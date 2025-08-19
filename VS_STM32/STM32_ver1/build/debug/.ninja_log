@@ -1,0 +1,16 @@
+# ninja log v5
+65	395	7769869021913368	CMakeFiles/STM32_ver1.dir/Startup/startup_stm32f103c8tx.s.obj	1670444050611603
+43	600	7769869023969894	CMakeFiles/STM32_ver1.dir/Src/sysmem.c.obj	818b70347a1eb9ab
+23	720	7769869025174950	CMakeFiles/STM32_ver1.dir/Src/syscall.c.obj	c6ebbafdba217ac9
+53	82	0	clean	529518bdb38c021b
+49	672	7771140197344758	CMakeFiles/STM32_ver1.dir/Startup/startup_stm32f103c8tx.s.obj	676060bc8e220ecc
+39	674	7771140197446208	CMakeFiles/STM32_ver1.dir/Src/sysmem.c.obj	52d5203a7fbd9495
+27	757	7771140198316738	CMakeFiles/STM32_ver1.dir/Src/syscall.c.obj	8866c866c554e8bc
+15	781	7771140198508163	CMakeFiles/STM32_ver1.dir/Src/main.c.obj	d8bce220ba1db936
+782	2035	7771140204995493	STM32_ver1.elf	da4845865705ba7f
+29	48	0	clean	529518bdb38c021b
+42	481	7771143181586373	CMakeFiles/STM32_ver1.dir/Startup/startup_stm32f103c8tx.s.obj	676060bc8e220ecc
+34	495	7771143181698636	CMakeFiles/STM32_ver1.dir/Src/sysmem.c.obj	52d5203a7fbd9495
+24	503	7771143181790340	CMakeFiles/STM32_ver1.dir/Src/syscall.c.obj	8866c866c554e8bc
+14	567	7771143182508081	CMakeFiles/STM32_ver1.dir/Src/main.c.obj	d8bce220ba1db936
+568	1289	7771143185902540	STM32_ver1.elf	da4845865705ba7f

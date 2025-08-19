@@ -1,0 +1,26 @@
+[
+{
+  "directory": "D:/dev/SuperProject/VS_STM32/STM32_ver1/build/debug",
+  "command": "C:\\ST\\STM32CubeCLT_1.18.0\\GNU-tools-for-STM32\\bin\\arm-none-eabi-gcc.exe -DDEBUG -DSTM32F103xB -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Inc -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/STM32F1xx_HAL_Driver/Inc -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Device/ST/STM32F1xx/Include -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Include -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m3 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles\\STM32_ver1.dir\\Src\\main.c.obj -c D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Src\\main.c",
+  "file": "D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Src\\main.c",
+  "output": "CMakeFiles\\STM32_ver1.dir\\Src\\main.c.obj"
+},
+{
+  "directory": "D:/dev/SuperProject/VS_STM32/STM32_ver1/build/debug",
+  "command": "C:\\ST\\STM32CubeCLT_1.18.0\\GNU-tools-for-STM32\\bin\\arm-none-eabi-gcc.exe -DDEBUG -DSTM32F103xB -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Inc -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/STM32F1xx_HAL_Driver/Inc -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Device/ST/STM32F1xx/Include -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Include -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m3 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles\\STM32_ver1.dir\\Src\\syscall.c.obj -c D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Src\\syscall.c",
+  "file": "D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Src\\syscall.c",
+  "output": "CMakeFiles\\STM32_ver1.dir\\Src\\syscall.c.obj"
+},
+{
+  "directory": "D:/dev/SuperProject/VS_STM32/STM32_ver1/build/debug",
+  "command": "C:\\ST\\STM32CubeCLT_1.18.0\\GNU-tools-for-STM32\\bin\\arm-none-eabi-gcc.exe -DDEBUG -DSTM32F103xB -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Inc -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/STM32F1xx_HAL_Driver/Inc -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Device/ST/STM32F1xx/Include -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Include -fdata-sections -ffunction-sections -Wl,--gc-sections -g -std=gnu11 -mthumb -mcpu=cortex-m3 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Og -g3 -ggdb -o CMakeFiles\\STM32_ver1.dir\\Src\\sysmem.c.obj -c D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Src\\sysmem.c",
+  "file": "D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Src\\sysmem.c",
+  "output": "CMakeFiles\\STM32_ver1.dir\\Src\\sysmem.c.obj"
+},
+{
+  "directory": "D:/dev/SuperProject/VS_STM32/STM32_ver1/build/debug",
+  "command": "C:\\ST\\STM32CubeCLT_1.18.0\\GNU-tools-for-STM32\\bin\\arm-none-eabi-gcc.exe -DDEBUG -DSTM32F103xB -ID:/dev/SuperProject/VS_STM32/STM32_ver1 -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/STM32F1xx_HAL_Driver/Inc -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Device/ST/STM32F1xx/Include -ID:/dev/SuperProject/VS_STM32/STM32_ver1/Drivers/CMSIS/Include -g -mthumb -mcpu=cortex-m3 -Wall -Wextra -Wpedantic -Wno-unused-parameter -x assembler-with-cpp -MMD -MP -Og -g3 -ggdb -o CMakeFiles\\STM32_ver1.dir\\Startup\\startup_stm32f103c8tx.s.obj -c D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Startup\\startup_stm32f103c8tx.s",
+  "file": "D:\\dev\\SuperProject\\VS_STM32\\STM32_ver1\\Startup\\startup_stm32f103c8tx.s",
+  "output": "CMakeFiles\\STM32_ver1.dir\\Startup\\startup_stm32f103c8tx.s.obj"
+}
+]
