@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sơ đồ chân STM32 ↔ DM542 (đấu trở)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main style="max-width:980px;margin:18px auto;">
+    <h1>Sơ đồ chân & đấu trở: STM32F103C8 → 3× DM542</h1>
+    <p style="color:#444">Hình minh họa thể hiện: pull-up 4.7k lên PUL+/DIR+, các Rbase 4.7k tới base transistor 2N2222; transistor kéo PUL-/DIR- xuống GND.</p>
+    <div style="border:1px solid #e6e6ee;padding:8px;border-radius:8px;background:#fff;">
+      <!-- embed svg -->
+      <!-- If your browser blocks object, you can open stm32_dm542_pins.svg directly -->
+      <object type="image/svg+xml" data="stm32_dm542_pins.svg" width="960" height="640">Sơ đồ SVG — mở file stm32_dm542_pins.svg</object>
+    </div>
+
+    <h2>Muốn thêm gì nữa?</h2>
+    <ul>
+      <li>Đánh dấu chân STM32 chính xác (ví dụ PA0 → TIM2 CH1) lên sơ đồ</li>
+      <li>Phiên bản dùng open-drain (không transistor)</li>
+      <li>Phiên bản dùng opto-isolator</li>
+      <li>Gửi đoạn mã STM32 HAL để tạo xung STEP (ví dụ 1 Hz thử nghiệm)</li>
+    </ul>
+  </main>
+</body>
+</html>

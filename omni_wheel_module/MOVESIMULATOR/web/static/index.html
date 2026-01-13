@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Omni Robot 2D Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1629;
+      --panel: #121b30;
+      --accent: #7cf0c6;
+      --accent-2: #ff8a5c;
+      --text: #e9edf5;
+      --muted: #8ea0c2;
+      --grid: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, #1d2743 0, #0f1629 45%),
+                  radial-gradient(circle at 80% 10%, #1a2f3f 0, #0f1629 40%);
+      color: var(--text);
+      font-family: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .layout {
+      width: 100%;
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 18px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, var(--accent), #49c3a0);
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      background: #0b1020;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: block;
+    }
+    .side {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    ul {
+      padding-left: 18px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .telemetry {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .telemetry div { margin: 4px 0; }
+    .badge {
+      display: inline-block;
+      margin-right: 8px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+    .pulse-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+      align-items: center;
+    }
+    .pulse-form label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pulse-form input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+    }
+    .pulse-form button {
+      grid-column: 1 / -1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(120deg, var(--accent), #49c3a0);
+      color: #0f172a;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="panel">
+      <div class="header">
+        <div class="title">Omni Robot 2D</div>
+        <div class="pill">LIVE</div>
+      </div>
+      <canvas id="sim" width="900" height="900"></canvas>
+    </div>
+    <div class="side">
+      <h2>Controls</h2>
+      <ul>
+        <li>W / A / D - accelerate wheels A / B / C</li>
+        <li>Up / Left / Down - reverse wheels A / B / C</li>
+        <li>R - reset</li>
+      </ul>
+      <div>
+        <span class="badge">Polling 60ms</span>
+        <span class="badge">DT 0.05s</span>
+      </div>
+      <div class="telemetry" id="telemetry">
+        Waiting for data...
+      </div>
+      <div>
+        <h2>Pulse control (Hz)</h2>
+        <form class="pulse-form" id="pulseForm">
+          <label for="pulse1">Wheel 1 (left)</label>
+          <input id="pulse1" type="number" step="any" placeholder="e.g. 0" />
+          <label for="pulse2">Wheel 2 (back)</label>
+          <input id="pulse2" type="number" step="any" placeholder="e.g. 0" />
+          <label for="pulse3">Wheel 3 (right)</label>
+          <input id="pulse3" type="number" step="any" placeholder="e.g. 0" />
+          <label for="microsteps">Microsteps</label>
+          <input id="microsteps" type="number" step="1" value="16" />
+          <button type="submit">Run pulses</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('sim');
+    const ctx = canvas.getContext('2d');
+    const telemetryEl = document.getElementById('telemetry');
+    let lastState = null;
+    const pressed = new Set();
+    const pulseInputs = [
+      document.getElementById('pulse1'),
+      document.getElementById('pulse2'),
+      document.getElementById('pulse3'),
+    ];
+    const microInput = document.getElementById('microsteps');
+
+    const keyMap = {
+      'w': 'w',
+      'a': 'a',
+      'd': 'd',
+      'ArrowUp': 'up',
+      'ArrowLeft': 'left',
+      'ArrowDown': 'down',
+      'r': 'r',
+    };
+
+    async function sendKey(key, isDown) {
+      try {
+        await fetch('/input', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, pressed: isDown })
+        });
+      } catch (err) {
+        console.error('input error', err);
+      }
+    }
+
+    async function sendReset() {
+      try {
+        pressed.clear();
+        await fetch('/reset', { method: 'POST' });
+      } catch (err) {
+        console.error('reset error', err);
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const mapped = keyMap[e.key];
+      if (!mapped) return;
+      e.preventDefault();
+      if (mapped === 'r') {
+        sendReset();
+        return;
+      }
+      if (!pressed.has(mapped)) {
+        pressed.add(mapped);
+        sendKey(mapped, true);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const mapped = keyMap[e.key];
+      if (!mapped || mapped === 'r') return;
+      e.preventDefault();
+      if (pressed.has(mapped)) {
+        pressed.delete(mapped);
+        sendKey(mapped, false);
+      }
+    });
+
+    async function sendPulses() {
+      const pulses = pulseInputs.map((el) => parseFloat(el.value || '0'));
+      const micro = parseInt(microInput.value || '16', 10);
+      try {
+        await fetch('/pulses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pulses, microsteps: micro })
+        });
+      } catch (err) {
+        console.error('pulses error', err);
+      }
+    }
+
+    document.getElementById('pulseForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      sendPulses();
+    });
+
+    function metersToCanvas(x, y, gridSize) {
+      const ppm = canvas.width / (gridSize * 2);
+      const cx = canvas.width / 2 + x * ppm;
+      const cy = canvas.height / 2 - y * ppm;
+      return [cx, cy, ppm];
+    }
+
+    function drawGrid(gridSize) {
+      const [, , ppm] = metersToCanvas(0, 0, gridSize);
+      ctx.strokeStyle = '#131a30';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let g = -gridSize; g <= gridSize; g += 1) {
+        const x = canvas.width / 2 + g * ppm;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        const y = canvas.height / 2 + g * ppm;
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+      }
+      ctx.stroke();
+    }
+
+    function drawTrajectory(xs, ys, gridSize) {
+      if (!xs || xs.length === 0) return;
+      ctx.strokeStyle = 'rgba(124, 240, 198, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < xs.length; i++) {
+        const [cx, cy] = metersToCanvas(xs[i], ys[i], gridSize);
+        if (i === 0) ctx.moveTo(cx, cy); else ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    }
+
+    function drawRobot(state) {
+      const { position, orientation, wheel_positions, robot_radius } = state;
+      const [cx, cy, ppm] = metersToCanvas(position.x, position.y, state.grid_size);
+      const radiusPx = robot_radius * ppm * 4.0; // doubled visual size
+
+      ctx.fillStyle = '#1c2745';
+      ctx.strokeStyle = '#7cf0c6';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radiusPx, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Heading
+      const hx = cx + radiusPx * Math.cos(orientation);
+      const hy = cy - radiusPx * Math.sin(orientation);
+      ctx.strokeStyle = '#ff8a5c';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(hx, hy);
+      ctx.stroke();
+
+      // Wheels
+      ctx.fillStyle = '#e9edf5';
+      wheel_positions.forEach((w) => {
+        const [wx, wy] = metersToCanvas(w.x, w.y, state.grid_size);
+        ctx.beginPath();
+        ctx.arc(wx, wy, Math.max(4, radiusPx * 0.12), 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function drawVelocity(state) {
+      const { position, velocity } = state;
+      const [cx, cy, ppm] = metersToCanvas(position.x, position.y, state.grid_size);
+      const scale = ppm * 2.5; // amplify to improve visibility
+      const dx = velocity.x * scale;
+      const dy = -velocity.y * scale;
+      ctx.strokeStyle = '#ff8a5c';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + dx, cy + dy);
+      ctx.stroke();
+      // arrow head
+      const angle = Math.atan2(dy, dx);
+      const head = 12;
+      ctx.beginPath();
+      ctx.moveTo(cx + dx, cy + dy);
+      ctx.lineTo(cx + dx - head * Math.cos(angle - Math.PI / 7), cy + dy - head * Math.sin(angle - Math.PI / 7));
+      ctx.lineTo(cx + dx - head * Math.cos(angle + Math.PI / 7), cy + dy - head * Math.sin(angle + Math.PI / 7));
+      ctx.lineTo(cx + dx, cy + dy);
+      ctx.fillStyle = '#ff8a5c';
+      ctx.fill();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!lastState) return;
+      drawGrid(lastState.grid_size);
+      drawTrajectory(lastState.trajectory.x, lastState.trajectory.y, lastState.grid_size);
+      drawRobot(lastState);
+      drawVelocity(lastState);
+    }
+
+    function updateTelemetry(state) {
+      const v = state.velocity;
+      const wheels = state.wheel_speeds.map((w) => w.toFixed(2)).join(', ');
+      telemetryEl.innerHTML = `
+        <div><strong>Position:</strong> (${state.position.x.toFixed(2)}, ${state.position.y.toFixed(2)}) m</div>
+        <div><strong>Velocity:</strong> vx ${v.x.toFixed(2)} m/s - vy ${v.y.toFixed(2)} m/s</div>
+        <div><strong>Omega:</strong> ${v.omega.toFixed(2)} rad/s</div>
+        <div><strong>Wheel speeds:</strong> [${wheels}] rad/s</div>
+      `;
+    }
+
+    async function poll() {
+      try {
+        const res = await fetch('/state');
+        const data = await res.json();
+        lastState = data;
+        updateTelemetry(data);
+      } catch (err) {
+        console.error('state error', err);
+      }
+    }
+
+    setInterval(poll, 60);
+
+    function loop() {
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    poll();
+    loop();
+  </script>
+</body>
+</html>

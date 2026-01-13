@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "ardArmsPort",
+      "type": "promptString",
+      "description": "Serial/Upload port for ARD_ARMS (e.g., COM5)",
+      "default": "COM5"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "ARD_ARMS: Build",
+      "type": "shell",
+      "command": "python",
+      "args": ["-m", "platformio", "run"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ARD_ARMS: Upload",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "-m",
+        "platformio",
+        "run",
+        "-e",
+        "uno",
+        "-t",
+        "upload",
+        "--upload-port",
+        "${input:ardArmsPort}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ARD_ARMS: Serial Monitor",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "-m",
+        "platformio",
+        "device",
+        "monitor",
+        "-p",
+        "${input:ardArmsPort}",
+        "-b",
+        "115200"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}
