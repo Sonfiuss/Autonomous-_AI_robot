@@ -1,0 +1,5 @@
+Command build BezierControl:
+g++ -std=c++17 BEZIERCONTROL/src/main.cpp -o bezier_control.exe
+
+Command run bezier Control:
+.\bezier_control.exe

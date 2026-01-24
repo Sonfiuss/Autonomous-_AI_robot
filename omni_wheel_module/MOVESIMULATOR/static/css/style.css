@@ -1,0 +1,274 @@
+/* ==========================================
+   Robot Path Planning Simulator - Styles
+   ========================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #eee;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 2rem;
+    color: #00d4ff;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+/* Main Layout */
+.main-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Canvas Container */
+.canvas-container {
+    flex: 1;
+    background: #0a0a1a;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+#simulatorCanvas {
+    display: block;
+    width: 100%;
+    background: #111;
+    border-radius: 8px;
+    cursor: crosshair;
+}
+
+.canvas-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/* Control Panel */
+.control-panel {
+    width: 320px;
+    background: #0f0f23;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.panel-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #2a2a4a;
+}
+
+.panel-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.panel-section h3 {
+    font-size: 1rem;
+    color: #00d4ff;
+    margin-bottom: 12px;
+}
+
+/* Input Groups */
+.input-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.input-group input {
+    width: 80px;
+    padding: 6px 10px;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #00d4ff;
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+}
+
+/* Tool Buttons */
+.tool-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.tool-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 12px;
+    border: 1px solid #3a3a5a;
+    border-radius: 6px;
+    background: #1a1a2e;
+    color: #ccc;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    background: #2a2a4a;
+    border-color: #00d4ff;
+}
+
+.tool-btn.active {
+    background: #00d4ff;
+    color: #000;
+    border-color: #00d4ff;
+}
+
+/* Action Buttons */
+.action-btn {
+    width: 100%;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #0066ff, #00d4ff);
+    color: #fff;
+}
+
+.action-btn.primary:hover {
+    box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.action-btn.success {
+    background: linear-gradient(135deg, #00c853, #69f0ae);
+    color: #000;
+}
+
+.action-btn.success:hover {
+    box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
+    transform: translateY(-1px);
+}
+
+.action-btn.warning {
+    background: linear-gradient(135deg, #ff9800, #ffca28);
+    color: #000;
+}
+
+.action-btn.warning:hover {
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+    transform: translateY(-1px);
+}
+
+.action-btn.danger {
+    background: linear-gradient(135deg, #f44336, #ff7043);
+    color: #fff;
+}
+
+.action-btn.danger:hover {
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+    transform: translateY(-1px);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Status Log */
+.status-log {
+    background: #0a0a1a;
+    border-radius: 6px;
+    padding: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+    font-family: 'Consolas', monospace;
+}
+
+.status-log p {
+    margin-bottom: 5px;
+    padding-left: 10px;
+    border-left: 2px solid #3a3a5a;
+}
+
+.status-log p.info {
+    border-left-color: #00d4ff;
+}
+
+.status-log p.success {
+    border-left-color: #00c853;
+}
+
+.status-log p.error {
+    border-left-color: #f44336;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a2e;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3a3a5a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4a4a6a;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .main-content {
+        flex-direction: column;
+    }
+    
+    .control-panel {
+        width: 100%;
+        max-height: none;
+    }
+}

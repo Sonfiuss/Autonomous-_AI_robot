@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Path Planning Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .container { display: flex; height: 100vh; }
+        
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px 8px 0 0;
+        }
+        .canvas-header h1 {
+            font-size: 1.2rem;
+            color: #00d4ff;
+        }
+        .canvas-info span {
+            margin-left: 20px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        #simulatorCanvas {
+            flex: 1;
+            background: #111;
+            border-radius: 0 0 8px 8px;
+            cursor: crosshair;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            width: 280px;
+            background: #0f0f23;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .panel-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .panel-section h3 {
+            font-size: 0.9rem;
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .input-group label { font-size: 0.8rem; color: #aaa; }
+        .input-group input {
+            width: 70px;
+            padding: 5px 8px;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: #fff;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        /* Buttons */
+        .tool-buttons { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .tool-btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 6px 8px;
+            border: 1px solid #3a3a5a;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: #ccc;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tool-btn:hover { background: #2a2a4a; border-color: #00d4ff; }
+        .tool-btn.active { background: #00d4ff; color: #000; border-color: #00d4ff; }
+        
+        .action-btn {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn.primary { background: linear-gradient(135deg, #0066ff, #00d4ff); color: #fff; }
+        .action-btn.success { background: linear-gradient(135deg, #00c853, #69f0ae); color: #000; }
+        .action-btn.warning { background: linear-gradient(135deg, #ff9800, #ffca28); color: #000; }
+        .action-btn.danger { background: linear-gradient(135deg, #f44336, #ff7043); color: #fff; }
+        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        
+        /* Status Log */
+        .status-log {
+            background: #0a0a1a;
+            border-radius: 4px;
+            padding: 8px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            font-family: 'Consolas', monospace;
+        }
+        .status-log p {
+            margin-bottom: 4px;
+            padding-left: 8px;
+            border-left: 2px solid #3a3a5a;
+        }
+        .status-log p.info { border-left-color: #00d4ff; }
+        .status-log p.success { border-left-color: #00c853; }
+        .status-log p.error { border-left-color: #f44336; }
+        
+        /* Kinematics Output */
+        .kinematics-output {
+            background: #0a0a1a;
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 10px;
+        }
+        .kin-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.8rem;
+        }
+        .kin-row.wheel {
+            color: #00ff88;
+        }
+        .kin-label { color: #888; }
+        .kin-value { 
+            font-family: 'Consolas', monospace;
+            color: #fff;
+            font-weight: bold;
+        }
+        .kin-divider {
+            border-top: 1px solid #3a3a5a;
+            margin: 6px 0;
+        }
+        .kin-header {
+            font-size: 0.75rem;
+            color: #00d4ff;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        
+        /* Instructions */
+        .instructions {
+            background: rgba(0,212,255,0.1);
+            border: 1px solid #00d4ff;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-size: 0.75rem;
+        }
+        .instructions p { margin-bottom: 3px; }
+        .instructions strong { color: #00d4ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+            <div class="canvas-header">
+                <h1>🤖 Omni-Wheel Robot Simulator</h1>
+                <div class="canvas-info">
+                    <span id="mousePos">Mouse: (0, 0)</span>
+                    <span id="robotPos">Robot: (0, 0) θ=0°</span>
+                </div>
+            </div>
+            <canvas id="simulatorCanvas"></canvas>
+        </div>
+        
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <!-- Instructions -->
+            <section class="panel-section">
+                <div class="instructions">
+                    <p><strong>Left Click:</strong> Set goal & move robot</p>
+                    <p><strong>Draw Obstacle:</strong> Click button → Drag on map</p>
+                    <p><strong>Right Click:</strong> Remove obstacle</p>
+                </div>
+            </section>
+            
+            <!-- Robot Configuration -->
+            <section class="panel-section">
+                <h3>🔧 Robot Config</h3>
+                <div class="input-group">
+                    <label>Outer Radius (cm):</label>
+                    <input type="number" id="outerRadius" value="19" min="1" max="50" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Inner Radius (cm):</label>
+                    <input type="number" id="innerRadius" value="14.4" min="1" max="50" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Max Velocity (m/s):</label>
+                    <input type="number" id="maxVelocity" value="0.3" min="0.1" max="5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Max Turn Speed (rad/s):</label>
+                    <input type="number" id="maxOmega" value="0.5" min="0.1" max="3" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Safety Margin (cm):</label>
+                    <input type="number" id="safetyMargin" value="2" min="0" max="20" step="0.5">
+                </div>
+            </section>
+            
+            <!-- Grid Configuration -->
+            <section class="panel-section">
+                <h3>📐 Grid Settings</h3>
+                <div class="input-group">
+                    <label>Cell Size (px):</label>
+                    <input type="number" id="cellSize" value="20" min="10" max="50" step="5">
+                </div>
+                <div class="input-group">
+                    <label>Scale (px/cm):</label>
+                    <input type="number" id="gridScale" value="2" min="0.5" max="10" step="0.5">
+                </div>
+            </section>
+            
+            <!-- Obstacle Tools -->
+            <section class="panel-section">
+                <h3>🚧 Obstacles</h3>
+                <div class="tool-buttons">
+                    <button class="tool-btn" data-tool="circle">⭕ Circle</button>
+                    <button class="tool-btn" data-tool="rectangle">⬜ Rect</button>
+                    <button class="tool-btn" data-tool="parallelogram">◇ Para</button>
+                </div>
+                <div class="input-group">
+                    <label>Size (cm):</label>
+                    <input type="number" id="obstacleSize" value="30" min="5" max="200" step="5">
+                </div>
+                <button id="clearObstacles" class="action-btn danger">🗑️ Clear Obstacles</button>
+            </section>
+            
+            <!-- Simulation Controls -->
+            <section class="panel-section">
+                <h3>▶️ Simulation</h3>
+                <button id="stopSim" class="action-btn warning">⏸️ Stop</button>
+                <button id="resetSim" class="action-btn">🔄 Reset Robot</button>
+            </section>
+            
+            <!-- Kinematics Output -->
+            <section class="panel-section">
+                <h3>⚙️ Inverse Kinematics</h3>
+                <div class="input-group">
+                    <label>Wheel Distance L (cm):</label>
+                    <input type="number" id="wheelDistance" value="14.4" min="1" max="50" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Wheel Radius (cm):</label>
+                    <input type="number" id="wheelRadius" value="4.1" min="0.5" max="10" step="0.1">
+                </div>
+                <div class="kinematics-output">
+                    <div class="kin-row">
+                        <span class="kin-label">Direction:</span>
+                        <span id="kinAngle" class="kin-value">--°</span>
+                    </div>
+                    <div class="kin-row">
+                        <span class="kin-label">Distance:</span>
+                        <span id="kinDistance" class="kin-value">-- cm</span>
+                    </div>
+                    <div class="kin-row">
+                        <span class="kin-label">Vx (robot):</span>
+                        <span id="kinVx" class="kin-value">-- cm/s</span>
+                    </div>
+                    <div class="kin-row">
+                        <span class="kin-label">Vy (robot):</span>
+                        <span id="kinVy" class="kin-value">-- cm/s</span>
+                    </div>
+                    <div class="kin-row">
+                        <span class="kin-label">ω (robot):</span>
+                        <span id="kinOmegaRobot" class="kin-value">-- rad/s</span>
+                    </div>
+                    <div class="kin-divider"></div>
+                    <div class="kin-header">Wheel Angular Velocities (r=4.1cm):</div>
+                    <div class="kin-row wheel">
+                        <span class="kin-label">ω₁ (V1-Left 150°):</span>
+                        <span id="kinOmegaLeft" class="kin-value">-- rad/s</span>
+                    </div>
+                    <div class="kin-row wheel">
+                        <span class="kin-label">ω₂ (V2-Back 270°):</span>
+                        <span id="kinOmegaBack" class="kin-value">-- rad/s</span>
+                    </div>
+                    <div class="kin-row wheel">
+                        <span class="kin-label">ω₃ (V3-Right 30°):</span>
+                        <span id="kinOmegaRight" class="kin-value">-- rad/s</span>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Status -->
+            <section class="panel-section">
+                <h3>📊 Status</h3>
+                <div id="statusLog" class="status-log">
+                    <p class="info">Ready. Click anywhere to move robot.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <script src="/static/js/grid.js"></script>
+    <script src="/static/js/robot.js"></script>
+    <script src="/static/js/obstacles.js"></script>
+    <script src="/static/js/pathfinding.js"></script>
+    <script src="/static/js/kinematics.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

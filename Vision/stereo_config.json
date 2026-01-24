@@ -1,0 +1,15 @@
+{
+  "left": {
+    "source_type": "imou_config",
+    "config_path": "camera_config.json",
+    "width": 640,
+    "height": 480
+  },
+  "right": {
+    "source_type": "device",
+    "index": 0,
+    "width": 640,
+    "height": 480,
+    "backend": "dshow"
+  }
+}

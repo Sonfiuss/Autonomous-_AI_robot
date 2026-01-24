@@ -39,3 +39,7 @@
 
 # debug information files
 *.dwo
+
+# Folders to ignore
+OpenBase-master/
+Depth-Anything-V2-main/
