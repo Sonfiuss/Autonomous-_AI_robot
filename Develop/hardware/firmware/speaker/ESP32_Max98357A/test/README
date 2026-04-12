@@ -1,0 +1,19 @@
+Pin config
+
+// MAX98357A (I2S DAC Amplifier)
+Module    -    ESP32
+Vin       =    5V
+GND       =    GND
+DIN       =    GPIO 25    (I2S data out)
+BCLK      =    GPIO 27    (I2S bit clock)
+LRC       =    GPIO 26    (I2S word select)
+SD        =    (float)    Shutdown - float = always ON
+GAIN      =    (float)    Float = 15 dB gain
+
+// INMP441 (I2S MEMS Microphone)
+VD        =    3.3V
+GND       =    GND
+SD        =    GPIO 34    (I2S data in)
+SCK       =    GPIO 33    (I2S bit clock)
+WS        =    GPIO 32    (I2S word select)
+L/R       =    GND        *** QUAN TRỌNG: nối GND = kênh Left ***
