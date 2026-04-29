@@ -1,0 +1,38 @@
+{
+    "model_id": "depth_anything_v2",
+    "model_name": "Depth-Anything-V2",
+    "runtime": "onnx",
+    "precision": "float",
+    "tool_versions": {
+        "qairt": "2.42.0.251225135753_193295",
+        "onnx_runtime": "1.24.3"
+    },
+    "model_files": {
+        "depth_anything_v2.onnx": {
+            "inputs": {
+                "image": {
+                    "shape": [
+                        1,
+                        3,
+                        518,
+                        518
+                    ],
+                    "dtype": "float32",
+                    "io_type": "image",
+                    "image_metadata": {}
+                }
+            },
+            "outputs": {
+                "depth_estimates": {
+                    "shape": [
+                        1,
+                        1,
+                        518,
+                        518
+                    ],
+                    "dtype": "float32"
+                }
+            }
+        }
+    }
+}

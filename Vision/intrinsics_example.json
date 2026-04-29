@@ -1,0 +1,10 @@
+{
+  "model": "pinhole",
+  "camera_matrix": [[1000.0, 0.0, 960.0], [0.0, 1000.0, 540.0], [0.0, 0.0, 1.0]],
+  "dist_coeffs": [-0.25, 0.10, 0.0, 0.0, 0.0],
+  "image_width": 1920,
+  "image_height": 1080,
+  "alpha": 0.0,
+  "balance": 0.0,
+  "crop": true
+}

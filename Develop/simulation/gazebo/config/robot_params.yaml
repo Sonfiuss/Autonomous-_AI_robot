@@ -1,0 +1,28 @@
+# Robot Simulation Parameters
+# Thông số robot cho Gazebo simulation
+
+robot:
+  base:
+    radius: 0.25        # m
+    height: 0.15        # m
+    mass: 5.0            # kg
+
+  wheels:
+    count: 3             # Số bánh omni wheel
+    radius: 0.05         # m
+    width: 0.03          # m
+    max_speed: 1.0       # m/s
+
+  arm:
+    joints: 6
+    max_reach: 0.5       # m
+
+  sensors:
+    camera:
+      resolution: [640, 480]
+      fps: 30
+    ultrasonic:
+      count: 4
+      max_range: 4.0     # m
+    imu:
+      update_rate: 100   # Hz

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultrasonic Radar</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>ULTRASONIC RADAR</h1>
+        
+        <div class="controls">
+            <label for="portSelect">COM Port:</label>
+            <select id="portSelect">
+                <option value="">-- Chọn port --</option>
+            </select>
+            <button id="connectBtn" class="btn">Kết nối</button>
+            <button id="disconnectBtn" class="btn" disabled>Ngắt kết nối</button>
+            <button id="refreshBtn" class="btn">Làm mới ports</button>
+            <button id="testBtn" class="btn btn-test">Test Mode</button>
+        </div>
+        
+        <div class="status-bar">
+            <span id="status">Chưa kết nối</span>
+            <span id="angleDisplay">Góc: --°</span>
+            <span id="distanceDisplay">Khoảng cách: -- cm</span>
+        </div>
+        
+        <div class="radar-container">
+            <canvas id="radarCanvas" width="800" height="450"></canvas>
+        </div>
+        
+        <div class="info">
+            <p>Phạm vi quét: -30° đến +30° | Tốc độ: 0.5 rad/s | Khoảng cách tối đa: 150 cm | <span style="color:#0078ff">&#9646; Trống</span> &nbsp; <span style="color:#ff2800">&#9646; Vật cản</span></p>
+        </div>
+    </div>
+    
+    <script src="radar.js"></script>
+</body>
+</html>

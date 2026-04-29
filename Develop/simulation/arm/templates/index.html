@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6DOF Robotic Arm Simulation</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🤖 6DOF Robotic Arm Simulation</h1>
+            <p>Mô phỏng cánh tay robot 6 bậc tự do</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Panel 1: 3D Visualization -->
+            <div class="panel panel-3d">
+                <div class="panel-header">
+                    <h2>📐 Không gian 3D</h2>
+                    <div class="view-controls">
+                        <button id="btn-reset-view" title="Reset camera view">🔄 Reset View</button>
+                        <button id="btn-top-view" title="Top view">⬆️ Top</button>
+                        <button id="btn-side-view" title="Side view">➡️ Side</button>
+                        <button id="btn-front-view" title="Front view">🎯 Front</button>
+                    </div>
+                </div>
+                <div id="canvas-container"></div>
+                <div class="position-info">
+                    <span id="end-effector-pos">End Effector: X: 0 Y: 0 Z: 0</span>
+                </div>
+                
+                <!-- Object Info & Controls -->
+                <div class="object-controls">
+                    <div id="object-info" class="object-info">
+                        <em>Double-click trên mặt phẳng để đặt vật thể</em>
+                    </div>
+                    <div class="object-buttons">
+                        <button id="btn-grip" class="btn-grip" title="Gắp vật thể đã chọn">🤏 Gắp</button>
+                        <button id="btn-remove-object" class="btn-remove" title="Xóa vật thể đã chọn">🗑️ Xóa</button>
+                        <button id="btn-clear-objects" class="btn-clear" title="Xóa tất cả vật thể">🧹 Xóa hết</button>
+                    </div>
+                </div>
+                
+                <!-- Message Display -->
+                <div id="message-display" class="message-display hidden"></div>
+            </div>
+
+            <!-- Panel 2: Control Parameters -->
+            <div class="panel panel-controls">
+                <div class="panel-header">
+                    <h2>🎮 Điều khiển tham số</h2>
+                    <button id="btn-reset-arm" class="btn-reset">🔄 Reset All</button>
+                </div>
+
+                <div class="controls-content">
+                    <!-- Joint Angles Section -->
+                    <div class="control-section">
+                        <h3>🔧 Góc các khớp (Joint Angles)</h3>
+                        
+                        <div class="control-group">
+                            <label for="joint-1">
+                                <span class="label-text">J1 - Base (Đế)</span>
+                                <span class="value-display" id="j1-value">0°</span>
+                            </label>
+                            <input type="range" id="joint-1" min="-180" max="180" value="0" class="joint-slider">
+                            <div class="range-labels">
+                                <span>-180°</span>
+                                <span>180°</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="joint-2">
+                                <span class="label-text">J2 - Shoulder (Vai)</span>
+                                <span class="value-display" id="j2-value">0°</span>
+                            </label>
+                            <input type="range" id="joint-2" min="-90" max="90" value="0" class="joint-slider">
+                            <div class="range-labels">
+                                <span>-90°</span>
+                                <span>90°</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="joint-3">
+                                <span class="label-text">J3 - Elbow (Khuỷu)</span>
+                                <span class="value-display" id="j3-value">0°</span>
+                            </label>
+                            <input type="range" id="joint-3" min="-135" max="135" value="0" class="joint-slider">
+                            <div class="range-labels">
+                                <span>-135°</span>
+                                <span>135°</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="joint-4">
+                                <span class="label-text">J4 - Wrist Rotation (Xoay cổ tay)</span>
+                                <span class="value-display" id="j4-value">0°</span>
+                            </label>
+                            <input type="range" id="joint-4" min="-180" max="180" value="0" class="joint-slider">
+                            <div class="range-labels">
+                                <span>-180°</span>
+                                <span>180°</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="joint-5">
+                                <span class="label-text">J5 - Wrist Bend (Uốn cổ tay)</span>
+                                <span class="value-display" id="j5-value">0°</span>
+                            </label>
+                            <input type="range" id="joint-5" min="-90" max="90" value="0" class="joint-slider">
+                            <div class="range-labels">
+                                <span>-90°</span>
+                                <span>90°</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="joint-6">
+                                <span class="label-text">J6 - End Effector (Công cụ)</span>
+                                <span class="value-display" id="j6-value">0°</span>
+                            </label>
+                            <input type="range" id="joint-6" min="-180" max="180" value="0" class="joint-slider">
+                            <div class="range-labels">
+                                <span>-180°</span>
+                                <span>180°</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DH Parameters Section -->
+                    <div class="control-section">
+                        <h3>📏 Thông số DH (Link Lengths)</h3>
+                        
+                        <div class="control-group">
+                            <label for="dh-d1">
+                                <span class="label-text">d1 - Chiều cao đế</span>
+                                <span class="value-display" id="d1-value">100 mm</span>
+                            </label>
+                            <input type="range" id="dh-d1" min="50" max="200" value="100" class="dh-slider">
+                            <div class="range-labels">
+                                <span>50mm</span>
+                                <span>200mm</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="dh-a2">
+                                <span class="label-text">a2 - Khoảng cách vai-khuỷu</span>
+                                <span class="value-display" id="a2-value">200 mm</span>
+                            </label>
+                            <input type="range" id="dh-a2" min="100" max="400" value="200" class="dh-slider">
+                            <div class="range-labels">
+                                <span>100mm</span>
+                                <span>400mm</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="dh-a3">
+                                <span class="label-text">a3 - Khoảng cách khuỷu-cổ tay</span>
+                                <span class="value-display" id="a3-value">200 mm</span>
+                            </label>
+                            <input type="range" id="dh-a3" min="100" max="400" value="200" class="dh-slider">
+                            <div class="range-labels">
+                                <span>100mm</span>
+                                <span>400mm</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="dh-d4">
+                                <span class="label-text">d4 - Offset khớp 4</span>
+                                <span class="value-display" id="d4-value">50 mm</span>
+                            </label>
+                            <input type="range" id="dh-d4" min="20" max="100" value="50" class="dh-slider">
+                            <div class="range-labels">
+                                <span>20mm</span>
+                                <span>100mm</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="dh-d5">
+                                <span class="label-text">d5 - Offset khớp 5</span>
+                                <span class="value-display" id="d5-value">50 mm</span>
+                            </label>
+                            <input type="range" id="dh-d5" min="20" max="100" value="50" class="dh-slider">
+                            <div class="range-labels">
+                                <span>20mm</span>
+                                <span>100mm</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="dh-d6">
+                                <span class="label-text">d6 - Chiều dài công cụ</span>
+                                <span class="value-display" id="d6-value">50 mm</span>
+                            </label>
+                            <input type="range" id="dh-d6" min="20" max="150" value="50" class="dh-slider">
+                            <div class="range-labels">
+                                <span>20mm</span>
+                                <span>150mm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Input Section -->
+                    <div class="control-section">
+                        <h3>⌨️ Nhập trực tiếp</h3>
+                        <div class="direct-input-grid">
+                            <div class="input-field">
+                                <label>J1</label>
+                                <input type="number" id="input-j1" value="0" step="1">
+                                <span>°</span>
+                            </div>
+                            <div class="input-field">
+                                <label>J2</label>
+                                <input type="number" id="input-j2" value="0" step="1">
+                                <span>°</span>
+                            </div>
+                            <div class="input-field">
+                                <label>J3</label>
+                                <input type="number" id="input-j3" value="0" step="1">
+                                <span>°</span>
+                            </div>
+                            <div class="input-field">
+                                <label>J4</label>
+                                <input type="number" id="input-j4" value="0" step="1">
+                                <span>°</span>
+                            </div>
+                            <div class="input-field">
+                                <label>J5</label>
+                                <input type="number" id="input-j5" value="0" step="1">
+                                <span>°</span>
+                            </div>
+                            <div class="input-field">
+                                <label>J6</label>
+                                <input type="number" id="input-j6" value="0" step="1">
+                                <span>°</span>
+                            </div>
+                        </div>
+                        <button id="btn-apply-joints" class="btn-apply">Áp dụng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>6DOF Robotic Arm Simulation | Autonomous AI Robot Project</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/arm3d.js"></script>
+    <script src="/static/js/controls.js"></script>
+</body>
+</html>

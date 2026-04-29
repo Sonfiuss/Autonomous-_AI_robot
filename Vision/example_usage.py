@@ -1,21 +1,28 @@
-"""
-Ví dụ sử dụng ImouCamera class
-Example usage of ImouCamera class
-"""
+"""Ví dụ sử dụng ImouCamera (đọc config từ camera_config.json)."""
 
-from imou_camera_capture import ImouCamera
+import os
 import time
+
+from imou_camera_capture import ImouCamera, load_camera_config
+
+
+def _make_camera() -> ImouCamera:
+    base_dir = os.path.dirname(__file__)
+    cfg_path = os.path.join(base_dir, "camera_config.json")
+    cfg = load_camera_config(cfg_path)
+    return ImouCamera(cfg)
 
 def example_1_simple_capture():
     """Ví dụ 1: Chụp một ảnh đơn giản"""
     print("\n=== VÍ DỤ 1: CHỤP MỘT ẢNH ===\n")
-    
-    camera = ImouCamera("192.168.1.100", "admin", "your_password")
+
+    camera = _make_camera()
     
     if camera.connect():
         frame = camera.capture_frame()
         if frame is not None:
-            camera.save_image(frame)
+            path = camera.save_image(frame)
+            print(f"✓ Đã lưu: {path}")
         camera.disconnect()
 
 
@@ -23,11 +30,12 @@ def example_2_timelapse():
     """Ví dụ 2: Chụp timelapse - chụp ảnh định kỳ"""
     print("\n=== VÍ DỤ 2: CHỤP TIMELAPSE ===\n")
     
-    camera = ImouCamera("192.168.1.100", "admin", "your_password")
+    camera = _make_camera()
     
     if camera.connect():
         # Chụp 20 ảnh, mỗi ảnh cách nhau 5 giây
-        camera.capture_multiple_images(count=20, interval=5)
+        paths = camera.capture_multiple_images(count=20, interval=5)
+        print(f"✓ Đã lưu {len(paths)} ảnh")
         camera.disconnect()
 
 
@@ -35,7 +43,7 @@ def example_3_continuous_monitoring():
     """Ví dụ 3: Giám sát liên tục và lưu ảnh mỗi phút"""
     print("\n=== VÍ DỤ 3: GIÁM SÁT LIÊN TỤC ===\n")
     
-    camera = ImouCamera("192.168.1.100", "admin", "your_password")
+    camera = _make_camera()
     
     if camera.connect():
         print("Bắt đầu giám sát. Nhấn Ctrl+C để dừng.")
@@ -43,7 +51,8 @@ def example_3_continuous_monitoring():
             while True:
                 frame = camera.capture_frame()
                 if frame is not None:
-                    camera.save_image(frame, folder="monitoring")
+                    path = camera.save_image(frame, folder="monitoring")
+                    print(f"✓ Đã lưu: {path}")
                     print("Ảnh tiếp theo sau 60 giây...")
                 time.sleep(60)  # Chụp mỗi phút
         except KeyboardInterrupt:
@@ -55,12 +64,16 @@ def example_3_continuous_monitoring():
 def example_4_multiple_cameras():
     """Ví dụ 4: Kết nối với nhiều camera"""
     print("\n=== VÍ DỤ 4: NHIỀU CAMERA ===\n")
-    
-    cameras = [
-        ImouCamera("192.168.1.100", "admin", "password1"),
-        ImouCamera("192.168.1.101", "admin", "password2"),
-        ImouCamera("192.168.1.102", "admin", "password3")
+
+    # Gợi ý: Nếu bạn có nhiều camera, hãy tạo nhiều file config riêng
+    # (ví dụ: camera_config_1.json, camera_config_2.json, ...) rồi load từng file.
+    base_dir = os.path.dirname(__file__)
+    config_paths = [
+        os.path.join(base_dir, "camera_config.json"),
+        # os.path.join(base_dir, "camera_config_2.json"),
+        # os.path.join(base_dir, "camera_config_3.json"),
     ]
+    cameras = [ImouCamera(load_camera_config(p)) for p in config_paths]
     
     connected_cameras = []
     
@@ -89,7 +102,7 @@ def example_5_save_with_custom_name():
     import cv2
     from datetime import datetime
     
-    camera = ImouCamera("192.168.1.100", "admin", "your_password")
+    camera = _make_camera()
     
     if camera.connect():
         frame = camera.capture_frame()
@@ -107,7 +120,7 @@ def example_6_check_camera_info():
     
     import cv2
     
-    camera = ImouCamera("192.168.1.100", "admin", "your_password")
+    camera = _make_camera()
     
     if camera.connect():
         frame = camera.capture_frame()

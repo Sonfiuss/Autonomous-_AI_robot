@@ -1,0 +1,15 @@
+# Gazebo Simulation Parameters
+
+gazebo:
+  physics:
+    engine: ode
+    max_step_size: 0.001
+    real_time_factor: 1.0
+    real_time_update_rate: 1000
+
+  world:
+    default: "default.world"
+
+  gui:
+    camera:
+      initial_pose: [0, -3, 2, 0, 0.5, 1.57]

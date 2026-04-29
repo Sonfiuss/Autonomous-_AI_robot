@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous AI Robot - Control Panel</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>🤖 Robot Control Panel</h1>
+        <div id="status-indicator" class="status disconnected">Disconnected</div>
+    </header>
+
+    <main>
+        <!-- Camera Feed -->
+        <section id="camera-section">
+            <h2>Camera Feed</h2>
+            <div id="camera-feed">
+                <p>Camera chưa kết nối</p>
+            </div>
+        </section>
+
+        <!-- Manual Control -->
+        <section id="control-section">
+            <h2>Manual Control</h2>
+            <div id="joystick-container">
+                <!-- TODO: Virtual joystick -->
+                <p>Joystick Control Area</p>
+            </div>
+            <div id="control-buttons">
+                <button id="btn-stop" class="btn btn-danger">STOP</button>
+                <button id="btn-home" class="btn">HOME</button>
+            </div>
+        </section>
+
+        <!-- Telemetry -->
+        <section id="telemetry-section">
+            <h2>Telemetry</h2>
+            <div id="sensor-data">
+                <div class="sensor-card">
+                    <h3>Ultrasonic</h3>
+                    <span id="us-data">--</span> cm
+                </div>
+                <div class="sensor-card">
+                    <h3>IMU Heading</h3>
+                    <span id="imu-data">--</span>°
+                </div>
+                <div class="sensor-card">
+                    <h3>Speed</h3>
+                    <span id="speed-data">--</span> mm/s
+                </div>
+            </div>
+        </section>
+
+        <!-- Arm Control -->
+        <section id="arm-section">
+            <h2>Arm Control</h2>
+            <div id="arm-controls">
+                <!-- TODO: Slider cho từng khớp -->
+                <p>Arm joint controls will be here</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script src="js/controller.js"></script>
+    <script src="js/telemetry.js"></script>
+</body>
+</html>

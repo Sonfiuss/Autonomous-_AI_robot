@@ -1,9 +1,23 @@
-"""Simple RTSP viewer for Imou cameras."""
+"""RTSP viewer + capture helpers for Imou cameras.
+
+This module is used by scripts in the Vision folder.
+
+Primary workflow:
+    - Put connection info in camera_config.json
+    - Load it with load_camera_config()
+    - Create ImouCamera(config)
+
+Note: For backward compatibility, ImouCamera also accepts
+ImouCamera(ip, username, password, rtsp_port=554).
+"""
 
 import json
 import os
 import time
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
 import cv2
 
@@ -17,18 +31,23 @@ class CameraConfig:
 
 
 class ImouCamera:
-    def __init__(self, config: CameraConfig):
-        self.config = config
+    def __init__(self, config: CameraConfig | str, username: Optional[str] = None, password: Optional[str] = None, rtsp_port: int = 554):
+        if isinstance(config, CameraConfig):
+            self.config = config
+        else:
+            if username is None or password is None:
+                raise TypeError("ImouCamera(ip, username, password, rtsp_port=...) requires username and password")
+            self.config = CameraConfig(ip_address=str(config), username=str(username), password=str(password), rtsp_port=int(rtsp_port))
         self.rtsp_url = (
-            f"rtsp://{config.username}:{config.password}@"
-            f"{config.ip_address}:{config.rtsp_port}/cam/realmonitor?channel=1&subtype=0"
+            f"rtsp://{self.config.username}:{self.config.password}@"
+            f"{self.config.ip_address}:{self.config.rtsp_port}/cam/realmonitor?channel=1&subtype=0"
         )
         self.alternative_urls = [
-            f"rtsp://{config.username}:{config.password}@{config.ip_address}:{config.rtsp_port}/stream1",
-            f"rtsp://{config.username}:{config.password}@{config.ip_address}:{config.rtsp_port}/stream2",
-            f"rtsp://{config.username}:{config.password}@{config.ip_address}:{config.rtsp_port}/live",
-            f"rtsp://{config.username}:{config.password}@{config.ip_address}:{config.rtsp_port}/Streaming/Channels/101",
-            f"rtsp://{config.username}:{config.password}@{config.ip_address}:{config.rtsp_port}/11",
+            f"rtsp://{self.config.username}:{self.config.password}@{self.config.ip_address}:{self.config.rtsp_port}/stream1",
+            f"rtsp://{self.config.username}:{self.config.password}@{self.config.ip_address}:{self.config.rtsp_port}/stream2",
+            f"rtsp://{self.config.username}:{self.config.password}@{self.config.ip_address}:{self.config.rtsp_port}/live",
+            f"rtsp://{self.config.username}:{self.config.password}@{self.config.ip_address}:{self.config.rtsp_port}/Streaming/Channels/101",
+            f"rtsp://{self.config.username}:{self.config.password}@{self.config.ip_address}:{self.config.rtsp_port}/11",
         ]
         self.cap = None
 
@@ -51,6 +70,34 @@ class ImouCamera:
             self.cap.release()
 
         return False
+
+    def capture_frame(self, retries: int = 3, retry_delay_s: float = 0.2):
+        if self.cap is None or not self.cap.isOpened():
+            return None
+
+        for _ in range(max(1, int(retries))):
+            ok, frame = self.cap.read()
+            if ok and frame is not None:
+                return frame
+            time.sleep(float(retry_delay_s))
+        return None
+
+    def save_image(self, frame, folder: str = "captured_images", filename: Optional[str] = None) -> str:
+        Path(folder).mkdir(parents=True, exist_ok=True)
+        if filename is None:
+            filename = f"imou_capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+        path = str(Path(folder) / filename)
+        cv2.imwrite(path, frame)
+        return path
+
+    def capture_multiple_images(self, count: int = 10, interval: float = 1.0, folder: str = "captured_images"):
+        saved = []
+        for _ in range(int(count)):
+            frame = self.capture_frame()
+            if frame is not None:
+                saved.append(self.save_image(frame, folder=folder))
+            time.sleep(float(interval))
+        return saved
 
     def live_view(self):
         if self.cap is None or not self.cap.isOpened():

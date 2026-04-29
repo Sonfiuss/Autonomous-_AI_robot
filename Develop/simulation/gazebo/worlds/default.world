@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<!--
+  Default Gazebo World
+  Môi trường mặc định cho mô phỏng robot.
+-->
+<sdf version="1.6">
+  <world name="default">
+    <!-- Ánh sáng -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Mặt đất -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Physics -->
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- TODO: Thêm obstacles, walls cho test environment -->
+
+  </world>
+</sdf>

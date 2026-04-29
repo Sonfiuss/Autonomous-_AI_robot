@@ -1,0 +1,2 @@
+# Hardware API Dependencies
+pyserial>=3.5
