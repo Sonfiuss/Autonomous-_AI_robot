@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/nvidia/Documents/agent/scripts/context_loader.sh",
+            "statusMessage": "Loading robot project context..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/nvidia/Documents/agent/scripts/session_logger.sh",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

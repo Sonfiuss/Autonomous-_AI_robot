@@ -1,0 +1,7 @@
+/home/nvidia/Documents/motivation/build/CMakeFiles/install/strip.dir
+/home/nvidia/Documents/motivation/build/CMakeFiles/install/local.dir
+/home/nvidia/Documents/motivation/build/CMakeFiles/install.dir
+/home/nvidia/Documents/motivation/build/CMakeFiles/list_install_components.dir
+/home/nvidia/Documents/motivation/build/CMakeFiles/rebuild_cache.dir
+/home/nvidia/Documents/motivation/build/CMakeFiles/edit_cache.dir
+/home/nvidia/Documents/motivation/build/CMakeFiles/motivation.dir

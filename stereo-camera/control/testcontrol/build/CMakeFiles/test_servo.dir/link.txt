@@ -1,0 +1,1 @@
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/test_servo.dir/test_servo.cpp.o CMakeFiles/test_servo.dir/home/nvidia/Documents/stereo-camera/control/ServoClient.cpp.o  -o test_servo  -lpthread 

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libstereo_pipeline.a  CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.o CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.o CMakeFiles/stereo_pipeline.dir/vision/StereoCamera.cpp.o CMakeFiles/stereo_pipeline.dir/vision/MapBuilder.cpp.o CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.o
+/usr/bin/ranlib libstereo_pipeline.a

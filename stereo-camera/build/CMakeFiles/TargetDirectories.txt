@@ -1,0 +1,14 @@
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/install/strip.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/stereo_pipeline.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/stereo_scan.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/servo_test.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/servo_ctrl.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/test_frame_queue.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/test_scanner_raster.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/test_map_builder.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/test.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/edit_cache.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/rebuild_cache.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/list_install_components.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/install.dir
+/home/nvidia/Documents/stereo-camera/build/CMakeFiles/install/local.dir
