@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 
 #include "FrameQueue.hpp"
+#include "../core/Config.hpp"
+#include "../core/AngleBuffer.hpp"
 
 class ServoController;
 class StereoCamera;
@@ -41,14 +43,36 @@ public:
         float tilt_max   =  30.f;
         float step_pan   =  30.f;
         float step_tilt  =  20.f;
+        // Stop-and-shoot 3-pan tiling (plan §6): when true, pan positions are the
+        // fixed FOV-tiling centres {-44, 0, +44}° instead of stepping by step_pan.
+        bool  pan_tiling = false;
         std::string config_path = "scan.config";
         std::string output_path = "scan.ply";
     };
 
+    // Fixed pan-tiling centres (plan §6) for ~±80° horizontal coverage.
+    static constexpr float kPanTiles[3] = {-44.f, 0.f, 44.f};
+
     Scanner(ServoController& servo, StereoCamera& camera, MapBuilder& builder);
 
-    /** Run full scan; block until the point cloud is saved. */
+    /** Run full stop-and-shoot scan; block until the point cloud is saved. */
     void run(const Config& cfg);
+
+    /**
+     * Continuous-sweep mode (plan §6/§8, optional). Cameras free-run while the
+     * head sweeps; each frame is paired with the INTERPOLATED angle at
+     * (t_frame + t_offset) from `angles`, gap-rejected, then reconstructed.
+     *
+     * Gated on core.shutter_synced (requires global-shutter + genlock). The
+     * `angles` buffer must be fed concurrently by a firmware reader thread
+     * (P-feedback -> AngleBuffer::push). NOTE: the current ServoController is
+     * step-and-hold only and does not stream P-feedback; wiring that reader is a
+     * pending firmware task. Returns number of frames accumulated.
+     *
+     * @param n_frames  number of free-running frames to capture.
+     */
+    size_t runContinuous(const ::Config& core, AngleBuffer& angles,
+                         size_t n_frames, const std::string& output_path);
 
     // ── Helpers exposed for unit tests ────────────────────────────────────────
 

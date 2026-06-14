@@ -1,0 +1,77 @@
+# Build output directories
+build/
+builds/
+out/
+bin/
+obj/
+dist/
+cmake-build-*/
+.cmake/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.make
+install_manifest.txt
+CTestTestfile.cmake
+
+# Compiled binaries and libraries
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.lib
+*.pdb
+*.ilk
+*.exp
+*.map
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+dist/
+.eggs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.suo
+*.user
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.VC.opendb
+.vs/
+*.swp
+*.swo
+*~
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+
+# Calibration outputs (generated, not source)
+stereo-camera/calibration/*.xml
+stereo-camera/calibration/*.yaml
+stereo-camera/calibration/*.yml
+stereo-camera/calibration/*.json
+stereo-camera/captures/
+
+# Node modules (if any)
+node_modules/

@@ -1,7 +1,9 @@
 #include "StereoCamera.hpp"
+#include "../core/Depth.hpp"
 
 #include <cmath>
 #include <cstdio>
+#include <chrono>
 #include <stdexcept>
 
 // ── Constructor / Destructor ──────────────────────────────────────────────────
@@ -103,16 +105,50 @@ bool StereoCamera::loadCalibration(const std::string& path) {
     cv::initUndistortRectifyMap(M2, D2, R2, P2, img_sz,
                                 CV_32FC1, m_map_rx, m_map_ry);
 
+    // Capture rectified intrinsics for Reconstruct (must match the depth's K).
+    if (!P1.empty()) {
+        cv::Mat P1d; P1.convertTo(P1d, CV_64F);
+        m_fx = (float)P1d.at<double>(0, 0);
+        m_fy = (float)P1d.at<double>(1, 1);
+        m_cx = (float)P1d.at<double>(0, 2);
+        m_cy = (float)P1d.at<double>(1, 2);
+        if (!P2.empty()) {
+            cv::Mat P2d; P2.convertTo(P2d, CV_64F);
+            // baseline = -P2(0,3)/fx  (sign per OpenCV convention; |·| in mm)
+            m_baseline = std::fabs((float)P2d.at<double>(0, 3) / m_fx);
+        }
+    }
+
     m_calibrated = true;
     printf("[StereoCamera] Calibration loaded from %s\n", path.c_str());
+    return true;
+}
+
+bool StereoCamera::applyIntrinsicsTo(Config& cfg) const {
+    if (!m_calibrated || m_fx <= 0.f) return false;
+    cfg.fx = m_fx; cfg.fy = m_fy; cfg.cx = m_cx; cfg.cy = m_cy;
+    if (m_baseline > 0.f) cfg.baseline = m_baseline;
+    cfg.z_min = m_cfg.z_min; cfg.z_max = m_cfg.z_max;
     return true;
 }
 
 // ── Capture ───────────────────────────────────────────────────────────────────
 
 bool StereoCamera::captureDepth(cv::Mat& depth_out, cv::Mat* left_out) {
+    double t_ms;
+    return captureDepth(depth_out, t_ms, left_out);
+}
+
+bool StereoCamera::captureDepth(cv::Mat& depth_out, double& t_ms_out,
+                               cv::Mat* left_out) {
+    // Fix stereo skew: grab() both first (near-simultaneous), then retrieve().
+    // Sequential read() could add up to one frame period (~33 ms) of skew.
+    if (!m_cap_l.grab() || !m_cap_r.grab()) return false;
+    t_ms_out = std::chrono::duration<double, std::milli>(
+                   std::chrono::steady_clock::now().time_since_epoch()).count();
+
     cv::Mat frame_l, frame_r;
-    if (!m_cap_l.read(frame_l) || !m_cap_r.read(frame_r)) return false;
+    if (!m_cap_l.retrieve(frame_l) || !m_cap_r.retrieve(frame_r)) return false;
 
     cv::Mat gray_l, gray_r;
     cv::cvtColor(frame_l, gray_l, cv::COLOR_BGR2GRAY);
@@ -138,15 +174,18 @@ bool StereoCamera::captureDepth(cv::Mat& depth_out, cv::Mat* left_out) {
     disp16.convertTo(disp, CV_32F, 1.0 / 16.0);
 
     if (m_calibrated && !m_Q.empty()) {
-        // Reproject to 3D and extract Z channel (depth in metres)
+        // Reproject to 3D and extract Z channel. Q from a calibration in mm
+        // yields depth in mm (plan units).
         cv::Mat pts3d;
         cv::reprojectImageTo3D(disp, pts3d, m_Q, true);
-        cv::extractChannel(pts3d, depth_out, 2);          // Z component
-        // Invalidate pixels with zero or negative disparity
+        cv::extractChannel(pts3d, depth_out, 2);          // Z component (mm)
         cv::Mat mask = (disp <= 0);
         depth_out.setTo(std::numeric_limits<float>::quiet_NaN(), mask);
+        // Validity clamp: drop SGBM outliers outside [z_min, z_max] (mm).
+        cv::Mat valid = depthutil::validityMask(depth_out, m_cfg.z_min, m_cfg.z_max);
+        depthutil::applyMask(depth_out, valid);
     } else {
-        // No calibration: return normalised disparity as proxy depth
+        // No calibration: return normalised disparity as proxy depth (NOT metric).
         cv::normalize(disp, depth_out, 0.f, 1.f, cv::NORM_MINMAX, CV_32F);
         cv::Mat mask = (disp <= 0);
         depth_out.setTo(std::numeric_limits<float>::quiet_NaN(), mask);

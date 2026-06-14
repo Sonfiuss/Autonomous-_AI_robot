@@ -16,6 +16,13 @@ add_library(stereo_pipeline STATIC
     vision/StereoCamera.cpp
     vision/MapBuilder.cpp
     pipeline/Scanner.cpp
+    # ── core fusion (port of implement_plan_stereo.md) ──
+    core/Geometry.cpp
+    core/AngleBuffer.cpp
+    core/Depth.cpp
+    core/Reconstruct.cpp
+    core/Sync.cpp
+    calibration/Calibration.cpp
 )
 
 target_include_directories(stereo_pipeline PUBLIC
@@ -70,6 +77,13 @@ add_test(NAME scanner_raster COMMAND test_scanner_raster)
 add_executable(test_map_builder tests/test_map_builder.cpp)
 target_link_libraries(test_map_builder PRIVATE stereo_pipeline)
 add_test(NAME map_builder COMMAND test_map_builder)
+
+# ── core fusion tests (plan §8 validation tables) ─────────────────────────────
+foreach(t geometry angle_buffer depth reconstruct accumulate end_to_end sync calibration)
+    add_executable(test_${t} tests/test_${t}.cpp)
+    target_link_libraries(test_${t} PRIVATE stereo_pipeline)
+    add_test(NAME ${t} COMMAND test_${t})
+endforeach()
 
 # ── Install ───────────────────────────────────────────────────────────────────
 install(TARGETS stereo_scan servo_test RUNTIME DESTINATION bin)

@@ -29,6 +29,7 @@
 #include "vision/StereoCamera.hpp"
 #include "vision/MapBuilder.hpp"
 #include "pipeline/Scanner.hpp"
+#include "core/Config.hpp"
 
 // ── Args ──────────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,7 @@ struct Args {
     std::string calib_path;
     std::string output      = "scan.ply";
     std::string config_path = "scan.config";
+    bool        pan_tiling  = false;
 };
 
 static bool parseArgs(int argc, char* argv[], Args& out) {
@@ -64,6 +66,7 @@ static bool parseArgs(int argc, char* argv[], Args& out) {
         else if (eq("--calib"))      out.calib_path  = argv[++i];
         else if (eq("--output"))     out.output      = argv[++i];
         else if (eq("--config"))     out.config_path = argv[++i];
+        else if (strcmp(argv[i], "--pan-tiling") == 0) out.pan_tiling = true;
         else if (strcmp(argv[i], "--help") == 0) return false;
         else { fprintf(stderr, "Unknown argument: %s\n", argv[i]); return false; }
     }
@@ -99,6 +102,7 @@ int main(int argc, char* argv[]) {
     scan_cfg.step_tilt  = args.step_tilt;
     scan_cfg.config_path = args.config_path;
     scan_cfg.output_path = args.output;
+    scan_cfg.pan_tiling  = args.pan_tiling;
 
     auto raster = Scanner::buildRaster(scan_cfg);
 
@@ -139,7 +143,17 @@ int main(int argc, char* argv[]) {
     if (!args.calib_path.empty())
         camera.loadCalibration(args.calib_path);
 
-    MapBuilder builder;
+    // Build the fusion config; pull rectified intrinsics from the calibration so
+    // Reconstruct unprojects with the SAME K the depth was computed with.
+    Config core_cfg;
+    if (!camera.applyIntrinsicsTo(core_cfg)) {
+        fprintf(stderr,
+            "[main] WARNING: no calibration intrinsics — using Config defaults "
+            "(fx=%.0f, cx=%.0f). Point cloud will not be metrically correct.\n",
+            core_cfg.fx, core_cfg.cx);
+    }
+
+    MapBuilder builder(core_cfg);
 
     // Run 3-thread pipeline
     Scanner scanner(servo, camera, builder);

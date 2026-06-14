@@ -4,6 +4,8 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/calib3d.hpp>
 
+#include "../core/Config.hpp"
+
 /**
  * Stereo camera wrapper.
  *
@@ -28,6 +30,9 @@ public:
         // SGBM parameters
         int num_disparities = 128;
         int block_size      = 5;
+        // Depth validity clamp (mm) — drops SGBM outliers (plan §3 / open bug)
+        float z_min = 200.f;
+        float z_max = 6000.f;
     };
 
     StereoCamera();
@@ -53,8 +58,22 @@ public:
      */
     bool captureDepth(cv::Mat& depth_out, cv::Mat* left_out = nullptr);
 
+    /**
+     * Same as captureDepth but also returns the capture timestamp (ms, monotonic)
+     * sampled as close to the grab as possible — used to pair the frame with the
+     * pan/tilt angle via AngleBuffer (continuous-sweep sync, plan §6).
+     */
+    bool captureDepth(cv::Mat& depth_out, double& t_ms_out, cv::Mat* left_out = nullptr);
+
     void release();
     bool isOpened() const;
+
+    /**
+     * After loadCalibration(), copy the RECTIFIED intrinsics (fx, fy, cx, cy)
+     * and baseline (mm) into `cfg` so MapBuilder/Reconstruct unproject with the
+     * SAME K the depth was computed with. No-op (returns false) if uncalibrated.
+     */
+    bool applyIntrinsicsTo(Config& cfg) const;
 
     int width()  const { return m_cfg.width;  }
     int height() const { return m_cfg.height; }
@@ -69,6 +88,9 @@ private:
     cv::Mat m_map_rx, m_map_ry;
     cv::Mat m_Q;          // disparity-to-depth (4×4)
     bool    m_calibrated = false;
+
+    // Rectified intrinsics captured from P1/Q on loadCalibration (mm units).
+    float m_fx = 0.f, m_fy = 0.f, m_cx = 0.f, m_cy = 0.f, m_baseline = 0.f;
 
     void buildMatcher();
 };

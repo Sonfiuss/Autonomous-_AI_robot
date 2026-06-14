@@ -26,10 +26,15 @@ std::vector<std::pair<float,float>> Scanner::buildRaster(const Config& cfg) {
         const float t = std::min(tilt, cfg.tilt_max);
 
         std::vector<float> pans;
-        for (float pan = cfg.pan_min;
-             pan <= cfg.pan_max + 0.01f;
-             pan += cfg.step_pan)
-            pans.push_back(std::min(pan, cfg.pan_max));
+        if (cfg.pan_tiling) {
+            // Fixed FOV-tiling centres (plan §6).
+            for (float p : Scanner::kPanTiles) pans.push_back(p);
+        } else {
+            for (float pan = cfg.pan_min;
+                 pan <= cfg.pan_max + 0.01f;
+                 pan += cfg.step_pan)
+                pans.push_back(std::min(pan, cfg.pan_max));
+        }
 
         if (!forward)
             std::reverse(pans.begin(), pans.end());
@@ -181,4 +186,48 @@ void Scanner::run(const Config& cfg) {
     tb.join();
     q.close();              // drain: Thread C saves PLY then exits
     tc.join();
+}
+
+// ── Continuous-sweep mode (plan §6/§8) ─────────────────────────────────────────
+
+size_t Scanner::runContinuous(const ::Config& core, AngleBuffer& angles,
+                              size_t n_frames, const std::string& output_path) {
+    if (!core.shutter_synced) {
+        fprintf(stderr,
+            "[Scanner] runContinuous refused: core.shutter_synced is false.\n"
+            "  Continuous mode needs a global-shutter + genlocked stereo rig\n"
+            "  (plan §6). Use stop-and-shoot run() instead.\n");
+        return 0;
+    }
+
+    m_builder.setConfig(core);
+
+    size_t accepted = 0, discarded = 0;
+    for (size_t i = 0; i < n_frames; ++i) {
+        cv::Mat depth;
+        double t_ms = 0.0;
+        if (!m_camera.captureDepth(depth, t_ms)) {
+            fprintf(stderr, "[Scanner] continuous: capture failed at frame %zu\n", i);
+            continue;
+        }
+        // Pair with interpolated angle at the calibrated capture instant.
+        auto q = angles.angleAt(t_ms + core.t_offset_ms);
+        if (!q.valid || q.gap_ms > core.angle_gap_threshold_ms) {
+            ++discarded;     // no trustworthy angle for this frame
+            continue;
+        }
+        m_builder.addFrame(q.pan, q.tilt, depth);
+        ++accepted;
+    }
+
+    printf("[Scanner] continuous: %zu accepted, %zu discarded (angle gap)\n",
+           accepted, discarded);
+    if (m_builder.pointCount() > 0) {
+        if (output_path.size() >= 4 &&
+            output_path.substr(output_path.size() - 4) == ".npy")
+            m_builder.saveNPY(output_path);
+        else
+            m_builder.savePLY(output_path);
+    }
+    return accepted;
 }

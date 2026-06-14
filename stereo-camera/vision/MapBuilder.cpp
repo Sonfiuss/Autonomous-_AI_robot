@@ -1,73 +1,59 @@
 #include "MapBuilder.hpp"
+#include "../core/Reconstruct.hpp"
 
 #include <fstream>
 #include <cstring>
 #include <cstdio>
-#include <stdexcept>
-
-static constexpr float DEG2RAD = static_cast<float>(M_PI / 180.0);
+#include <cmath>
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 
-void MapBuilder::setLensFOV(float half_fov_h_deg, float half_fov_v_deg) {
+void MapBuilder::setConfig(const Config& cfg) {
     std::lock_guard<std::mutex> lk(m_mutex);
-    m_fov_h = half_fov_h_deg;
-    m_fov_v = half_fov_v_deg;
+    m_cfg = cfg;
+}
+
+// ── Voxel key ─────────────────────────────────────────────────────────────────
+// Quantize to voxel index and pack three 21-bit signed indices into 63 bits.
+uint64_t MapBuilder::voxelKey(float x, float y, float z) const {
+    const float vs = (m_cfg.voxel_size > 0.f) ? m_cfg.voxel_size : 1.f;
+    auto q = [vs](float c) -> int64_t {
+        int64_t i = (int64_t)std::llround(std::floor(c / vs));
+        // bias into unsigned 21-bit range [0, 2^21)
+        return (i + (1 << 20)) & 0x1FFFFF;
+    };
+    const uint64_t ix = (uint64_t)q(x);
+    const uint64_t iy = (uint64_t)q(y);
+    const uint64_t iz = (uint64_t)q(z);
+    return (ix << 42) | (iy << 21) | iz;
 }
 
 // ── Add frame ─────────────────────────────────────────────────────────────────
 
-void MapBuilder::addFrame(float pan_deg, float tilt_deg, const cv::Mat& depth_map) {
-    CV_Assert(depth_map.type() == CV_32F);
+size_t MapBuilder::addFrame(float pan_deg, float tilt_deg, const cv::Mat& depth_mm) {
+    CV_Assert(depth_mm.type() == CV_32F);
 
-    const int H = depth_map.rows;
-    const int W = depth_map.cols;
+    Config cfg;
+    { std::lock_guard<std::mutex> lk(m_mutex); cfg = m_cfg; }
 
-    float fov_h, fov_v;
-    {
-        std::lock_guard<std::mutex> lk(m_mutex);
-        fov_h = m_fov_h * DEG2RAD;
-        fov_v = m_fov_v * DEG2RAD;
-    }
-
-    const float pan_r  = pan_deg  * DEG2RAD;
-    const float tilt_r = tilt_deg * DEG2RAD;
-
-    std::vector<Point3f> local;
-    local.reserve(H * W / 4);
-
-    for (int v = 0; v < H; ++v) {
-        const float* row = depth_map.ptr<float>(v);
-
-        // Vertical angular offset of this pixel row (centre = 0)
-        // Guard against single-row images where (H-1) == 0.
-        const float beta = (H > 1)
-            ? ((float)v / (H - 1) - 0.5f) * 2.f * fov_v
-            : 0.f;
-
-        for (int u = 0; u < W; ++u) {
-            const float r = row[u];
-            if (!std::isfinite(r) || r <= 0.f) continue;
-
-            // Horizontal angular offset (guard single-column images)
-            const float alpha = (W > 1)
-                ? ((float)u / (W - 1) - 0.5f) * 2.f * fov_h
-                : 0.f;
-
-            // World-frame angles
-            const float theta = pan_r  + alpha;   // azimuth
-            const float phi   = tilt_r + beta;    // elevation
-
-            local.push_back({
-                r * std::cos(phi) * std::sin(theta),   // X
-                r * std::sin(phi),                     // Y
-                r * std::cos(phi) * std::cos(theta)    // Z
-            });
-        }
-    }
+    // Reconstruct outside the lock (the expensive part).
+    auto world = recon::reconstruct(depth_mm, pan_deg, tilt_deg, cfg);
 
     std::lock_guard<std::mutex> lk(m_mutex);
-    m_points.insert(m_points.end(), local.begin(), local.end());
+    size_t added = 0;
+    for (const auto& p : world) {
+        if (m_points.size() >= m_cfg.max_points) {
+            fprintf(stderr, "[MapBuilder] max_points (%zu) reached — capping cloud\n",
+                    m_cfg.max_points);
+            break;
+        }
+        const uint64_t key = voxelKey(p[0], p[1], p[2]);
+        if (m_occupied.insert(key).second) {       // new voxel -> keep point
+            m_points.push_back({p[0], p[1], p[2]});
+            ++added;
+        }
+    }
+    return added;
 }
 
 // ── Query ─────────────────────────────────────────────────────────────────────
@@ -79,10 +65,7 @@ size_t MapBuilder::pointCount() const {
 
 cv::Mat MapBuilder::getCloud() const {
     std::lock_guard<std::mutex> lk(m_mutex);
-    if (m_points.empty())
-        return cv::Mat();
-
-    // Return as (N, 3) CV_32F
+    if (m_points.empty()) return cv::Mat();
     cv::Mat out((int)m_points.size(), 3, CV_32F);
     std::memcpy(out.data, m_points.data(), m_points.size() * sizeof(Point3f));
     return out;
@@ -91,6 +74,7 @@ cv::Mat MapBuilder::getCloud() const {
 void MapBuilder::clear() {
     std::lock_guard<std::mutex> lk(m_mutex);
     m_points.clear();
+    m_occupied.clear();
 }
 
 // ── Save ──────────────────────────────────────────────────────────────────────
@@ -101,13 +85,11 @@ bool MapBuilder::savePLY(const std::string& path) const {
         fprintf(stderr, "[MapBuilder] No points to save.\n");
         return false;
     }
-
     std::ofstream ofs(path);
     if (!ofs) {
         fprintf(stderr, "[MapBuilder] Cannot open %s for writing\n", path.c_str());
         return false;
     }
-
     const size_t N = m_points.size();
     ofs << "ply\n"
            "format ascii 1.0\n"
@@ -116,10 +98,8 @@ bool MapBuilder::savePLY(const std::string& path) const {
            "property float y\n"
            "property float z\n"
            "end_header\n";
-
     for (const auto& p : m_points)
         ofs << p.x << ' ' << p.y << ' ' << p.z << '\n';
-
     printf("[MapBuilder] Saved %zu points to %s\n", N, path.c_str());
     return true;
 }
@@ -128,20 +108,16 @@ bool MapBuilder::saveNPY(const std::string& path) const {
     std::lock_guard<std::mutex> lk(m_mutex);
     if (m_points.empty()) return false;
 
-    // Minimal .npy header (float32, shape [N, 3], C-order)
     const size_t N = m_points.size();
     std::ofstream ofs(path, std::ios::binary);
     if (!ofs) return false;
 
-    // Magic + version
     const char magic[] = "\x93NUMPY\x01\x00";
     ofs.write(magic, 8);
 
     char header[128];
     int hlen = snprintf(header, sizeof(header),
-        "{'descr': '<f4', 'fortran_order': False, 'shape': (%zu, 3), }",
-        N);
-    // Pad to multiple of 64 with spaces, terminated by newline
+        "{'descr': '<f4', 'fortran_order': False, 'shape': (%zu, 3), }", N);
     int total = ((hlen + 10 + 63) / 64) * 64;
     std::string hdr(header, hlen);
     hdr.append(total - 10 - hlen, ' ');
@@ -150,8 +126,7 @@ bool MapBuilder::saveNPY(const std::string& path) const {
     uint16_t hdr_len = (uint16_t)hdr.size();
     ofs.write(reinterpret_cast<const char*>(&hdr_len), 2);
     ofs.write(hdr.data(), hdr.size());
-    ofs.write(reinterpret_cast<const char*>(m_points.data()),
-              N * sizeof(Point3f));
+    ofs.write(reinterpret_cast<const char*>(m_points.data()), N * sizeof(Point3f));
 
     printf("[MapBuilder] Saved %zu points to %s\n", N, path.c_str());
     return true;

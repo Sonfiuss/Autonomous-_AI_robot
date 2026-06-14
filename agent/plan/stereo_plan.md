@@ -1,6 +1,43 @@
 # Plan: stereo-camera
 
-_Last updated: 2026-06-10_
+_Last updated: 2026-06-14_
+
+> **2026-06-14 — Fusion core rebuilt to `implement_plan_stereo.md` (C++ port).**
+> New `core/` package implements the plan's geometry-first pipeline. **Coordinate
+> convention changed** to the plan §3 contract: body **X forward, Y right, Z up**, units
+> **millimetres** (was X-right/Y-up/Z-fwd in metres). The old spherical projection in
+> `MapBuilder` (forbidden by §3) and the FOV-as-half-FOV bug are gone.
+
+## Fusion core architecture (`core/`, `calibration/`)
+
+```
+firmware ─▶ AngleBuffer (ring + angle_at interp) ──┐
+2 cameras ─▶ StereoCamera (grab/retrieve, mm depth + validity mask)
+                              │ depth Z + mask      │ angle_at(t+t_offset)
+                              ▼                      ▼
+                       Reconstruct (unproject→remap→+lever→rotate) ─▶ world pts
+                              ▼
+                       MapBuilder (voxel-grid dedup) ─▶ PLY / NPY
+```
+
+| File | Role | Plan phase |
+|------|------|-----------|
+| `core/Config.hpp` | intrinsics, baseline, lever_arm, t_offset, thresholds, conventions | 0 |
+| `core/Geometry.*` | unproject / remapAxes / rotation(pan,tilt) / toWorld | 1 |
+| `core/AngleBuffer.*` | timestamped ring buffer + linear `angleAt(t)` + gap | 2 |
+| `core/Depth.*` | disparity→depth (mm) + validity mask (z clamp) | 3 |
+| `core/Reconstruct.*` | mask + edge-trim + decimation + unproject + toWorld | 5 |
+| `core/Sync.*` | interp/nearest pairing + t_offset estimation | 6/8 |
+| `vision/MapBuilder.*` | voxel-grid accumulation + PLY/NPY (uses Reconstruct) | 6/7 |
+| `pipeline/Scanner.*` | stop-and-shoot loop, 3-pan tiling, `runContinuous` (gated) | 6/8 |
+| `calibration/Calibration.*` | lever-arm bow minimization; t_offset; hand-eye scaffold | 8 |
+
+**Tests (ctest):** `geometry` (G1–G6), `angle_buffer` (A1–A4), `depth` (D1–D3),
+`reconstruct` (R1–R2), `accumulate` (C1–C2), `end_to_end` (E1), `sync` (S1–S3),
+`calibration`. Geometry + sync verified passing locally; full suite runs on the Jetson.
+
+New `stereo_scan` flag: `--pan-tiling` → uses fixed FOV centres {−44, 0, +44}° instead of
+`--step-pan`.
 
 ---
 
@@ -161,10 +198,19 @@ python3 tools/map3d_server.py --input build/scan.ply
 - [x] MOVE/OK added to unified ESP32 firmware
 
 ### Sub-module: cv — raw depth
-- [x] StereoCamera: SGBM disparity → CV_32F depth map
-- [x] MapBuilder: 3D point cloud accumulation (PLY/NPY)
+- [x] StereoCamera: SGBM disparity → CV_32F depth map (now **mm**, grab/retrieve sync)
+- [x] MapBuilder: 3D point cloud accumulation (PLY/NPY) — **rewritten** voxel-grid dedup
+- [x] core/Geometry proper unprojection (replaces spherical projection; G1–G6 pass)
+- [x] core/Depth validity mask + z_min/z_max clamp (fixes max-depth outlier bug)
+- [x] core/AngleBuffer + core/Sync (angle pairing + t_offset estimation)
+- [x] core/Reconstruct (mask + edge-trim + decimation)
+- [x] calibration/Calibration lever-arm bow minimization
+- [x] Scanner 3-pan tiling + gated continuous-sweep mode scaffold
+- [ ] Build + ctest on Jetson (full suite green)
 - [ ] Stereo calibration tested end-to-end (calib.yml generated)
-- [ ] map3d_server.py live viewer verified
+- [ ] map3d_server.py live viewer verified (note: viewer must handle mm + new axes)
+- [ ] Continuous-sweep firmware feedback: stream `P pan tilt` → AngleBuffer (pending)
+- [ ] hand-eye calibration real solve (checkerboard) — currently scaffold
 
 ### Sub-module: cv — AI detection + 2D map  ← NOT STARTED
 - [ ] Choose AI model (YOLO/TensorRT on Jetson)
@@ -174,10 +220,10 @@ python3 tools/map3d_server.py --input build/scan.ply
 - [ ] ZMQ publisher: send Map2D to simulation module
 - [ ] Integration test: live detection + map overlay in browser
 
-### Known open bugs (deferred)
-- [ ] StereoCamera sequential `.read()` — up to 33ms stereo skew (fix: grab/retrieve)
-- [ ] MapBuilder FOV default 70° treated as half-FOV — should be ~35° H
-- [ ] No max-depth clamp — SGBM outliers enter point cloud
+### Known open bugs (deferred) — RESOLVED 2026-06-14
+- [x] StereoCamera sequential `.read()` skew — fixed with grab()+retrieve()
+- [x] MapBuilder FOV-as-half-FOV — removed (proper pinhole unprojection now)
+- [x] No max-depth clamp — added z_min/z_max validity mask in core/Depth
 
 ## Cross-module interface (pending)
 - [ ] Define Map2D ZMQ message format (port TBD, must not conflict with 5555/5556)

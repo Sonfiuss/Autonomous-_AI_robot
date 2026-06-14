@@ -3,64 +3,63 @@
 #include <vector>
 #include <mutex>
 #include <string>
-#include <cmath>
+#include <unordered_set>
+#include <cstdint>
 #include <opencv2/opencv.hpp>
 
+#include "../core/Config.hpp"
+
 /**
- * Accumulates depth frames captured at known (pan, tilt) angles and projects
- * them into a unified 3-D point cloud using spherical-to-Cartesian conversion.
+ * Accumulates depth frames captured at known (pan, tilt) angles into a unified
+ * 3-D point cloud.
  *
- * Coordinate system (right-hand, Z forward):
- *   X  =  right
- *   Y  =  up
- *   Z  =  forward (away from camera at pan=0, tilt=0)
+ * Geometry (plan §3, via core/Reconstruct + core/Geometry):
+ *   Body/world axes:  X = forward, Y = right, Z = up.  Units: millimetres.
+ *   Per pixel: unproject through K, remap axes, add lever arm, rotate by
+ *   R(pan,tilt). This REPLACES the old spherical projection (which double-counted
+ *   the angle on a depth map) and the FOV-as-half-FOV bug.
+ *
+ * Accumulation: a voxel grid (config.voxel_size) deduplicates overlapping points
+ * so repeated views of the same surface don't pile up (plan §6/§7).
  *
  * Usage:
- *   MapBuilder builder;
- *   builder.setLensFOV(70.f, 50.f);       // horizontal / vertical half-FOV
- *   builder.addFrame(pan_deg, tilt_deg, depth_map);
+ *   MapBuilder builder(cfg);
+ *   builder.addFrame(pan_deg, tilt_deg, depth_mm);   // CV_32F mm
  *   builder.savePLY("scan.ply");
  */
 class MapBuilder {
 public:
     struct Point3f { float x, y, z; };
 
-    MapBuilder() = default;
+    MapBuilder() : MapBuilder(Config{}) {}
+    explicit MapBuilder(const Config& cfg) : m_cfg(cfg) {}
 
-    /** Set the camera lens half-FOV in degrees (default: 70° H, 50° V). */
-    void setLensFOV(float half_fov_h_deg, float half_fov_v_deg);
+    void setConfig(const Config& cfg);
 
     /**
-     * Project a depth map taken at the given pan/tilt angles and append to the
-     * internal cloud. Thread-safe.
+     * Reconstruct a depth map taken at the given pan/tilt and append the new
+     * (voxel-deduplicated) points to the cloud. Thread-safe.
      *
-     * @param pan_deg   Horizontal servo angle  (positive = right).
-     * @param tilt_deg  Vertical   servo angle  (positive = up).
-     * @param depth_map CV_32F depth image (metres). NaN pixels are skipped.
+     * @param pan_deg   Horizontal servo angle.
+     * @param tilt_deg  Vertical   servo angle.
+     * @param depth_mm  CV_32F depth image (mm). NaN/out-of-range pixels skipped.
+     * @return number of NEW points added (after voxel dedup).
      */
-    void addFrame(float pan_deg, float tilt_deg, const cv::Mat& depth_map);
+    size_t addFrame(float pan_deg, float tilt_deg, const cv::Mat& depth_mm);
 
-    /** Total number of valid points accumulated so far. */
     size_t pointCount() const;
+    cv::Mat getCloud() const;                 // (N×3) CV_32F, mm
 
-    /** Copy accumulated cloud as (N×3) float matrix. */
-    cv::Mat getCloud() const;
-
-    /**
-     * Save cloud as ASCII PLY.
-     * Falls back to XYZ if path has neither .ply nor .pcd extension.
-     */
     bool savePLY(const std::string& path) const;
-
-    /** Save raw float32 binary: 4 bytes × 3 channels × N points (row-major). */
     bool saveNPY(const std::string& path) const;
-
     void clear();
 
 private:
-    mutable std::mutex          m_mutex;
-    std::vector<Point3f>        m_points;
+    mutable std::mutex            m_mutex;
+    std::vector<Point3f>          m_points;
+    std::unordered_set<uint64_t>  m_occupied;   // occupied voxel keys (dedup)
+    Config                        m_cfg;
 
-    float m_fov_h = 70.f;   // half-FOV degrees
-    float m_fov_v = 50.f;
+    // Quantize a point to a voxel key. Caller holds the lock.
+    uint64_t voxelKey(float x, float y, float z) const;
 };
