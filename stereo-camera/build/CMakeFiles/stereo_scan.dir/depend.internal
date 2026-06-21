@@ -3,6 +3,8 @@
 
 CMakeFiles/stereo_scan.dir/main.cpp.o
  /home/nvidia/Documents/stereo-camera/control/ServoController.hpp
+ /home/nvidia/Documents/stereo-camera/core/AngleBuffer.hpp
+ /home/nvidia/Documents/stereo-camera/core/Config.hpp
  /home/nvidia/Documents/stereo-camera/main.cpp
  /home/nvidia/Documents/stereo-camera/pipeline/FrameQueue.hpp
  /home/nvidia/Documents/stereo-camera/pipeline/Scanner.hpp

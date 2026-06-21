@@ -6,6 +6,20 @@
 
 #IncludeRegexTransform: 
 
+/home/nvidia/Documents/stereo-camera/core/AngleBuffer.hpp
+vector
+-
+cstddef
+-
+mutex
+-
+
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
+array
+-
+string
+-
+
 /home/nvidia/Documents/stereo-camera/pipeline/FrameQueue.hpp
 queue
 -
@@ -29,6 +43,10 @@ opencv2/opencv.hpp
 -
 FrameQueue.hpp
 /home/nvidia/Documents/stereo-camera/pipeline/FrameQueue.hpp
+../core/Config.hpp
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
+../core/AngleBuffer.hpp
+/home/nvidia/Documents/stereo-camera/core/AngleBuffer.hpp
 
 /home/nvidia/Documents/stereo-camera/tests/test_scanner_raster.cpp
 cstdio

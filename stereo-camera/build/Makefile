@@ -68,6 +68,28 @@ install/strip/fast: preinstall/fast
 	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
 .PHONY : install/strip/fast
 
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+
+.PHONY : list_install_components/fast
+
 # Special rule for the target test
 test:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
@@ -78,17 +100,6 @@ test:
 test/fast: test
 
 .PHONY : test/fast
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
 
 # Special rule for the target rebuild_cache
 rebuild_cache:
@@ -101,15 +112,16 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
-# Special rule for the target list_install_components
-list_install_components:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
-.PHONY : list_install_components
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
 
-# Special rule for the target list_install_components
-list_install_components/fast: list_install_components
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
 
-.PHONY : list_install_components/fast
+.PHONY : edit_cache/fast
 
 # Special rule for the target install
 install: preinstall
@@ -122,18 +134,6 @@ install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
 	/usr/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
-
-# Special rule for the target install/local
-install/local: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local
-
-# Special rule for the target install/local
-install/local/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -168,17 +168,30 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named stereo_pipeline
+# Target rules for targets named test_calibration
 
 # Build rule for target.
-stereo_pipeline: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 stereo_pipeline
-.PHONY : stereo_pipeline
+test_calibration: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_calibration
+.PHONY : test_calibration
 
 # fast build rule for target.
-stereo_pipeline/fast:
-	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/build
-.PHONY : stereo_pipeline/fast
+test_calibration/fast:
+	$(MAKE) -f CMakeFiles/test_calibration.dir/build.make CMakeFiles/test_calibration.dir/build
+.PHONY : test_calibration/fast
+
+#=============================================================================
+# Target rules for targets named test_sync
+
+# Build rule for target.
+test_sync: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_sync
+.PHONY : test_sync
+
+# fast build rule for target.
+test_sync/fast:
+	$(MAKE) -f CMakeFiles/test_sync.dir/build.make CMakeFiles/test_sync.dir/build
+.PHONY : test_sync/fast
 
 #=============================================================================
 # Target rules for targets named stereo_scan
@@ -246,6 +259,19 @@ test_scanner_raster/fast:
 .PHONY : test_scanner_raster/fast
 
 #=============================================================================
+# Target rules for targets named test_depth
+
+# Build rule for target.
+test_depth: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_depth
+.PHONY : test_depth
+
+# fast build rule for target.
+test_depth/fast:
+	$(MAKE) -f CMakeFiles/test_depth.dir/build.make CMakeFiles/test_depth.dir/build
+.PHONY : test_depth/fast
+
+#=============================================================================
 # Target rules for targets named test_map_builder
 
 # Build rule for target.
@@ -258,14 +284,119 @@ test_map_builder/fast:
 	$(MAKE) -f CMakeFiles/test_map_builder.dir/build.make CMakeFiles/test_map_builder.dir/build
 .PHONY : test_map_builder/fast
 
+#=============================================================================
+# Target rules for targets named test_reconstruct
+
+# Build rule for target.
+test_reconstruct: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_reconstruct
+.PHONY : test_reconstruct
+
+# fast build rule for target.
+test_reconstruct/fast:
+	$(MAKE) -f CMakeFiles/test_reconstruct.dir/build.make CMakeFiles/test_reconstruct.dir/build
+.PHONY : test_reconstruct/fast
+
+#=============================================================================
+# Target rules for targets named test_geometry
+
+# Build rule for target.
+test_geometry: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_geometry
+.PHONY : test_geometry
+
+# fast build rule for target.
+test_geometry/fast:
+	$(MAKE) -f CMakeFiles/test_geometry.dir/build.make CMakeFiles/test_geometry.dir/build
+.PHONY : test_geometry/fast
+
+#=============================================================================
+# Target rules for targets named test_angle_buffer
+
+# Build rule for target.
+test_angle_buffer: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_angle_buffer
+.PHONY : test_angle_buffer
+
+# fast build rule for target.
+test_angle_buffer/fast:
+	$(MAKE) -f CMakeFiles/test_angle_buffer.dir/build.make CMakeFiles/test_angle_buffer.dir/build
+.PHONY : test_angle_buffer/fast
+
+#=============================================================================
+# Target rules for targets named stereo_pipeline
+
+# Build rule for target.
+stereo_pipeline: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 stereo_pipeline
+.PHONY : stereo_pipeline
+
+# fast build rule for target.
+stereo_pipeline/fast:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/build
+.PHONY : stereo_pipeline/fast
+
+#=============================================================================
+# Target rules for targets named test_accumulate
+
+# Build rule for target.
+test_accumulate: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_accumulate
+.PHONY : test_accumulate
+
+# fast build rule for target.
+test_accumulate/fast:
+	$(MAKE) -f CMakeFiles/test_accumulate.dir/build.make CMakeFiles/test_accumulate.dir/build
+.PHONY : test_accumulate/fast
+
+#=============================================================================
+# Target rules for targets named test_end_to_end
+
+# Build rule for target.
+test_end_to_end: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_end_to_end
+.PHONY : test_end_to_end
+
+# fast build rule for target.
+test_end_to_end/fast:
+	$(MAKE) -f CMakeFiles/test_end_to_end.dir/build.make CMakeFiles/test_end_to_end.dir/build
+.PHONY : test_end_to_end/fast
+
+calibration/Calibration.o: calibration/Calibration.cpp.o
+
+.PHONY : calibration/Calibration.o
+
+# target to build an object file
+calibration/Calibration.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.o
+.PHONY : calibration/Calibration.cpp.o
+
+calibration/Calibration.i: calibration/Calibration.cpp.i
+
+.PHONY : calibration/Calibration.i
+
+# target to preprocess a source file
+calibration/Calibration.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.i
+.PHONY : calibration/Calibration.cpp.i
+
+calibration/Calibration.s: calibration/Calibration.cpp.s
+
+.PHONY : calibration/Calibration.s
+
+# target to generate assembly for a file
+calibration/Calibration.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.s
+.PHONY : calibration/Calibration.cpp.s
+
 control/ServoClient.o: control/ServoClient.cpp.o
 
 .PHONY : control/ServoClient.o
 
 # target to build an object file
 control/ServoClient.cpp.o:
-	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.o
 	$(MAKE) -f CMakeFiles/servo_test.dir/build.make CMakeFiles/servo_test.dir/control/ServoClient.cpp.o
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.o
 .PHONY : control/ServoClient.cpp.o
 
 control/ServoClient.i: control/ServoClient.cpp.i
@@ -274,8 +405,8 @@ control/ServoClient.i: control/ServoClient.cpp.i
 
 # target to preprocess a source file
 control/ServoClient.cpp.i:
-	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.i
 	$(MAKE) -f CMakeFiles/servo_test.dir/build.make CMakeFiles/servo_test.dir/control/ServoClient.cpp.i
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.i
 .PHONY : control/ServoClient.cpp.i
 
 control/ServoClient.s: control/ServoClient.cpp.s
@@ -284,8 +415,8 @@ control/ServoClient.s: control/ServoClient.cpp.s
 
 # target to generate assembly for a file
 control/ServoClient.cpp.s:
-	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.s
 	$(MAKE) -f CMakeFiles/servo_test.dir/build.make CMakeFiles/servo_test.dir/control/ServoClient.cpp.s
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.s
 .PHONY : control/ServoClient.cpp.s
 
 control/ServoController.o: control/ServoController.cpp.o
@@ -294,8 +425,8 @@ control/ServoController.o: control/ServoController.cpp.o
 
 # target to build an object file
 control/ServoController.cpp.o:
-	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.o
 	$(MAKE) -f CMakeFiles/servo_ctrl.dir/build.make CMakeFiles/servo_ctrl.dir/control/ServoController.cpp.o
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.o
 .PHONY : control/ServoController.cpp.o
 
 control/ServoController.i: control/ServoController.cpp.i
@@ -304,8 +435,8 @@ control/ServoController.i: control/ServoController.cpp.i
 
 # target to preprocess a source file
 control/ServoController.cpp.i:
-	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.i
 	$(MAKE) -f CMakeFiles/servo_ctrl.dir/build.make CMakeFiles/servo_ctrl.dir/control/ServoController.cpp.i
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.i
 .PHONY : control/ServoController.cpp.i
 
 control/ServoController.s: control/ServoController.cpp.s
@@ -314,9 +445,144 @@ control/ServoController.s: control/ServoController.cpp.s
 
 # target to generate assembly for a file
 control/ServoController.cpp.s:
-	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.s
 	$(MAKE) -f CMakeFiles/servo_ctrl.dir/build.make CMakeFiles/servo_ctrl.dir/control/ServoController.cpp.s
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.s
 .PHONY : control/ServoController.cpp.s
+
+core/AngleBuffer.o: core/AngleBuffer.cpp.o
+
+.PHONY : core/AngleBuffer.o
+
+# target to build an object file
+core/AngleBuffer.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.o
+.PHONY : core/AngleBuffer.cpp.o
+
+core/AngleBuffer.i: core/AngleBuffer.cpp.i
+
+.PHONY : core/AngleBuffer.i
+
+# target to preprocess a source file
+core/AngleBuffer.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.i
+.PHONY : core/AngleBuffer.cpp.i
+
+core/AngleBuffer.s: core/AngleBuffer.cpp.s
+
+.PHONY : core/AngleBuffer.s
+
+# target to generate assembly for a file
+core/AngleBuffer.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.s
+.PHONY : core/AngleBuffer.cpp.s
+
+core/Depth.o: core/Depth.cpp.o
+
+.PHONY : core/Depth.o
+
+# target to build an object file
+core/Depth.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.o
+.PHONY : core/Depth.cpp.o
+
+core/Depth.i: core/Depth.cpp.i
+
+.PHONY : core/Depth.i
+
+# target to preprocess a source file
+core/Depth.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.i
+.PHONY : core/Depth.cpp.i
+
+core/Depth.s: core/Depth.cpp.s
+
+.PHONY : core/Depth.s
+
+# target to generate assembly for a file
+core/Depth.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.s
+.PHONY : core/Depth.cpp.s
+
+core/Geometry.o: core/Geometry.cpp.o
+
+.PHONY : core/Geometry.o
+
+# target to build an object file
+core/Geometry.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.o
+.PHONY : core/Geometry.cpp.o
+
+core/Geometry.i: core/Geometry.cpp.i
+
+.PHONY : core/Geometry.i
+
+# target to preprocess a source file
+core/Geometry.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.i
+.PHONY : core/Geometry.cpp.i
+
+core/Geometry.s: core/Geometry.cpp.s
+
+.PHONY : core/Geometry.s
+
+# target to generate assembly for a file
+core/Geometry.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.s
+.PHONY : core/Geometry.cpp.s
+
+core/Reconstruct.o: core/Reconstruct.cpp.o
+
+.PHONY : core/Reconstruct.o
+
+# target to build an object file
+core/Reconstruct.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.o
+.PHONY : core/Reconstruct.cpp.o
+
+core/Reconstruct.i: core/Reconstruct.cpp.i
+
+.PHONY : core/Reconstruct.i
+
+# target to preprocess a source file
+core/Reconstruct.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.i
+.PHONY : core/Reconstruct.cpp.i
+
+core/Reconstruct.s: core/Reconstruct.cpp.s
+
+.PHONY : core/Reconstruct.s
+
+# target to generate assembly for a file
+core/Reconstruct.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.s
+.PHONY : core/Reconstruct.cpp.s
+
+core/Sync.o: core/Sync.cpp.o
+
+.PHONY : core/Sync.o
+
+# target to build an object file
+core/Sync.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.o
+.PHONY : core/Sync.cpp.o
+
+core/Sync.i: core/Sync.cpp.i
+
+.PHONY : core/Sync.i
+
+# target to preprocess a source file
+core/Sync.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.i
+.PHONY : core/Sync.cpp.i
+
+core/Sync.s: core/Sync.cpp.s
+
+.PHONY : core/Sync.s
+
+# target to generate assembly for a file
+core/Sync.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.s
+.PHONY : core/Sync.cpp.s
 
 main.o: main.cpp.o
 
@@ -372,6 +638,141 @@ pipeline/Scanner.cpp.s:
 	$(MAKE) -f CMakeFiles/stereo_pipeline.dir/build.make CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.s
 .PHONY : pipeline/Scanner.cpp.s
 
+tests/test_accumulate.o: tests/test_accumulate.cpp.o
+
+.PHONY : tests/test_accumulate.o
+
+# target to build an object file
+tests/test_accumulate.cpp.o:
+	$(MAKE) -f CMakeFiles/test_accumulate.dir/build.make CMakeFiles/test_accumulate.dir/tests/test_accumulate.cpp.o
+.PHONY : tests/test_accumulate.cpp.o
+
+tests/test_accumulate.i: tests/test_accumulate.cpp.i
+
+.PHONY : tests/test_accumulate.i
+
+# target to preprocess a source file
+tests/test_accumulate.cpp.i:
+	$(MAKE) -f CMakeFiles/test_accumulate.dir/build.make CMakeFiles/test_accumulate.dir/tests/test_accumulate.cpp.i
+.PHONY : tests/test_accumulate.cpp.i
+
+tests/test_accumulate.s: tests/test_accumulate.cpp.s
+
+.PHONY : tests/test_accumulate.s
+
+# target to generate assembly for a file
+tests/test_accumulate.cpp.s:
+	$(MAKE) -f CMakeFiles/test_accumulate.dir/build.make CMakeFiles/test_accumulate.dir/tests/test_accumulate.cpp.s
+.PHONY : tests/test_accumulate.cpp.s
+
+tests/test_angle_buffer.o: tests/test_angle_buffer.cpp.o
+
+.PHONY : tests/test_angle_buffer.o
+
+# target to build an object file
+tests/test_angle_buffer.cpp.o:
+	$(MAKE) -f CMakeFiles/test_angle_buffer.dir/build.make CMakeFiles/test_angle_buffer.dir/tests/test_angle_buffer.cpp.o
+.PHONY : tests/test_angle_buffer.cpp.o
+
+tests/test_angle_buffer.i: tests/test_angle_buffer.cpp.i
+
+.PHONY : tests/test_angle_buffer.i
+
+# target to preprocess a source file
+tests/test_angle_buffer.cpp.i:
+	$(MAKE) -f CMakeFiles/test_angle_buffer.dir/build.make CMakeFiles/test_angle_buffer.dir/tests/test_angle_buffer.cpp.i
+.PHONY : tests/test_angle_buffer.cpp.i
+
+tests/test_angle_buffer.s: tests/test_angle_buffer.cpp.s
+
+.PHONY : tests/test_angle_buffer.s
+
+# target to generate assembly for a file
+tests/test_angle_buffer.cpp.s:
+	$(MAKE) -f CMakeFiles/test_angle_buffer.dir/build.make CMakeFiles/test_angle_buffer.dir/tests/test_angle_buffer.cpp.s
+.PHONY : tests/test_angle_buffer.cpp.s
+
+tests/test_calibration.o: tests/test_calibration.cpp.o
+
+.PHONY : tests/test_calibration.o
+
+# target to build an object file
+tests/test_calibration.cpp.o:
+	$(MAKE) -f CMakeFiles/test_calibration.dir/build.make CMakeFiles/test_calibration.dir/tests/test_calibration.cpp.o
+.PHONY : tests/test_calibration.cpp.o
+
+tests/test_calibration.i: tests/test_calibration.cpp.i
+
+.PHONY : tests/test_calibration.i
+
+# target to preprocess a source file
+tests/test_calibration.cpp.i:
+	$(MAKE) -f CMakeFiles/test_calibration.dir/build.make CMakeFiles/test_calibration.dir/tests/test_calibration.cpp.i
+.PHONY : tests/test_calibration.cpp.i
+
+tests/test_calibration.s: tests/test_calibration.cpp.s
+
+.PHONY : tests/test_calibration.s
+
+# target to generate assembly for a file
+tests/test_calibration.cpp.s:
+	$(MAKE) -f CMakeFiles/test_calibration.dir/build.make CMakeFiles/test_calibration.dir/tests/test_calibration.cpp.s
+.PHONY : tests/test_calibration.cpp.s
+
+tests/test_depth.o: tests/test_depth.cpp.o
+
+.PHONY : tests/test_depth.o
+
+# target to build an object file
+tests/test_depth.cpp.o:
+	$(MAKE) -f CMakeFiles/test_depth.dir/build.make CMakeFiles/test_depth.dir/tests/test_depth.cpp.o
+.PHONY : tests/test_depth.cpp.o
+
+tests/test_depth.i: tests/test_depth.cpp.i
+
+.PHONY : tests/test_depth.i
+
+# target to preprocess a source file
+tests/test_depth.cpp.i:
+	$(MAKE) -f CMakeFiles/test_depth.dir/build.make CMakeFiles/test_depth.dir/tests/test_depth.cpp.i
+.PHONY : tests/test_depth.cpp.i
+
+tests/test_depth.s: tests/test_depth.cpp.s
+
+.PHONY : tests/test_depth.s
+
+# target to generate assembly for a file
+tests/test_depth.cpp.s:
+	$(MAKE) -f CMakeFiles/test_depth.dir/build.make CMakeFiles/test_depth.dir/tests/test_depth.cpp.s
+.PHONY : tests/test_depth.cpp.s
+
+tests/test_end_to_end.o: tests/test_end_to_end.cpp.o
+
+.PHONY : tests/test_end_to_end.o
+
+# target to build an object file
+tests/test_end_to_end.cpp.o:
+	$(MAKE) -f CMakeFiles/test_end_to_end.dir/build.make CMakeFiles/test_end_to_end.dir/tests/test_end_to_end.cpp.o
+.PHONY : tests/test_end_to_end.cpp.o
+
+tests/test_end_to_end.i: tests/test_end_to_end.cpp.i
+
+.PHONY : tests/test_end_to_end.i
+
+# target to preprocess a source file
+tests/test_end_to_end.cpp.i:
+	$(MAKE) -f CMakeFiles/test_end_to_end.dir/build.make CMakeFiles/test_end_to_end.dir/tests/test_end_to_end.cpp.i
+.PHONY : tests/test_end_to_end.cpp.i
+
+tests/test_end_to_end.s: tests/test_end_to_end.cpp.s
+
+.PHONY : tests/test_end_to_end.s
+
+# target to generate assembly for a file
+tests/test_end_to_end.cpp.s:
+	$(MAKE) -f CMakeFiles/test_end_to_end.dir/build.make CMakeFiles/test_end_to_end.dir/tests/test_end_to_end.cpp.s
+.PHONY : tests/test_end_to_end.cpp.s
+
 tests/test_frame_queue.o: tests/test_frame_queue.cpp.o
 
 .PHONY : tests/test_frame_queue.o
@@ -398,6 +799,33 @@ tests/test_frame_queue.s: tests/test_frame_queue.cpp.s
 tests/test_frame_queue.cpp.s:
 	$(MAKE) -f CMakeFiles/test_frame_queue.dir/build.make CMakeFiles/test_frame_queue.dir/tests/test_frame_queue.cpp.s
 .PHONY : tests/test_frame_queue.cpp.s
+
+tests/test_geometry.o: tests/test_geometry.cpp.o
+
+.PHONY : tests/test_geometry.o
+
+# target to build an object file
+tests/test_geometry.cpp.o:
+	$(MAKE) -f CMakeFiles/test_geometry.dir/build.make CMakeFiles/test_geometry.dir/tests/test_geometry.cpp.o
+.PHONY : tests/test_geometry.cpp.o
+
+tests/test_geometry.i: tests/test_geometry.cpp.i
+
+.PHONY : tests/test_geometry.i
+
+# target to preprocess a source file
+tests/test_geometry.cpp.i:
+	$(MAKE) -f CMakeFiles/test_geometry.dir/build.make CMakeFiles/test_geometry.dir/tests/test_geometry.cpp.i
+.PHONY : tests/test_geometry.cpp.i
+
+tests/test_geometry.s: tests/test_geometry.cpp.s
+
+.PHONY : tests/test_geometry.s
+
+# target to generate assembly for a file
+tests/test_geometry.cpp.s:
+	$(MAKE) -f CMakeFiles/test_geometry.dir/build.make CMakeFiles/test_geometry.dir/tests/test_geometry.cpp.s
+.PHONY : tests/test_geometry.cpp.s
 
 tests/test_map_builder.o: tests/test_map_builder.cpp.o
 
@@ -426,6 +854,33 @@ tests/test_map_builder.cpp.s:
 	$(MAKE) -f CMakeFiles/test_map_builder.dir/build.make CMakeFiles/test_map_builder.dir/tests/test_map_builder.cpp.s
 .PHONY : tests/test_map_builder.cpp.s
 
+tests/test_reconstruct.o: tests/test_reconstruct.cpp.o
+
+.PHONY : tests/test_reconstruct.o
+
+# target to build an object file
+tests/test_reconstruct.cpp.o:
+	$(MAKE) -f CMakeFiles/test_reconstruct.dir/build.make CMakeFiles/test_reconstruct.dir/tests/test_reconstruct.cpp.o
+.PHONY : tests/test_reconstruct.cpp.o
+
+tests/test_reconstruct.i: tests/test_reconstruct.cpp.i
+
+.PHONY : tests/test_reconstruct.i
+
+# target to preprocess a source file
+tests/test_reconstruct.cpp.i:
+	$(MAKE) -f CMakeFiles/test_reconstruct.dir/build.make CMakeFiles/test_reconstruct.dir/tests/test_reconstruct.cpp.i
+.PHONY : tests/test_reconstruct.cpp.i
+
+tests/test_reconstruct.s: tests/test_reconstruct.cpp.s
+
+.PHONY : tests/test_reconstruct.s
+
+# target to generate assembly for a file
+tests/test_reconstruct.cpp.s:
+	$(MAKE) -f CMakeFiles/test_reconstruct.dir/build.make CMakeFiles/test_reconstruct.dir/tests/test_reconstruct.cpp.s
+.PHONY : tests/test_reconstruct.cpp.s
+
 tests/test_scanner_raster.o: tests/test_scanner_raster.cpp.o
 
 .PHONY : tests/test_scanner_raster.o
@@ -452,6 +907,33 @@ tests/test_scanner_raster.s: tests/test_scanner_raster.cpp.s
 tests/test_scanner_raster.cpp.s:
 	$(MAKE) -f CMakeFiles/test_scanner_raster.dir/build.make CMakeFiles/test_scanner_raster.dir/tests/test_scanner_raster.cpp.s
 .PHONY : tests/test_scanner_raster.cpp.s
+
+tests/test_sync.o: tests/test_sync.cpp.o
+
+.PHONY : tests/test_sync.o
+
+# target to build an object file
+tests/test_sync.cpp.o:
+	$(MAKE) -f CMakeFiles/test_sync.dir/build.make CMakeFiles/test_sync.dir/tests/test_sync.cpp.o
+.PHONY : tests/test_sync.cpp.o
+
+tests/test_sync.i: tests/test_sync.cpp.i
+
+.PHONY : tests/test_sync.i
+
+# target to preprocess a source file
+tests/test_sync.cpp.i:
+	$(MAKE) -f CMakeFiles/test_sync.dir/build.make CMakeFiles/test_sync.dir/tests/test_sync.cpp.i
+.PHONY : tests/test_sync.cpp.i
+
+tests/test_sync.s: tests/test_sync.cpp.s
+
+.PHONY : tests/test_sync.s
+
+# target to generate assembly for a file
+tests/test_sync.cpp.s:
+	$(MAKE) -f CMakeFiles/test_sync.dir/build.make CMakeFiles/test_sync.dir/tests/test_sync.cpp.s
+.PHONY : tests/test_sync.cpp.s
 
 tools/servo_ctrl.o: tools/servo_ctrl.cpp.o
 
@@ -568,40 +1050,90 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... install/strip"
-	@echo "... stereo_pipeline"
+	@echo "... install/local"
+	@echo "... list_install_components"
+	@echo "... test"
+	@echo "... test_calibration"
+	@echo "... test_sync"
 	@echo "... stereo_scan"
 	@echo "... servo_test"
 	@echo "... servo_ctrl"
 	@echo "... test_frame_queue"
 	@echo "... test_scanner_raster"
+	@echo "... test_depth"
 	@echo "... test_map_builder"
-	@echo "... test"
-	@echo "... edit_cache"
+	@echo "... test_reconstruct"
 	@echo "... rebuild_cache"
-	@echo "... list_install_components"
+	@echo "... edit_cache"
+	@echo "... test_geometry"
+	@echo "... test_angle_buffer"
+	@echo "... stereo_pipeline"
+	@echo "... test_accumulate"
 	@echo "... install"
-	@echo "... install/local"
+	@echo "... test_end_to_end"
+	@echo "... calibration/Calibration.o"
+	@echo "... calibration/Calibration.i"
+	@echo "... calibration/Calibration.s"
 	@echo "... control/ServoClient.o"
 	@echo "... control/ServoClient.i"
 	@echo "... control/ServoClient.s"
 	@echo "... control/ServoController.o"
 	@echo "... control/ServoController.i"
 	@echo "... control/ServoController.s"
+	@echo "... core/AngleBuffer.o"
+	@echo "... core/AngleBuffer.i"
+	@echo "... core/AngleBuffer.s"
+	@echo "... core/Depth.o"
+	@echo "... core/Depth.i"
+	@echo "... core/Depth.s"
+	@echo "... core/Geometry.o"
+	@echo "... core/Geometry.i"
+	@echo "... core/Geometry.s"
+	@echo "... core/Reconstruct.o"
+	@echo "... core/Reconstruct.i"
+	@echo "... core/Reconstruct.s"
+	@echo "... core/Sync.o"
+	@echo "... core/Sync.i"
+	@echo "... core/Sync.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
 	@echo "... pipeline/Scanner.o"
 	@echo "... pipeline/Scanner.i"
 	@echo "... pipeline/Scanner.s"
+	@echo "... tests/test_accumulate.o"
+	@echo "... tests/test_accumulate.i"
+	@echo "... tests/test_accumulate.s"
+	@echo "... tests/test_angle_buffer.o"
+	@echo "... tests/test_angle_buffer.i"
+	@echo "... tests/test_angle_buffer.s"
+	@echo "... tests/test_calibration.o"
+	@echo "... tests/test_calibration.i"
+	@echo "... tests/test_calibration.s"
+	@echo "... tests/test_depth.o"
+	@echo "... tests/test_depth.i"
+	@echo "... tests/test_depth.s"
+	@echo "... tests/test_end_to_end.o"
+	@echo "... tests/test_end_to_end.i"
+	@echo "... tests/test_end_to_end.s"
 	@echo "... tests/test_frame_queue.o"
 	@echo "... tests/test_frame_queue.i"
 	@echo "... tests/test_frame_queue.s"
+	@echo "... tests/test_geometry.o"
+	@echo "... tests/test_geometry.i"
+	@echo "... tests/test_geometry.s"
 	@echo "... tests/test_map_builder.o"
 	@echo "... tests/test_map_builder.i"
 	@echo "... tests/test_map_builder.s"
+	@echo "... tests/test_reconstruct.o"
+	@echo "... tests/test_reconstruct.i"
+	@echo "... tests/test_reconstruct.s"
 	@echo "... tests/test_scanner_raster.o"
 	@echo "... tests/test_scanner_raster.i"
 	@echo "... tests/test_scanner_raster.s"
+	@echo "... tests/test_sync.o"
+	@echo "... tests/test_sync.i"
+	@echo "... tests/test_sync.s"
 	@echo "... tools/servo_ctrl.o"
 	@echo "... tools/servo_ctrl.i"
 	@echo "... tools/servo_ctrl.s"

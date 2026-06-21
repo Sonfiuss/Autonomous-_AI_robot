@@ -24,6 +24,20 @@ termios.h
 unistd.h
 -
 
+/home/nvidia/Documents/stereo-camera/core/AngleBuffer.hpp
+vector
+-
+cstddef
+-
+mutex
+-
+
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
+array
+-
+string
+-
+
 /home/nvidia/Documents/stereo-camera/main.cpp
 cstdio
 -
@@ -43,6 +57,8 @@ vision/MapBuilder.hpp
 /home/nvidia/Documents/stereo-camera/vision/MapBuilder.hpp
 pipeline/Scanner.hpp
 /home/nvidia/Documents/stereo-camera/pipeline/Scanner.hpp
+core/Config.hpp
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
 
 /home/nvidia/Documents/stereo-camera/pipeline/FrameQueue.hpp
 queue
@@ -67,6 +83,10 @@ opencv2/opencv.hpp
 -
 FrameQueue.hpp
 /home/nvidia/Documents/stereo-camera/pipeline/FrameQueue.hpp
+../core/Config.hpp
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
+../core/AngleBuffer.hpp
+/home/nvidia/Documents/stereo-camera/core/AngleBuffer.hpp
 
 /home/nvidia/Documents/stereo-camera/vision/MapBuilder.hpp
 vector
@@ -75,10 +95,14 @@ mutex
 -
 string
 -
-cmath
+unordered_set
+-
+cstdint
 -
 opencv2/opencv.hpp
 -
+../core/Config.hpp
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
 
 /home/nvidia/Documents/stereo-camera/vision/StereoCamera.hpp
 string
@@ -87,6 +111,8 @@ opencv2/opencv.hpp
 -
 opencv2/calib3d.hpp
 -
+../core/Config.hpp
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
 
 /usr/include/opencv4/opencv2/calib3d.hpp
 opencv2/core.hpp

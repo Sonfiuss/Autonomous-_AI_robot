@@ -73,7 +73,7 @@ public:
      * and baseline (mm) into `cfg` so MapBuilder/Reconstruct unproject with the
      * SAME K the depth was computed with. No-op (returns false) if uncalibrated.
      */
-    bool applyIntrinsicsTo(Config& cfg) const;
+    bool applyIntrinsicsTo(::Config& cfg) const;
 
     int width()  const { return m_cfg.width;  }
     int height() const { return m_cfg.height; }

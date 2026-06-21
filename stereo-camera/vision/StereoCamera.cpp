@@ -124,7 +124,7 @@ bool StereoCamera::loadCalibration(const std::string& path) {
     return true;
 }
 
-bool StereoCamera::applyIntrinsicsTo(Config& cfg) const {
+bool StereoCamera::applyIntrinsicsTo(::Config& cfg) const {
     if (!m_calibrated || m_fx <= 0.f) return false;
     cfg.fx = m_fx; cfg.fy = m_fy; cfg.cx = m_cx; cfg.cy = m_cy;
     if (m_baseline > 0.f) cfg.baseline = m_baseline;
@@ -185,10 +185,23 @@ bool StereoCamera::captureDepth(cv::Mat& depth_out, double& t_ms_out,
         cv::Mat valid = depthutil::validityMask(depth_out, m_cfg.z_min, m_cfg.z_max);
         depthutil::applyMask(depth_out, valid);
     } else {
-        // No calibration: return normalised disparity as proxy depth (NOT metric).
-        cv::normalize(disp, depth_out, 0.f, 1.f, cv::NORM_MINMAX, CV_32F);
-        cv::Mat mask = (disp <= 0);
-        depth_out.setTo(std::numeric_limits<float>::quiet_NaN(), mask);
+        // No calibration: derive a PLAUSIBLE (non-metric) depth from disparity via
+        // Z = fx·baseline / disp, using the same defaults the reconstruct pipeline
+        // unprojects with (Config fx=600 px, baseline=60 mm) so the cloud is
+        // self-consistent and lands inside [z_min, z_max]. NOT metrically accurate
+        // — calibrate (tools/stereo_calibrate.py) + --calib for true scale.
+        constexpr float kFxPx = 600.f, kBaselineMm = 60.f;
+        depth_out.create(disp.size(), CV_32F);
+        const float fb = kFxPx * kBaselineMm;
+        for (int y = 0; y < disp.rows; ++y) {
+            const float* d = disp.ptr<float>(y);
+            float* z = depth_out.ptr<float>(y);
+            for (int x = 0; x < disp.cols; ++x)
+                z[x] = (d[x] > 1.f) ? fb / d[x]
+                                    : std::numeric_limits<float>::quiet_NaN();
+        }
+        cv::Mat valid = depthutil::validityMask(depth_out, m_cfg.z_min, m_cfg.z_max);
+        depthutil::applyMask(depth_out, valid);
     }
 
     return true;

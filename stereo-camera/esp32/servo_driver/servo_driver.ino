@@ -3,8 +3,8 @@
  *
  * Hardware
  *   PCA9685 I2C : SDA=GPIO21, SCL=GPIO17, addr=0x40
- *   Pan  servo  : channel 0   (-80° … +80°)
- *   Tilt servo  : channel 1   (-70° … +30°)
+ *   Pan  servo  : channel 12  (-80° … +80°)
+ *   Tilt servo  : channel 14  (-70° … +30°)
  *
  * Serial protocol (115200 baud, LF-terminated):
  *   Jetson → ESP32 : "MOVE <pan_f> <tilt_f>\n"
@@ -23,8 +23,8 @@
 #define I2C_SCL         17
 #define PCA9685_ADDR    0x40
 
-#define PAN_CHANNEL     0
-#define TILT_CHANNEL    1
+#define PAN_CHANNEL     12
+#define TILT_CHANNEL    14
 
 // ── Servo calibration ─────────────────────────────────────────────────────────
 // At 50 Hz: 1 period = 20 ms = 4096 counts

@@ -6,29 +6,41 @@
 
 #IncludeRegexTransform: 
 
-/home/nvidia/Documents/stereo-camera/vision/MapBuilder.cpp
-MapBuilder.hpp
-/home/nvidia/Documents/stereo-camera/vision/MapBuilder.hpp
-fstream
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
+array
 -
-cstring
+string
+-
+
+/home/nvidia/Documents/stereo-camera/core/Depth.hpp
+opencv2/opencv.hpp
+-
+Config.hpp
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
+
+/home/nvidia/Documents/stereo-camera/vision/StereoCamera.cpp
+StereoCamera.hpp
+/home/nvidia/Documents/stereo-camera/vision/StereoCamera.hpp
+../core/Depth.hpp
+/home/nvidia/Documents/stereo-camera/core/Depth.hpp
+cmath
 -
 cstdio
+-
+chrono
 -
 stdexcept
 -
 
-/home/nvidia/Documents/stereo-camera/vision/MapBuilder.hpp
-vector
--
-mutex
--
+/home/nvidia/Documents/stereo-camera/vision/StereoCamera.hpp
 string
--
-cmath
 -
 opencv2/opencv.hpp
 -
+opencv2/calib3d.hpp
+-
+../core/Config.hpp
+/home/nvidia/Documents/stereo-camera/core/Config.hpp
 
 /usr/include/opencv4/opencv2/calib3d.hpp
 opencv2/core.hpp

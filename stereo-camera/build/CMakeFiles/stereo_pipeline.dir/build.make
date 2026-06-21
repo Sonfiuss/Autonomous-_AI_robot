@@ -122,13 +122,97 @@ CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nvidia/Documents/stereo-camera/pipeline/Scanner.cpp -o CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.s
 
+CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.o: CMakeFiles/stereo_pipeline.dir/flags.make
+CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.o: ../core/Geometry.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.o -c /home/nvidia/Documents/stereo-camera/core/Geometry.cpp
+
+CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nvidia/Documents/stereo-camera/core/Geometry.cpp > CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.i
+
+CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nvidia/Documents/stereo-camera/core/Geometry.cpp -o CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.s
+
+CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.o: CMakeFiles/stereo_pipeline.dir/flags.make
+CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.o: ../core/AngleBuffer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.o -c /home/nvidia/Documents/stereo-camera/core/AngleBuffer.cpp
+
+CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nvidia/Documents/stereo-camera/core/AngleBuffer.cpp > CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.i
+
+CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nvidia/Documents/stereo-camera/core/AngleBuffer.cpp -o CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.s
+
+CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.o: CMakeFiles/stereo_pipeline.dir/flags.make
+CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.o: ../core/Depth.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.o -c /home/nvidia/Documents/stereo-camera/core/Depth.cpp
+
+CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nvidia/Documents/stereo-camera/core/Depth.cpp > CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.i
+
+CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nvidia/Documents/stereo-camera/core/Depth.cpp -o CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.s
+
+CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.o: CMakeFiles/stereo_pipeline.dir/flags.make
+CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.o: ../core/Reconstruct.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.o -c /home/nvidia/Documents/stereo-camera/core/Reconstruct.cpp
+
+CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nvidia/Documents/stereo-camera/core/Reconstruct.cpp > CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.i
+
+CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nvidia/Documents/stereo-camera/core/Reconstruct.cpp -o CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.s
+
+CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.o: CMakeFiles/stereo_pipeline.dir/flags.make
+CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.o: ../core/Sync.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.o -c /home/nvidia/Documents/stereo-camera/core/Sync.cpp
+
+CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nvidia/Documents/stereo-camera/core/Sync.cpp > CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.i
+
+CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nvidia/Documents/stereo-camera/core/Sync.cpp -o CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.s
+
+CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.o: CMakeFiles/stereo_pipeline.dir/flags.make
+CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.o: ../calibration/Calibration.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.o -c /home/nvidia/Documents/stereo-camera/calibration/Calibration.cpp
+
+CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/nvidia/Documents/stereo-camera/calibration/Calibration.cpp > CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.i
+
+CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/nvidia/Documents/stereo-camera/calibration/Calibration.cpp -o CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.s
+
 # Object files for target stereo_pipeline
 stereo_pipeline_OBJECTS = \
 "CMakeFiles/stereo_pipeline.dir/control/ServoController.cpp.o" \
 "CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.o" \
 "CMakeFiles/stereo_pipeline.dir/vision/StereoCamera.cpp.o" \
 "CMakeFiles/stereo_pipeline.dir/vision/MapBuilder.cpp.o" \
-"CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.o"
+"CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.o" \
+"CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.o" \
+"CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.o" \
+"CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.o" \
+"CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.o" \
+"CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.o" \
+"CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.o"
 
 # External object files for target stereo_pipeline
 stereo_pipeline_EXTERNAL_OBJECTS =
@@ -138,9 +222,15 @@ libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/control/ServoClient.cpp.o
 libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/vision/StereoCamera.cpp.o
 libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/vision/MapBuilder.cpp.o
 libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/pipeline/Scanner.cpp.o
+libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/core/Geometry.cpp.o
+libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/core/AngleBuffer.cpp.o
+libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/core/Depth.cpp.o
+libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/core/Reconstruct.cpp.o
+libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/core/Sync.cpp.o
+libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/calibration/Calibration.cpp.o
 libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/build.make
 libstereo_pipeline.a: CMakeFiles/stereo_pipeline.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libstereo_pipeline.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/nvidia/Documents/stereo-camera/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX static library libstereo_pipeline.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/stereo_pipeline.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/stereo_pipeline.dir/link.txt --verbose=$(VERBOSE)
 

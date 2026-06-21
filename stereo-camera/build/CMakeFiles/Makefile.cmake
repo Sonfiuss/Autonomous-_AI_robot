@@ -51,11 +51,19 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/stereo_pipeline.dir/DependInfo.cmake"
+  "CMakeFiles/test_calibration.dir/DependInfo.cmake"
+  "CMakeFiles/test_sync.dir/DependInfo.cmake"
   "CMakeFiles/stereo_scan.dir/DependInfo.cmake"
   "CMakeFiles/servo_test.dir/DependInfo.cmake"
   "CMakeFiles/servo_ctrl.dir/DependInfo.cmake"
   "CMakeFiles/test_frame_queue.dir/DependInfo.cmake"
   "CMakeFiles/test_scanner_raster.dir/DependInfo.cmake"
+  "CMakeFiles/test_depth.dir/DependInfo.cmake"
   "CMakeFiles/test_map_builder.dir/DependInfo.cmake"
+  "CMakeFiles/test_reconstruct.dir/DependInfo.cmake"
+  "CMakeFiles/test_geometry.dir/DependInfo.cmake"
+  "CMakeFiles/test_angle_buffer.dir/DependInfo.cmake"
+  "CMakeFiles/stereo_pipeline.dir/DependInfo.cmake"
+  "CMakeFiles/test_accumulate.dir/DependInfo.cmake"
+  "CMakeFiles/test_end_to_end.dir/DependInfo.cmake"
   )

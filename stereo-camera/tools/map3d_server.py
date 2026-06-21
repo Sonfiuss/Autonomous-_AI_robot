@@ -3,7 +3,8 @@
 map3d_server.py  –  Stereo 3D scanning + WebGL viewer over HTTP
 
 Usage:
-  python3 tools/map3d_server.py [--serial /dev/ttyUSB0] [--port 8080]
+  Live scan : python3 tools/map3d_server.py [--serial /dev/ttyUSB0] [--port 8080]
+  View .ply : python3 tools/map3d_server.py --ply scan.ply [--scale 0.001] [--port 8080]
 
 Browser (máy local): http://<jetson-ip>:8080
   Kéo chuột trái  → xoay
@@ -181,6 +182,66 @@ def _add_to_cloud(new_pts: np.ndarray):
         _cloud = merged
     with _stats_lk:
         _stats["pts"] = len(merged)
+
+
+# ─── Static PLY loader (display a saved scan.ply through this viewer) ──────────
+
+def _load_ply(path: str, scale: float = None) -> np.ndarray:
+    """Load an ASCII PLY (x y z) into an (N, 4) [x, y, z, dist] cloud for the viewer.
+
+    The C++ stereo_scan writes points in MILLIMETRES in the body frame
+    (X=forward, Y=right, Z=up). This viewer expects METRES and Y-up, so we:
+      • auto-scale mm→m when coords look large (override with --scale),
+      • remap body Z-up → viewer Y-up: (x,y,z)_view = (Y_body, Z_body, X_body).
+    """
+    with open(path, "r") as f:
+        line = f.readline()
+        if not line.startswith("ply"):
+            raise ValueError(f"{path} is not a PLY file")
+        n = 0
+        fmt = "ascii"
+        while True:
+            line = f.readline()
+            if not line:
+                raise ValueError("Unexpected EOF in PLY header")
+            t = line.split()
+            if t and t[0] == "format":
+                fmt = t[1]
+            elif t and t[0] == "element" and t[1] == "vertex":
+                n = int(t[2])
+            elif t and t[0] == "end_header":
+                break
+        if fmt != "ascii":
+            raise ValueError(f"Only ASCII PLY supported (got '{fmt}')")
+        raw = np.loadtxt(f, dtype=np.float32, max_rows=n)
+
+    if raw.ndim == 1:
+        raw = raw.reshape(1, -1)
+    xyz = raw[:, :3]
+
+    if scale is None:
+        p95 = float(np.percentile(np.abs(xyz), 95)) if len(xyz) else 0.0
+        scale = 0.001 if p95 > 100.0 else 1.0
+        print(f"[map3d] PLY auto-scale: p95(|coord|)={p95:.1f} → scale={scale}")
+    xyz = xyz * scale
+
+    # body (X=fwd, Y=right, Z=up) → viewer (x=right, y=up, z=fwd)
+    x = xyz[:, 1].copy()
+    y = xyz[:, 2].copy()
+    z = xyz[:, 0].copy()
+
+    # Recenter on the cloud's centroid (median = robust to outliers) so it sits
+    # at the origin the orbit camera looks at — otherwise the whole cloud is
+    # forward of the camera and nothing is visible.
+    if len(x):
+        x -= np.median(x)
+        y -= np.median(y)
+        z -= np.median(z)
+        ext = float(np.percentile(np.sqrt(x * x + y * y + z * z), 95))
+        print(f"[map3d] PLY recentred on centroid; 95%% extent ~{ext:.2f} m")
+
+    d = np.sqrt(x * x + y * y + z * z, dtype=np.float32)
+    return np.stack([x, y, z, d], axis=-1).astype(np.float32)
 
 
 # ─── Capture loop ─────────────────────────────────────────────────────────────
@@ -485,6 +546,14 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
+        # Browsers cancel in-flight polls / refresh mid-download → broken pipe.
+        # Harmless; swallow so it doesn't spam the console.
+        try:
+            self._route_get()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    def _route_get(self):
         if self.path == "/":
             body = _HTML.encode()
             self.send_response(200)
@@ -527,6 +596,12 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
+        try:
+            self._route_post()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    def _route_post(self):
         if self.path == "/clear":
             global _cloud
             with _cld_lock:
@@ -563,22 +638,36 @@ def main():
                         help="HTTP port (default 8080)")
     parser.add_argument("--baseline", type=float, default=BASELINE,
                         help="Stereo baseline in metres (default 0.054)")
+    parser.add_argument("--ply", metavar="FILE",
+                        help="Display a saved .ply (static mode — no camera/servo)")
+    parser.add_argument("--scale", type=float, default=None,
+                        help="Coord scale for --ply (default: auto mm→m)")
     args = parser.parse_args()
 
-    print(f"[map3d] Baseline    : {args.baseline*1000:.1f} mm")
-    print(f"[map3d] Focal est.  : {FOCAL_PX:.1f} px  (FOV_H={FOV_H_HALF*2}°)")
-    print(f"[map3d] Depth range : {DEPTH_MIN}–{DEPTH_MAX} m")
-    print(f"[map3d] Max points  : {MAX_PTS:,}")
-
-    if args.serial:
-        t = threading.Thread(target=serial_reader, args=(args.serial,), daemon=True)
-        t.start()
+    if args.ply:
+        # ── Static mode: just show a saved point cloud through the viewer ──
+        global _cloud
+        cloud = _load_ply(args.ply, args.scale)
+        with _cld_lock:
+            _cloud = cloud
+        with _stats_lk:
+            _stats["pts"] = len(cloud)
+        print(f"[map3d] Loaded {len(cloud):,} points from {args.ply} (static viewer)")
     else:
-        print("[map3d] No --serial port → servo angles fixed at pan=0 tilt=0")
-        print("[map3d]   Để dùng servo: thêm --serial /dev/ttyUSB0")
+        print(f"[map3d] Baseline    : {args.baseline*1000:.1f} mm")
+        print(f"[map3d] Focal est.  : {FOCAL_PX:.1f} px  (FOV_H={FOV_H_HALF*2}°)")
+        print(f"[map3d] Depth range : {DEPTH_MIN}–{DEPTH_MAX} m")
+        print(f"[map3d] Max points  : {MAX_PTS:,}")
 
-    cap_t = threading.Thread(target=capture_loop, daemon=True)
-    cap_t.start()
+        if args.serial:
+            t = threading.Thread(target=serial_reader, args=(args.serial,), daemon=True)
+            t.start()
+        else:
+            print("[map3d] No --serial port → servo angles fixed at pan=0 tilt=0")
+            print("[map3d]   Để dùng servo: thêm --serial /dev/ttyUSB0")
+
+        cap_t = threading.Thread(target=capture_loop, daemon=True)
+        cap_t.start()
 
     ip = get_local_ip()
     print(f"[map3d] HTTP server port {args.port}")

@@ -47,7 +47,7 @@ inline Vec3 toWorld(const Vec3& p_body, const Mat3& R, const Config& c) {
     Vec3 shifted = { p_body[0] + c.lever_arm[0],
                      p_body[1] + c.lever_arm[1],
                      p_body[2] + c.lever_arm[2] };
-    return apply(R, shifted);
+    return geom::apply(R, shifted);
 }
 
 // Convenience: pixel + depth -> world point at given pan/tilt.

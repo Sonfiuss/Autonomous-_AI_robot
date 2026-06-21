@@ -1,10 +1,10 @@
-Start testing: Jun 06 23:53 +07
+Start testing: Jun 15 22:39 +07
 ----------------------------------------------------------
-1/3 Testing: frame_queue
-1/3 Test: frame_queue
+1/11 Testing: frame_queue
+1/11 Test: frame_queue
 Command: "/home/nvidia/Documents/stereo-camera/build/test_frame_queue"
 Directory: /home/nvidia/Documents/stereo-camera/build
-"frame_queue" start time: Jun 06 23:53 +07
+"frame_queue" start time: Jun 15 22:39 +07
 Output:
 ----------------------------------------------------------
 === test_frame_queue ===
@@ -48,18 +48,18 @@ Output:
 
   23 passed  /  0 failed
 <end of output>
-Test time =   0.12 sec
+Test time =   0.13 sec
 ----------------------------------------------------------
 Test Passed.
-"frame_queue" end time: Jun 06 23:53 +07
+"frame_queue" end time: Jun 15 22:39 +07
 "frame_queue" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-2/3 Testing: scanner_raster
-2/3 Test: scanner_raster
+2/11 Testing: scanner_raster
+2/11 Test: scanner_raster
 Command: "/home/nvidia/Documents/stereo-camera/build/test_scanner_raster"
 Directory: /home/nvidia/Documents/stereo-camera/build
-"scanner_raster" start time: Jun 06 23:53 +07
+"scanner_raster" start time: Jun 15 22:39 +07
 Output:
 ----------------------------------------------------------
 === test_scanner_raster ===
@@ -136,18 +136,18 @@ Output:
 
   48 passed  /  0 failed
 <end of output>
-Test time =   0.06 sec
+Test time =   0.10 sec
 ----------------------------------------------------------
 Test Passed.
-"scanner_raster" end time: Jun 06 23:53 +07
+"scanner_raster" end time: Jun 15 22:39 +07
 "scanner_raster" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-3/3 Testing: map_builder
-3/3 Test: map_builder
+3/11 Testing: map_builder
+3/11 Test: map_builder
 Command: "/home/nvidia/Documents/stereo-camera/build/test_map_builder"
 Directory: /home/nvidia/Documents/stereo-camera/build
-"map_builder" start time: Jun 06 23:53 +07
+"map_builder" start time: Jun 15 22:39 +07
 Output:
 ----------------------------------------------------------
 === test_map_builder ===
@@ -155,53 +155,307 @@ Output:
 ── empty MapBuilder has 0 points
   PASS  b.pointCount() == 0u
 
-── all-NaN depth map contributes 0 points
+── all-NaN depth contributes 0 points
   PASS  b.pointCount() == 0u
 
-── zero depth (≤ 0) is rejected
+── centre pixel at pan=0 tilt=0 -> X≈depth, Y≈0, Z≈0 (forward)
+  PASS  cloud.rows == 4
+  PASS  fwd
+
+── clear() resets point count
+  PASS  b.pointCount() > 0u
   PASS  b.pointCount() == 0u
 
-── 1×1 depth at pan=0 tilt=0 → Z ≈ depth
-  PASS  b.pointCount() == 1u
-  PASS  cloud.rows == 1
-  PASS  std::fabs(static_cast<double>(X) - static_cast<double>(0.f)) < (0.01f)
-  PASS  std::fabs(static_cast<double>(Y) - static_cast<double>(0.f)) < (0.01f)
-  PASS  std::fabs(static_cast<double>(Z) - static_cast<double>(d)) < (0.01f)
-
-── 1×1 depth at pan=90° tilt=0 → X ≈ depth, Z ≈ 0
-  PASS  std::fabs(static_cast<double>(X) - static_cast<double>(d)) < (0.02f)
-  PASS  std::fabs(static_cast<double>(Z) - static_cast<double>(0.f)) < (0.02f)
-
-── 1×1 depth at pan=0 tilt=90° → Y ≈ depth
-  PASS  std::fabs(static_cast<double>(Y) - static_cast<double>(d)) < (0.02f)
-
-── multiple addFrame calls accumulate points
-  PASS  b.pointCount() == 3u
-
-── uniform 4×4 depth adds 16 valid points
-  PASS  b.pointCount() == 16u
-
-── clear() resets point count to 0
-  PASS  b.pointCount() == 9u
-  PASS  b.pointCount() == 0u
-
-── concurrent addFrame from 4 threads is thread-safe
-  PASS  b.pointCount() == static_cast<size_t>(N_THREADS * FRAMES_PER_THREAD)
-
-── savePLY creates file with valid PLY header
-[MapBuilder] Saved 4 points to /tmp/test_mapbuilder_out.ply
-  PASS  b.savePLY(path) == true
+── savePLY writes valid header with vertex count
+[MapBuilder] Saved 4 points to test_mb_out.ply
+  PASS  b.savePLY(path)
   PASS  f != nullptr
-  PASS  found_ply
-  PASS  found_elem
+  PASS  ok
+  PASS  pn == n
 
-  20 passed  /  0 failed
+[test_map_builder]  10 passed  /  0 failed
 <end of output>
 Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"map_builder" end time: Jun 06 23:53 +07
+"map_builder" end time: Jun 15 22:39 +07
 "map_builder" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Jun 06 23:53 +07
+4/11 Testing: geometry
+4/11 Test: geometry
+Command: "/home/nvidia/Documents/stereo-camera/build/test_geometry"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"geometry" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_geometry ===
+
+── G1 centre pixel, Z=1000, θ=0 φ=0 -> (1000,0,0)
+  PASS  std::fabs(static_cast<double>(p[0]) - static_cast<double>(1000.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[1]) - static_cast<double>(0.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[2]) - static_cast<double>(0.f)) < (1e-2f)
+
+── G2 centre pixel, Z=1000, θ=90 φ=0 -> (0,1000,0)
+  PASS  std::fabs(static_cast<double>(p[0]) - static_cast<double>(0.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[1]) - static_cast<double>(1000.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[2]) - static_cast<double>(0.f)) < (1e-2f)
+
+── G3 centre pixel, Z=1000, θ=0 φ=90 -> (0,0,1000)
+  PASS  std::fabs(static_cast<double>(p[0]) - static_cast<double>(0.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[1]) - static_cast<double>(0.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[2]) - static_cast<double>(1000.f)) < (1e-2f)
+
+── G4 pixel (440,240), Z=1000, θ=0 φ=0 -> (1000,200,0)
+  PASS  std::fabs(static_cast<double>(p[0]) - static_cast<double>(1000.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[1]) - static_cast<double>(200.f)) < (1e-2f)
+  PASS  std::fabs(static_cast<double>(p[2]) - static_cast<double>(0.f)) < (1e-2f)
+
+── G5 fronto-parallel plane X=2000, noise-free -> planarity RMS < 1 mm
+  G5 planarity RMS = 0.00000 mm
+  PASS  rms < 1.0f
+  PASS  all_x
+
+── G6 same world wall X=2000 across θ∈{-44,0,44} -> merged RMS < 2 mm
+  G6 max |X-2000| = 0.00012 mm over 576 pts
+  PASS  maxerr < 2.0f
+
+[test_geometry]  15 passed  /  0 failed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"geometry" end time: Jun 15 22:39 +07
+"geometry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/11 Testing: angle_buffer
+5/11 Test: angle_buffer
+Command: "/home/nvidia/Documents/stereo-camera/build/test_angle_buffer"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"angle_buffer" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_angle_buffer ===
+
+── A1 samples (0ms,0°),(10ms,10°); angle_at(5ms)=5°, gap≈5ms
+  PASS  q.valid
+  PASS  !q.extrapolated
+  PASS  std::fabs(static_cast<double>(q.pan) - static_cast<double>(5.f)) < (1e-4f)
+  PASS  std::fabs(static_cast<double>(q.tilt) - static_cast<double>(5.f)) < (1e-4f)
+  PASS  std::fabs(static_cast<double>(q.gap_ms) - static_cast<double>(5.0)) < (1e-6)
+
+── A2 angle_at(0ms) = exactly 0°
+  PASS  q.valid
+  PASS  std::fabs(static_cast<double>(q.pan) - static_cast<double>(0.f)) < (1e-6f)
+
+── A3 50ms gap around query -> gap > threshold flagged
+  PASS  q.valid
+  PASS  q.gap_ms > threshold
+  PASS  std::fabs(static_cast<double>(q.pan) - static_cast<double>(25.f)) < (1e-4f)
+
+── A4 wrap past capacity: oldest evicted, newest retrievable, no crash
+  PASS  b.size() == 4u
+  PASS  newest.valid
+  PASS  std::fabs(static_cast<double>(newest.pan) - static_cast<double>(9.f)) < (1e-4f)
+  PASS  old.valid
+  PASS  old.extrapolated
+  PASS  std::fabs(static_cast<double>(old.pan) - static_cast<double>(6.f)) < (1e-4f)
+  PASS  std::fabs(static_cast<double>(mid.pan) - static_cast<double>(7.5f)) < (1e-4f)
+
+[test_angle_buffer]  17 passed  /  0 failed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"angle_buffer" end time: Jun 15 22:39 +07
+"angle_buffer" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/11 Testing: depth
+6/11 Test: depth
+Command: "/home/nvidia/Documents/stereo-camera/build/test_depth"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"depth" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_depth ===
+
+── D1 constant disparity d -> Z = fx·B/d everywhere
+  expected Z=3000.0 mm
+  PASS  all_ok
+
+── D2 NaN/0/inf disparity -> masked out, mask count exact
+  PASS  valid == 2
+  PASS  mask.at<uchar>(0,0) == 255
+  PASS  mask.at<uchar>(0,5) == 255
+
+── D3 depths outside [z_min,z_max] dropped
+  PASS  cv::countNonZero(mask) == 2
+  PASS  mask.at<uchar>(0,0) == 0
+  PASS  mask.at<uchar>(0,1) == 255
+  PASS  mask.at<uchar>(0,2) == 255
+  PASS  mask.at<uchar>(0,3) == 0
+
+[test_depth]  9 passed  /  0 failed
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"depth" end time: Jun 15 22:39 +07
+"depth" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/11 Testing: reconstruct
+7/11 Test: reconstruct
+Command: "/home/nvidia/Documents/stereo-camera/build/test_reconstruct"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"reconstruct" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_reconstruct ===
+
+── R1 decimation=9 -> ≈ (trimmed width)/9 columns kept
+  kept 72 cols, expected ≈ 72
+  PASS  std::abs((int)pts.size() - expected) <= 1
+
+── R2 fronto-parallel plane Z=2000 -> reconstructed X≈2000 (normal=+X)
+  PASS  !pts.empty()
+  max |X-2000| = 0.0000 mm
+  PASS  maxerr < 1.0f
+
+── edge_trim_frac drops outer columns
+  PASS  pts.size() == 80u
+
+[test_reconstruct]  4 passed  /  0 failed
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"reconstruct" end time: Jun 15 22:39 +07
+"reconstruct" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/11 Testing: accumulate
+8/11 Test: accumulate
+Command: "/home/nvidia/Documents/stereo-camera/build/test_accumulate"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"accumulate" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_accumulate ===
+
+── C1 two overlapping frames of same wall, voxel=5mm -> ~no doubling
+  single=34454  double=34454
+  PASS  one > 0u
+  PASS  two == one
+
+── C2 export then reload PLY round-trips identically
+  PASS  n > 0u
+[MapBuilder] Saved 34454 points to test_accum_roundtrip.ply
+  PASS  a.savePLY(path)
+  PASS  f != nullptr
+  PASS  counted
+  PASS  parsed_n == n
+
+── overlapping pans share voxels (dedup reduces total vs naive sum)
+  PASS  a0 > 0u
+  PASS  a1 == 0u
+
+[test_accumulate]  9 passed  /  0 failed
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"accumulate" end time: Jun 15 22:39 +07
+"accumulate" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/11 Testing: end_to_end
+9/11 Test: end_to_end
+Command: "/home/nvidia/Documents/stereo-camera/build/test_end_to_end"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"end_to_end" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_end_to_end ===
+
+── E1 mock scan, 3 pan poses, stop-and-shoot -> walls planar, no doubling
+  PASS  cloud.rows > 0
+  merged 95118 pts, max|X-D|=0.000 mm, Y range [-7207, 2273]
+  PASS  maxerr < 2.0f
+  PASS  (maxy - miny) > 1000.f
+
+── Scanner buildRaster with pan_tiling uses {-44,0,44} per tilt row
+  PASS  raster.size() == 3u
+  PASS  std::fabs(static_cast<double>(raster[0].first) - static_cast<double>(-44.f)) < (1e-3f)
+  PASS  std::fabs(static_cast<double>(raster[1].first) - static_cast<double>(0.f)) < (1e-3f)
+  PASS  std::fabs(static_cast<double>(raster[2].first) - static_cast<double>(44.f)) < (1e-3f)
+
+[test_end_to_end]  7 passed  /  0 failed
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"end_to_end" end time: Jun 15 22:39 +07
+"end_to_end" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/11 Testing: sync
+10/11 Test: sync
+Command: "/home/nvidia/Documents/stereo-camera/build/test_sync"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"sync" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_sync ===
+
+── S1 interp error < nearest error on a moving angle
+  interp_err=0.000  nearest_err=16.000
+  PASS  interp_err < nearest_err
+  PASS  interp_err < 1e-3
+
+── S2 angles shifted by known 8 ms -> recovered |t_offset| ≈ 8 ms
+  recovered offset = -8.00 ms
+  PASS  std::fabs(static_cast<double>(std::fabs(rec)) - static_cast<double>(8.0)) < (1.0)
+
+── S3 frame with no angle within threshold is counted/discarded
+  discarded = 1
+  PASS  discarded == 1u
+
+[test_sync]  4 passed  /  0 failed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"sync" end time: Jun 15 22:39 +07
+"sync" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/11 Testing: calibration
+11/11 Test: calibration
+Command: "/home/nvidia/Documents/stereo-camera/build/test_calibration"
+Directory: /home/nvidia/Documents/stereo-camera/build
+"calibration" start time: Jun 15 22:39 +07
+Output:
+----------------------------------------------------------
+=== test_calibration ===
+
+── estimateLeverArm reduces bow and recovers r ≈ 0
+[calib] lever arm r = (0.00, 0.00, 0.00) mm  planarity RMS=0.000 mm
+  RMS before=3.827  after=0.000  r=(0.00,0.00,0.00)
+  PASS  rms0 > 1.0f
+  PASS  rms1 < rms0
+  PASS  rms1 < 1.0f
+  PASS  std::fabs(est.lever_arm[0]) < 5.f
+
+[test_calibration]  4 passed  /  0 failed
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"calibration" end time: Jun 15 22:39 +07
+"calibration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Jun 15 22:39 +07
