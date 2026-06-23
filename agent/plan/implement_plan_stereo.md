@@ -234,6 +234,16 @@ Each phase lists a goal, the files touched, a ready-to-paste Claude Code prompt,
   NaN/inf/zero disparity and depths outside [z_min, z_max]. Write `tests/test_depth.py`
   using a synthetic constant-disparity image."*
 - **Done when:** known disparity maps to known depth; mask counts are correct.
+- **Field note (2026-06-21, from `tools/depth_grid.py`):** uncalibrated rectification
+  (`stereoRectifyUncalibrated` from SIFT matches + fundamental matrix) *does* fix row
+  alignment — on a real saved pair it cut the inlier vertical residual from ~60 px to
+  ~0.3 px — but only when `findFundamentalMat` uses a TIGHT RANSAC threshold (1.0 px,
+  conf 0.999); a loose threshold (3.0) produced a degenerate homography (residual
+  ~1900 px). Even when correct, the warp adds black borders + perspective skew that
+  *lower* SGBM coverage (~44% → ~20% valid cells here). Lesson: uncalibrated rectify
+  trades coverage for geometric correctness and still fixes neither lens distortion nor
+  absolute scale. For the production module, use a REAL stereo calibration (Q matrix +
+  `initUndistortRectifyMap` + `reprojectImageTo3D`), not the uncalibrated shortcut.
 
 ### Phase 4 — Adapters for your existing parts A and B
 - **Goal:** wrap part A behind `StereoCapture.grab() -> (t, L, R)` and part B behind
