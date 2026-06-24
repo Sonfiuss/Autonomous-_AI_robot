@@ -8,7 +8,7 @@ set "FORMAT=%~1"
 if "%FORMAT%"=="" set "FORMAT=svg"
 set "XML_DIR=doxygen_out\xml"
 set "OUT_DIR=callgraph_output"
-set "COMMANDS=testtool\command.txt"
+set "COMMANDS=tools\command.txt"
 if "%PYTHON%"=="" set "PYTHON=python"
 
 where doxygen >nul 2>&1 || (echo [fatal] doxygen not installed & exit /b 1)

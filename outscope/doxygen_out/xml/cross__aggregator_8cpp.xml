@@ -5,15 +5,6 @@
     <includes refid="cross__aggregator_8h" local="yes">cross_aggregator.h</includes>
     <includes local="no">cstring</includes>
     <incdepgraph>
-      <node id="7">
-        <label>algorithm</label>
-      </node>
-      <node id="4">
-        <label>cstdint</label>
-      </node>
-      <node id="8">
-        <label>cstring</label>
-      </node>
       <node id="3">
         <label>adcensus_types.h</label>
         <link refid="adcensus__types_8h"/>
@@ -39,6 +30,15 @@
         </childnode>
         <childnode refid="7" relation="include">
         </childnode>
+      </node>
+      <node id="7">
+        <label>algorithm</label>
+      </node>
+      <node id="4">
+        <label>cstdint</label>
+      </node>
+      <node id="8">
+        <label>cstring</label>
       </node>
       <node id="5">
         <label>limits</label>

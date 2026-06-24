@@ -128,8 +128,9 @@ def is_stdlib(name: str) -> bool:
 
 
 def in_project(file_path: str) -> bool:
-    """Break rule 2 — file path lives under the DBM tree."""
-    return DBM_KEYWORD.lower() in (file_path or "").lower()
+    """Break rule 2 — file path lives under the DBM tree (not the test tool)."""
+    fp = (file_path or "").lower()
+    return DBM_KEYWORD.lower() in fp and TESTTOOL_KEYWORD.lower() not in fp
 
 
 # ---------------------------------------------------------------------------

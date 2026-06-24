@@ -22,9 +22,9 @@
         <referencedby refid="class_multi_step_refiner_1a7fded02bd21c3750ca20429dd448db84" compoundref="multistep__refiner_8cpp" startline="24" endline="37">Initialize</referencedby>
         <referencedby refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" compoundref="multistep__refiner_8cpp" startline="155" endline="229">IterativeRegionVoting</referencedby>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</referencedby>
         <referencedby refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">ProperInterpolation</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1ae1dd3b6cbcbd61f413644b809687f4a0" prot="private" static="no" mutable="no">
         <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
@@ -42,9 +42,9 @@
         <referencedby refid="class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" compoundref="multistep__refiner_8cpp" startline="309" endline="354">DepthDiscontinuityAdjustment</referencedby>
         <referencedby refid="class_multi_step_refiner_1a7fded02bd21c3750ca20429dd448db84" compoundref="multistep__refiner_8cpp" startline="24" endline="37">Initialize</referencedby>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</referencedby>
         <referencedby refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">ProperInterpolation</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1ac267c189cc56ca67f3b07db2ca61a291" prot="private" static="no" mutable="no">
         <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
@@ -80,7 +80,7 @@
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="78" column="9" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="78" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" compoundref="multistep__refiner_8cpp" startline="309" endline="354">DepthDiscontinuityAdjustment</referencedby>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ae36280e2f6809daca4382104cb8cfd51" compoundref="multistep__refiner_8cpp" startline="39" endline="46">SetData</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1a3871cb2263e8136cd89be2f2101e4574" prot="private" static="no" mutable="no">
@@ -99,7 +99,7 @@
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="80" column="16" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="80" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" compoundref="multistep__refiner_8cpp" startline="155" endline="229">IterativeRegionVoting</referencedby>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ae36280e2f6809daca4382104cb8cfd51" compoundref="multistep__refiner_8cpp" startline="39" endline="46">SetData</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1ac30faac65b700f36aff5b279bb45b747" prot="private" static="no" mutable="no">
@@ -119,9 +119,9 @@
         <referencedby refid="class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" compoundref="multistep__refiner_8cpp" startline="309" endline="354">DepthDiscontinuityAdjustment</referencedby>
         <referencedby refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" compoundref="multistep__refiner_8cpp" startline="155" endline="229">IterativeRegionVoting</referencedby>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</referencedby>
         <referencedby refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">ProperInterpolation</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ae36280e2f6809daca4382104cb8cfd51" compoundref="multistep__refiner_8cpp" startline="39" endline="46">SetData</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1a0769b477c8075f14694fc85e163922a6" prot="private" static="no" mutable="no">
@@ -139,8 +139,8 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="85" column="7" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="85" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ae36280e2f6809daca4382104cb8cfd51" compoundref="multistep__refiner_8cpp" startline="39" endline="46">SetData</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1a3e3b7c69045146840b6a6d15eea3970a" prot="private" static="no" mutable="no">
@@ -250,7 +250,7 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="101" column="9" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="101" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</referencedby>
         <referencedby refid="class_multi_step_refiner_1ab77f66217afb4831db0b34d3cc9bce65" compoundref="multistep__refiner_8cpp" startline="48" endline="60">SetParam</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1a6c9ef785e6b3ddfc8c890d3a64ac58f7" prot="private" static="no" mutable="no">
@@ -268,7 +268,7 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="104" column="5" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="104" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ab77f66217afb4831db0b34d3cc9bce65" compoundref="multistep__refiner_8cpp" startline="48" endline="60">SetParam</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1add62f1920f580c701b3c4fe853c162d7" prot="private" static="no" mutable="no">
@@ -286,7 +286,7 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="106" column="5" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="106" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ab77f66217afb4831db0b34d3cc9bce65" compoundref="multistep__refiner_8cpp" startline="48" endline="60">SetParam</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1a98c119c309156945214cf23fd82a88f4" prot="private" static="no" mutable="no">
@@ -304,7 +304,7 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="108" column="5" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="108" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ab77f66217afb4831db0b34d3cc9bce65" compoundref="multistep__refiner_8cpp" startline="48" endline="60">SetParam</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1aef6930dee25b265d367dfea4a44d6aed" prot="private" static="no" mutable="no">
@@ -322,7 +322,7 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="110" column="5" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="110" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" compoundref="multistep__refiner_8cpp" startline="12" endline="18">MultiStepRefiner</referencedby>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
         <referencedby refid="class_multi_step_refiner_1ab77f66217afb4831db0b34d3cc9bce65" compoundref="multistep__refiner_8cpp" startline="48" endline="60">SetParam</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1a8fb5e8d5708e44af1ef702dfe5b1736c" prot="private" static="no" mutable="no">
@@ -340,7 +340,7 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="113" column="8" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="113" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" compoundref="multistep__refiner_8cpp" startline="155" endline="229">IterativeRegionVoting</referencedby>
-        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</referencedby>
         <referencedby refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">ProperInterpolation</referencedby>
       </memberdef>
       <memberdef kind="variable" id="class_multi_step_refiner_1a9948b0bdedd817ab579d21ebebfab044" prot="private" static="no" mutable="no">
@@ -358,7 +358,7 @@
         </inbodydescription>
         <location file="com/project/DBM/adcensus/multistep_refiner.h" line="115" column="8" bodyfile="com/project/DBM/adcensus/multistep_refiner.h" bodystart="115" bodyend="-1"/>
         <referencedby refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" compoundref="multistep__refiner_8cpp" startline="155" endline="229">IterativeRegionVoting</referencedby>
-        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</referencedby>
         <referencedby refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">ProperInterpolation</referencedby>
       </memberdef>
     </sectiondef>
@@ -682,7 +682,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="com/project/DBM/adcensus/multistep_refiner.h" line="54" column="6" bodyfile="testtool/main.cpp" bodystart="64" bodyend="91"/>
+        <location file="com/project/DBM/adcensus/multistep_refiner.h" line="54" column="6" bodyfile="com/project/DBM/adcensus/multistep_refiner.cpp" bodystart="62" bodyend="89"/>
         <references refid="class_multi_step_refiner_1a93824157d0395fe216cee729a0fd2254" compoundref="multistep__refiner_8h" startline="78">cost_</references>
         <references refid="class_multi_step_refiner_1a3871cb2263e8136cd89be2f2101e4574" compoundref="multistep__refiner_8h" startline="80">cross_arms_</references>
         <references refid="class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" compoundref="multistep__refiner_8cpp" startline="309" endline="354">DepthDiscontinuityAdjustment</references>
@@ -695,7 +695,7 @@
         <references refid="class_multi_step_refiner_1ae1dd3b6cbcbd61f413644b809687f4a0" compoundref="multistep__refiner_8h" startline="72">height_</references>
         <references refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" compoundref="multistep__refiner_8cpp" startline="155" endline="229">IterativeRegionVoting</references>
         <references refid="namespaceadcensus__util_1aaaebd40b291ee87e94d4d9e107d760ee" compoundref="adcensus__util_8cpp" startline="55" endline="81">adcensus_util::MedianFilter</references>
-        <references refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="testtool_2main_8cpp" startline="1" endline="62">OutlierDetection</references>
+        <references refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">OutlierDetection</references>
         <references refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">ProperInterpolation</references>
         <references refid="class_multi_step_refiner_1acd65795cb4c5b730c92e2e3f5c53f752" compoundref="multistep__refiner_8h" startline="71">width_</references>
       </memberdef>
@@ -714,7 +714,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="com/project/DBM/adcensus/multistep_refiner.h" line="59" column="6" bodyfile="testtool/main.cpp" bodystart="1" bodyend="62"/>
+        <location file="com/project/DBM/adcensus/multistep_refiner.h" line="59" column="6" bodyfile="com/project/DBM/adcensus/multistep_refiner.cpp" bodystart="92" bodyend="153"/>
         <references refid="class_multi_step_refiner_1ac30faac65b700f36aff5b279bb45b747" compoundref="multistep__refiner_8h" startline="83">disp_left_</references>
         <references refid="class_multi_step_refiner_1a0769b477c8075f14694fc85e163922a6" compoundref="multistep__refiner_8h" startline="85">disp_right_</references>
         <references refid="class_multi_step_refiner_1ae1dd3b6cbcbd61f413644b809687f4a0" compoundref="multistep__refiner_8h" startline="72">height_</references>
@@ -723,7 +723,7 @@
         <references refid="class_multi_step_refiner_1a9948b0bdedd817ab579d21ebebfab044" compoundref="multistep__refiner_8h" startline="115">mismatches_</references>
         <references refid="class_multi_step_refiner_1a8fb5e8d5708e44af1ef702dfe5b1736c" compoundref="multistep__refiner_8h" startline="113">occlusions_</references>
         <references refid="class_multi_step_refiner_1acd65795cb4c5b730c92e2e3f5c53f752" compoundref="multistep__refiner_8h" startline="71">width_</references>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
       </memberdef>
       <memberdef kind="function" id="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -749,7 +749,7 @@
         <references refid="class_multi_step_refiner_1a9948b0bdedd817ab579d21ebebfab044" compoundref="multistep__refiner_8h" startline="115">mismatches_</references>
         <references refid="class_multi_step_refiner_1a8fb5e8d5708e44af1ef702dfe5b1736c" compoundref="multistep__refiner_8h" startline="113">occlusions_</references>
         <references refid="class_multi_step_refiner_1acd65795cb4c5b730c92e2e3f5c53f752" compoundref="multistep__refiner_8h" startline="71">width_</references>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
       </memberdef>
       <memberdef kind="function" id="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -775,7 +775,7 @@
         <references refid="class_multi_step_refiner_1a9948b0bdedd817ab579d21ebebfab044" compoundref="multistep__refiner_8h" startline="115">mismatches_</references>
         <references refid="class_multi_step_refiner_1a8fb5e8d5708e44af1ef702dfe5b1736c" compoundref="multistep__refiner_8h" startline="113">occlusions_</references>
         <references refid="class_multi_step_refiner_1acd65795cb4c5b730c92e2e3f5c53f752" compoundref="multistep__refiner_8h" startline="71">width_</references>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
       </memberdef>
       <memberdef kind="function" id="class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -800,7 +800,7 @@
         <references refid="class_multi_step_refiner_1a909364d9984349872808bfae10ea9d07" compoundref="multistep__refiner_8h" startline="91">min_disparity_</references>
         <references refid="class_multi_step_refiner_1a3e3b7c69045146840b6a6d15eea3970a" compoundref="multistep__refiner_8h" startline="88">vec_edge_left_</references>
         <references refid="class_multi_step_refiner_1acd65795cb4c5b730c92e2e3f5c53f752" compoundref="multistep__refiner_8h" startline="71">width_</references>
-        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="testtool_2main_8cpp" startline="64" endline="91">Refine</referencedby>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">Refine</referencedby>
       </memberdef>
     </sectiondef>
     <sectiondef kind="private-static-func">

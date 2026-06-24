@@ -2,17 +2,7 @@ digraph "Refine" {
   rankdir=LR;
   node [shape=box, fontname="Helvetica", fontsize=10];
   edge [fontname="Helvetica", fontsize=8];
-  "class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" [label="MultiStepRefiner::DepthDiscontinuityAdjustment"];
-  "class_multi_step_refiner_1a11f8aac46a857cf14f712a0364cd10c3" [label="MultiStepRefiner::EdgeDetect"];
-  "class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" [label="MultiStepRefiner::IterativeRegionVoting"];
-  "class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" [label="MultiStepRefiner::OutlierDetection"];
-  "class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" [label="MultiStepRefiner::ProperInterpolation"];
-  "class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" [label="MultiStepRefiner::Refine", style="filled,bold", fillcolor="#ffe08a"];
+  "_d_b_m_down_load_test_8cpp_1ad45b094d532baccee95649c24192f87a" [label="DBMDownLoadTest.cpp::Refine", style="filled,bold", fillcolor="#ffe08a"];
   "namespaceadcensus__util_1aaaebd40b291ee87e94d4d9e107d760ee" [label="adcensus_util::MedianFilter"];
-  "class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" -> "class_multi_step_refiner_1a11f8aac46a857cf14f712a0364cd10c3";
-  "class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" -> "class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e";
-  "class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" -> "class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099";
-  "class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" -> "class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2";
-  "class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" -> "class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314";
-  "class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" -> "namespaceadcensus__util_1aaaebd40b291ee87e94d4d9e107d760ee";
+  "_d_b_m_down_load_test_8cpp_1ad45b094d532baccee95649c24192f87a" -> "namespaceadcensus__util_1aaaebd40b291ee87e94d4d9e107d760ee";
 }

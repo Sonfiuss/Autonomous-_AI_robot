@@ -2,7 +2,7 @@
 <doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
   <compounddef id="dir_95b6f87e81f5573dd87fb2e8b966a3ed" kind="dir">
     <compoundname>testtool</compoundname>
-    <innerfile refid="testtool_2main_8cpp">main.cpp</innerfile>
+    <innerfile refid="_d_b_m_down_load_test_8cpp">DBMDownLoadTest.cpp</innerfile>
     <briefdescription>
     </briefdescription>
     <detaileddescription>

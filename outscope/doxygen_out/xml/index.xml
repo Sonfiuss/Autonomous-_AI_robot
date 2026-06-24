@@ -223,11 +223,13 @@
   </compound>
   <compound refid="scanline__optimizer_8h" kind="file"><name>scanline_optimizer.h</name>
   </compound>
-  <compound refid="com_2project_2_d_b_m_2main_8cpp" kind="file"><name>main.cpp</name>
-    <member refid="com_2project_2_d_b_m_2main_8cpp_1af7e59fc879d4a02c4222160510de3191" kind="function"><name>SaveDisparityMap</name></member>
-    <member refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" kind="function"><name>main</name></member>
+  <compound refid="main_8cpp" kind="file"><name>main.cpp</name>
+    <member refid="main_8cpp_1af7e59fc879d4a02c4222160510de3191" kind="function"><name>SaveDisparityMap</name></member>
+    <member refid="main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" kind="function"><name>main</name></member>
   </compound>
-  <compound refid="testtool_2main_8cpp" kind="file"><name>main.cpp</name>
+  <compound refid="_d_b_m_down_load_test_8cpp" kind="file"><name>DBMDownLoadTest.cpp</name>
+    <member refid="_d_b_m_down_load_test_8cpp_1a4eafbcdeb31ba1da16d043e22881ec46" kind="function"><name>OutlierDetection</name></member>
+    <member refid="_d_b_m_down_load_test_8cpp_1ad45b094d532baccee95649c24192f87a" kind="function"><name>Refine</name></member>
   </compound>
   <compound refid="dir_fd67cc6cefbbc94f215ae4fb2c2646eb" kind="dir"><name>com/project/DBM/adcensus</name>
   </compound>

@@ -343,7 +343,7 @@
         <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
         <references refid="class_a_d_census_stereo_1aa68f87333a51e11a5c8ee4ea785b9eb7" compoundref="_a_d_census_stereo_8h" startline="86">refiner_</references>
         <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
-        <referencedby refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="com_2project_2_d_b_m_2main_8cpp" startline="66" endline="146">main</referencedby>
+        <referencedby refid="main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="main_8cpp" startline="66" endline="146">main</referencedby>
         <referencedby refid="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" compoundref="_a_d_census_stereo_8cpp" startline="136" endline="146">Reset</referencedby>
       </memberdef>
       <memberdef kind="function" id="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
@@ -410,7 +410,7 @@
         <references refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</references>
         <references refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</references>
         <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
-        <referencedby refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="com_2project_2_d_b_m_2main_8cpp" startline="66" endline="146">main</referencedby>
+        <referencedby refid="main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="main_8cpp" startline="66" endline="146">main</referencedby>
       </memberdef>
       <memberdef kind="function" id="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>bool</type>

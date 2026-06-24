@@ -7,12 +7,6 @@
     <includedby refid="_a_d_census_stereo_8h" local="yes">com/project/DBM/adcensus/ADCensusStereo.h</includedby>
     <includedby refid="multistep__refiner_8cpp" local="yes">com/project/DBM/adcensus/multistep_refiner.cpp</includedby>
     <incdepgraph>
-      <node id="7">
-        <label>algorithm</label>
-      </node>
-      <node id="3">
-        <label>cstdint</label>
-      </node>
       <node id="2">
         <label>adcensus_types.h</label>
         <link refid="adcensus__types_8h"/>
@@ -38,6 +32,12 @@
         </childnode>
         <childnode refid="6" relation="include">
         </childnode>
+      </node>
+      <node id="7">
+        <label>algorithm</label>
+      </node>
+      <node id="3">
+        <label>cstdint</label>
       </node>
       <node id="4">
         <label>limits</label>
@@ -73,7 +73,7 @@
       </node>
       <node id="4">
         <label>com/project/DBM/main.cpp</label>
-        <link refid="com_2project_2_d_b_m_2main_8cpp"/>
+        <link refid="main_8cpp"/>
       </node>
     </invincdepgraph>
     <innerclass refid="class_multi_step_refiner" prot="public">MultiStepRefiner</innerclass>

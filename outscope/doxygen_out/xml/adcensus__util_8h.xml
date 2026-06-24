@@ -8,12 +8,6 @@
     <includedby refid="cost__computor_8cpp" local="yes">com/project/DBM/adcensus/cost_computor.cpp</includedby>
     <includedby refid="multistep__refiner_8cpp" local="yes">com/project/DBM/adcensus/multistep_refiner.cpp</includedby>
     <incdepgraph>
-      <node id="2">
-        <label>algorithm</label>
-      </node>
-      <node id="4">
-        <label>cstdint</label>
-      </node>
       <node id="3">
         <label>adcensus_types.h</label>
         <link refid="adcensus__types_8h"/>
@@ -31,6 +25,12 @@
         </childnode>
         <childnode refid="3" relation="include">
         </childnode>
+      </node>
+      <node id="2">
+        <label>algorithm</label>
+      </node>
+      <node id="4">
+        <label>cstdint</label>
       </node>
       <node id="5">
         <label>limits</label>

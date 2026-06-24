@@ -8,14 +8,8 @@
     <includes refid="scanline__optimizer_8h" local="yes">scanline_optimizer.h</includes>
     <includes refid="multistep__refiner_8h" local="yes">multistep_refiner.h</includes>
     <includedby refid="_a_d_census_stereo_8cpp" local="yes">com/project/DBM/adcensus/ADCensusStereo.cpp</includedby>
-    <includedby refid="com_2project_2_d_b_m_2main_8cpp" local="yes">com/project/DBM/main.cpp</includedby>
+    <includedby refid="main_8cpp" local="yes">com/project/DBM/main.cpp</includedby>
     <incdepgraph>
-      <node id="8">
-        <label>algorithm</label>
-      </node>
-      <node id="3">
-        <label>cstdint</label>
-      </node>
       <node id="1">
         <label>com/project/DBM/adcensus/ADCensusStereo.h</label>
         <link refid="_a_d_census_stereo_8h"/>
@@ -70,6 +64,12 @@
         <childnode refid="2" relation="include">
         </childnode>
       </node>
+      <node id="8">
+        <label>algorithm</label>
+      </node>
+      <node id="3">
+        <label>cstdint</label>
+      </node>
       <node id="4">
         <label>limits</label>
       </node>
@@ -92,7 +92,7 @@
       </node>
       <node id="3">
         <label>com/project/DBM/main.cpp</label>
-        <link refid="com_2project_2_d_b_m_2main_8cpp"/>
+        <link refid="main_8cpp"/>
       </node>
     </invincdepgraph>
     <innerclass refid="class_a_d_census_stereo" prot="public">ADCensusStereo</innerclass>

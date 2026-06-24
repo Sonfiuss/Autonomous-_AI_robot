@@ -8,21 +8,6 @@
     <includes local="no">algorithm</includes>
     <includes local="no">chrono</includes>
     <incdepgraph>
-      <node id="9">
-        <label>algorithm</label>
-      </node>
-      <node id="14">
-        <label>chrono</label>
-      </node>
-      <node id="4">
-        <label>cstdint</label>
-      </node>
-      <node id="12">
-        <label>cstdio</label>
-      </node>
-      <node id="13">
-        <label>cstring</label>
-      </node>
       <node id="1">
         <label>com/project/DBM/adcensus/ADCensusStereo.cpp</label>
         <link refid="_a_d_census_stereo_8cpp"/>
@@ -90,6 +75,21 @@
         </childnode>
         <childnode refid="3" relation="include">
         </childnode>
+      </node>
+      <node id="9">
+        <label>algorithm</label>
+      </node>
+      <node id="14">
+        <label>chrono</label>
+      </node>
+      <node id="4">
+        <label>cstdint</label>
+      </node>
+      <node id="12">
+        <label>cstdio</label>
+      </node>
+      <node id="13">
+        <label>cstring</label>
       </node>
       <node id="5">
         <label>limits</label>

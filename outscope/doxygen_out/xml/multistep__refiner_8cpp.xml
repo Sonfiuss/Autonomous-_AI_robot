@@ -7,18 +7,6 @@
     <includes local="no">cstring</includes>
     <includes refid="adcensus__util_8h" local="yes">adcensus_util.h</includes>
     <incdepgraph>
-      <node id="8">
-        <label>algorithm</label>
-      </node>
-      <node id="9">
-        <label>cmath</label>
-      </node>
-      <node id="4">
-        <label>cstdint</label>
-      </node>
-      <node id="10">
-        <label>cstring</label>
-      </node>
       <node id="3">
         <label>adcensus_types.h</label>
         <link refid="adcensus__types_8h"/>
@@ -64,6 +52,18 @@
         </childnode>
         <childnode refid="7" relation="include">
         </childnode>
+      </node>
+      <node id="8">
+        <label>algorithm</label>
+      </node>
+      <node id="9">
+        <label>cmath</label>
+      </node>
+      <node id="4">
+        <label>cstdint</label>
+      </node>
+      <node id="10">
+        <label>cstring</label>
       </node>
       <node id="5">
         <label>limits</label>

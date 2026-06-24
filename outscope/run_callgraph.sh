@@ -11,7 +11,7 @@ cd "$HERE"
 
 XML_DIR="doxygen_out/xml"
 OUT_DIR="callgraph_output"
-COMMANDS="testtool/command.txt"
+COMMANDS="tools/command.txt"
 
 command -v doxygen >/dev/null || { echo "[fatal] doxygen not installed"; exit 1; }
 command -v dot     >/dev/null || { echo "[fatal] graphviz 'dot' not installed"; exit 1; }

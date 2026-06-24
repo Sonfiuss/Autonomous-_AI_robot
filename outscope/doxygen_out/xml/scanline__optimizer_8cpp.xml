@@ -6,18 +6,6 @@
     <includes local="no">cstring</includes>
     <includes local="no">cassert</includes>
     <incdepgraph>
-      <node id="3">
-        <label>algorithm</label>
-      </node>
-      <node id="9">
-        <label>cassert</label>
-      </node>
-      <node id="5">
-        <label>cstdint</label>
-      </node>
-      <node id="8">
-        <label>cstring</label>
-      </node>
       <node id="4">
         <label>adcensus_types.h</label>
         <link refid="adcensus__types_8h"/>
@@ -45,6 +33,18 @@
         </childnode>
         <childnode refid="4" relation="include">
         </childnode>
+      </node>
+      <node id="3">
+        <label>algorithm</label>
+      </node>
+      <node id="9">
+        <label>cassert</label>
+      </node>
+      <node id="5">
+        <label>cstdint</label>
+      </node>
+      <node id="8">
+        <label>cstring</label>
       </node>
       <node id="6">
         <label>limits</label>

@@ -1,4 +1,4 @@
-void MultiStepRefiner::OutlierDetection()
+void OutlierDetection()
 {
 	const sint32 width = width_;
 	const sint32 height = height_;
@@ -59,9 +59,10 @@ void MultiStepRefiner::OutlierDetection()
 			}
 		}
 	}
+	Refine()
 }
 
-void MultiStepRefiner::Refine()
+void Refine()
 {
 	if (width_ <= 0 || height_ <= 0 ||
 		disp_left_ == nullptr || disp_right_ == nullptr ||
@@ -71,7 +72,6 @@ void MultiStepRefiner::Refine()
 
 	// step1: outlier detection
 	if (do_lr_check_) {
-		OutlierDetection();
 	}
 	// step2: iterative region voting
 	if (do_region_voting_) {
