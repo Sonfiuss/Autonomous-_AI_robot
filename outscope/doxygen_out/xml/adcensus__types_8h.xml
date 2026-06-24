@@ -1,0 +1,372 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="adcensus__types_8h" kind="file" language="C++">
+    <compoundname>adcensus_types.h</compoundname>
+    <includes local="no">cstdint</includes>
+    <includes local="no">limits</includes>
+    <includes local="no">vector</includes>
+    <includedby refid="_a_d_census_stereo_8h" local="yes">com/project/DBM/adcensus/ADCensusStereo.h</includedby>
+    <includedby refid="adcensus__util_8h" local="yes">com/project/DBM/adcensus/adcensus_util.h</includedby>
+    <includedby refid="cost__computor_8h" local="yes">com/project/DBM/adcensus/cost_computor.h</includedby>
+    <includedby refid="cross__aggregator_8h" local="yes">com/project/DBM/adcensus/cross_aggregator.h</includedby>
+    <includedby refid="multistep__refiner_8h" local="yes">com/project/DBM/adcensus/multistep_refiner.h</includedby>
+    <includedby refid="scanline__optimizer_8h" local="yes">com/project/DBM/adcensus/scanline_optimizer.h</includedby>
+    <incdepgraph>
+      <node id="1">
+        <label>com/project/DBM/adcensus/adcensus_types.h</label>
+        <link refid="adcensus__types_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>cstdint</label>
+      </node>
+      <node id="3">
+        <label>limits</label>
+      </node>
+      <node id="4">
+        <label>vector</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3">
+        <label>com/project/DBM/adcensus/ADCensusStereo.cpp</label>
+        <link refid="_a_d_census_stereo_8cpp"/>
+      </node>
+      <node id="2">
+        <label>com/project/DBM/adcensus/ADCensusStereo.h</label>
+        <link refid="_a_d_census_stereo_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>com/project/DBM/adcensus/adcensus_types.h</label>
+        <link refid="adcensus__types_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="10" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+        <childnode refid="13" relation="include">
+        </childnode>
+      </node>
+      <node id="6">
+        <label>com/project/DBM/adcensus/adcensus_util.cpp</label>
+        <link refid="adcensus__util_8cpp"/>
+      </node>
+      <node id="5">
+        <label>com/project/DBM/adcensus/adcensus_util.h</label>
+        <link refid="adcensus__util_8h"/>
+        <childnode refid="6" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>com/project/DBM/adcensus/cost_computor.cpp</label>
+        <link refid="cost__computor_8cpp"/>
+      </node>
+      <node id="9">
+        <label>com/project/DBM/adcensus/cost_computor.h</label>
+        <link refid="cost__computor_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+      </node>
+      <node id="11">
+        <label>com/project/DBM/adcensus/cross_aggregator.cpp</label>
+        <link refid="cross__aggregator_8cpp"/>
+      </node>
+      <node id="10">
+        <label>com/project/DBM/adcensus/cross_aggregator.h</label>
+        <link refid="cross__aggregator_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="11" relation="include">
+        </childnode>
+        <childnode refid="12" relation="include">
+        </childnode>
+      </node>
+      <node id="8">
+        <label>com/project/DBM/adcensus/multistep_refiner.cpp</label>
+        <link refid="multistep__refiner_8cpp"/>
+      </node>
+      <node id="12">
+        <label>com/project/DBM/adcensus/multistep_refiner.h</label>
+        <link refid="multistep__refiner_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="14">
+        <label>com/project/DBM/adcensus/scanline_optimizer.cpp</label>
+        <link refid="scanline__optimizer_8cpp"/>
+      </node>
+      <node id="13">
+        <label>com/project/DBM/adcensus/scanline_optimizer.h</label>
+        <link refid="scanline__optimizer_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="14" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>com/project/DBM/main.cpp</label>
+        <link refid="main_8cpp"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="struct_a_d_census_option" prot="public">ADCensusOption</innerclass>
+    <innerclass refid="struct_a_d_color" prot="public">ADColor</innerclass>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="adcensus__types_8h_1abdf73516460d2bbbfdea4a92bcecc080" prot="public" static="no">
+        <name>SAFE_DELETE</name>
+        <param><defname>P</defname></param>
+        <initializer>{if(P) delete[](P);(P)=nullptr;}</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="17" column="9" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="17" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" compoundref="_a_d_census_stereo_8cpp" startline="314" endline="318">ADCensusStereo::Release</referencedby>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="enum">
+      <memberdef kind="enum" id="adcensus__types_8h_1ac8993191d9e5604cecade1988893f666" prot="public" static="no" strong="no">
+        <type></type>
+        <name>CensusSize</name>
+        <enumvalue id="adcensus__types_8h_1ac8993191d9e5604cecade1988893f666a141d3ca89a3b0ef23c1dc332bf54b6d5" prot="public">
+          <name>Census5x5</name>
+          <initializer>= 0</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="adcensus__types_8h_1ac8993191d9e5604cecade1988893f666a8fc33a293faaf2fab176ad8acbeab5b3" prot="public">
+          <name>Census9x7</name>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="39" column="1" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="39" bodyend="42"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="adcensus__types_8h_1a3e55e6174885a377573f0f04b8be2e54" prot="public" static="no">
+        <type>int8_t</type>
+        <definition>typedef int8_t sint8</definition>
+        <argsstring></argsstring>
+        <name>sint8</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="21" column="15" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="21" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" prot="public" static="no">
+        <type>uint8_t</type>
+        <definition>typedef uint8_t uint8</definition>
+        <argsstring></argsstring>
+        <name>uint8</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="22" column="16" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="22" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1aa961e2cfd0d472f8870c6032a6773e36" prot="public" static="no">
+        <type>int16_t</type>
+        <definition>typedef int16_t sint16</definition>
+        <argsstring></argsstring>
+        <name>sint16</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="23" column="16" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1ac2a9e79eb120216f855626495b7bd18a" prot="public" static="no">
+        <type>uint16_t</type>
+        <definition>typedef uint16_t uint16</definition>
+        <argsstring></argsstring>
+        <name>uint16</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="24" column="17" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" prot="public" static="no">
+        <type>int32_t</type>
+        <definition>typedef int32_t sint32</definition>
+        <argsstring></argsstring>
+        <name>sint32</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="25" column="16" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1acbd4acd0d29e2d6c43104827f77d9cd2" prot="public" static="no">
+        <type>uint32_t</type>
+        <definition>typedef uint32_t uint32</definition>
+        <argsstring></argsstring>
+        <name>uint32</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="26" column="17" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1a4a4dc5c711b664e54ebabbb396e2a9d8" prot="public" static="no">
+        <type>int64_t</type>
+        <definition>typedef int64_t sint64</definition>
+        <argsstring></argsstring>
+        <name>sint64</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="27" column="16" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1abc0f5bc07737e498f287334775dff2b6" prot="public" static="no">
+        <type>uint64_t</type>
+        <definition>typedef uint64_t uint64</definition>
+        <argsstring></argsstring>
+        <name>uint64</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="28" column="17" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" prot="public" static="no">
+        <type>float</type>
+        <definition>typedef float float32</definition>
+        <argsstring></argsstring>
+        <name>float32</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="29" column="14" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="typedef" id="adcensus__types_8h_1a232fad1b0d6dcc7c16aabde98b2e2a80" prot="public" static="no">
+        <type>double</type>
+        <definition>typedef double float64</definition>
+        <argsstring></argsstring>
+        <name>float64</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="30" column="15" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="var">
+      <memberdef kind="variable" id="adcensus__types_8h_1a118c72a78435968038ba96390aa41576" prot="public" static="no" constexpr="yes" mutable="no">
+        <type>auto</type>
+        <definition>auto Invalid_Float</definition>
+        <argsstring></argsstring>
+        <name>Invalid_Float</name>
+        <initializer>= std::numeric_limits&lt;<ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref>&gt;::infinity()</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="33" column="16" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="33" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ADCensusStereo::ComputeDisparity</referencedby>
+        <referencedby refid="class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" compoundref="multistep__refiner_8cpp" startline="309" endline="354">MultiStepRefiner::DepthDiscontinuityAdjustment</referencedby>
+        <referencedby refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" compoundref="multistep__refiner_8cpp" startline="155" endline="229">MultiStepRefiner::IterativeRegionVoting</referencedby>
+        <referencedby refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" compoundref="multistep__refiner_8cpp" startline="92" endline="153">MultiStepRefiner::OutlierDetection</referencedby>
+        <referencedby refid="_d_b_m_down_load_test_8cpp_1a4eafbcdeb31ba1da16d043e22881ec46" compoundref="_d_b_m_down_load_test_8cpp" startline="1" endline="63">OutlierDetection</referencedby>
+        <referencedby refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">MultiStepRefiner::ProperInterpolation</referencedby>
+        <referencedby refid="main_8cpp_1af7e59fc879d4a02c4222160510de3191" compoundref="main_8cpp" startline="27" endline="64">SaveDisparityMap</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="adcensus__types_8h_1a0fdd98eecb058201560ee2ff1fea3dcf" prot="public" static="no" constexpr="yes" mutable="no">
+        <type>auto</type>
+        <definition>auto Large_Float</definition>
+        <argsstring></argsstring>
+        <name>Large_Float</name>
+        <initializer>= 99999.0f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="35" column="16" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="35" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ADCensusStereo::ComputeDisparity</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" compoundref="_a_d_census_stereo_8cpp" startline="247" endline="312">ADCensusStereo::ComputeDisparityRight</referencedby>
+        <referencedby refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" compoundref="multistep__refiner_8cpp" startline="231" endline="307">MultiStepRefiner::ProperInterpolation</referencedby>
+        <referencedby refid="class_scanline_optimizer_1a4ddb87dae7151baf5ca67026e8b69c0d" compoundref="scanline__optimizer_8cpp" startline="64" endline="172">ScanlineOptimizer::ScanlineOptimizeLeftRight</referencedby>
+        <referencedby refid="class_scanline_optimizer_1a8dda679d8cd992a069c9dc02b1fc2074" compoundref="scanline__optimizer_8cpp" startline="174" endline="280">ScanlineOptimizer::ScanlineOptimizeUpDown</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="adcensus__types_8h_1a1dd4d5dfcd3301a0b6b4a3b06d9bd1cc" prot="public" static="no" constexpr="yes" mutable="no">
+        <type>auto</type>
+        <definition>auto Small_Float</definition>
+        <argsstring></argsstring>
+        <name>Small_Float</name>
+        <initializer>= -99999.0f</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="36" column="16" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/adcensus/adcensus_types.h"/>
+  </compounddef>
+</doxygen>

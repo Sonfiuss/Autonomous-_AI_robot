@@ -46,6 +46,10 @@ STDLIB_REGEXES = (re.compile(r"^pthread_\w+$"),)
 # far larger than the old test-tool-anchored trees, so the default is raised;
 # override per run with --max-nodes.
 MAX_NODES = 50
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7125b223b4b1f508926604d15850ed64bb945529
 # Secondary safety net against pathological recursion depth.
 MAX_DEPTH = 50
 # Break rule 3 (default methods): names listed in this file are treated as
@@ -148,6 +152,10 @@ def load_xml(xml_dir: str) -> dict[str, Func]:
 # ---------------------------------------------------------------------------
 def in_testtool(fn: "Func") -> bool:
     """A command names a function *in the test tool* (testtool/DBMDownLoadTest.cpp).
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7125b223b4b1f508926604d15850ed64bb945529
     The walk enters that exact function, then descends into whichever callees
     live in DBM (break rule 2). Doxygen records the declaration in location/@file
     and the definition in location/@bodyfile, so we accept either."""
@@ -168,6 +176,11 @@ def match_entries(command: str, funcs: dict[str, Func]) -> list[Func]:
     # function and the first hop reveals the DBM call it exercises.
     tt = [f for f in matches if in_testtool(f)]
     return tt or matches
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 7125b223b4b1f508926604d15850ed64bb945529
 # ---------------------------------------------------------------------------
 # 4.3 Walk the call graph with break rules + 4.4 collect nodes/edges
 # ---------------------------------------------------------------------------
@@ -252,6 +265,10 @@ def main(argv=None):
                          f"nodes (default {MAX_NODES}).")
     args = ap.parse_args(argv)
     MAX_NODES = args.max_nodes
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7125b223b4b1f508926604d15850ed64bb945529
     global DEFAULT_METHODS
     DEFAULT_METHODS = load_default_methods(args.defaults)
     print(f"[info] loaded {len(DEFAULT_METHODS)} default-method names "

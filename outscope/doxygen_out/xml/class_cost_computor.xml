@@ -1,0 +1,516 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="class_cost_computor" kind="class" language="C++" prot="public">
+    <compoundname>CostComputor</compoundname>
+    <includes refid="cost__computor_8h" local="no">cost_computor.h</includes>
+    <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 CostComputor::width_</definition>
+        <argsstring></argsstring>
+        <name>width_</name>
+        <qualifiedname>CostComputor::width_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="61" column="7" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="61" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CensusTransform</referencedby>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" compoundref="cost__computor_8cpp" startline="59" endline="74">ComputeGray</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1ad13ce101058129d31245ed39d3424096" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 CostComputor::height_</definition>
+        <argsstring></argsstring>
+        <name>height_</name>
+        <qualifiedname>CostComputor::height_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="62" column="7" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="62" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CensusTransform</referencedby>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" compoundref="cost__computor_8cpp" startline="59" endline="74">ComputeGray</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1ab20edcd3bf07695560e0c220c0a7dc5b" prot="private" static="no" mutable="no">
+        <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+        <definition>const uint8* CostComputor::img_left_</definition>
+        <argsstring></argsstring>
+        <name>img_left_</name>
+        <qualifiedname>CostComputor::img_left_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="65" column="13" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="65" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" compoundref="cost__computor_8cpp" startline="59" endline="74">ComputeGray</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1af102197b372e7b6aa4fd7b604afa8626" compoundref="cost__computor_8cpp" startline="47" endline="51">SetData</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1aed75ef93933df214740a649517f70d3f" prot="private" static="no" mutable="no">
+        <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+        <definition>const uint8* CostComputor::img_right_</definition>
+        <argsstring></argsstring>
+        <name>img_right_</name>
+        <qualifiedname>CostComputor::img_right_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="66" column="13" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="66" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" compoundref="cost__computor_8cpp" startline="59" endline="74">ComputeGray</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1af102197b372e7b6aa4fd7b604afa8626" compoundref="cost__computor_8cpp" startline="47" endline="51">SetData</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1a99ba7264db4b47abc45cf5ad18886165" prot="private" static="no" mutable="no">
+        <type>vector&lt; <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> &gt;</type>
+        <definition>vector&lt;uint8&gt; CostComputor::gray_left_</definition>
+        <argsstring></argsstring>
+        <name>gray_left_</name>
+        <qualifiedname>CostComputor::gray_left_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="69" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="69" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CensusTransform</referencedby>
+        <referencedby refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" compoundref="cost__computor_8cpp" startline="59" endline="74">ComputeGray</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1a54b06d4781f31323c19ab7df0e25fb58" prot="private" static="no" mutable="no">
+        <type>vector&lt; <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> &gt;</type>
+        <definition>vector&lt;uint8&gt; CostComputor::gray_right_</definition>
+        <argsstring></argsstring>
+        <name>gray_right_</name>
+        <qualifiedname>CostComputor::gray_right_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="71" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="71" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CensusTransform</referencedby>
+        <referencedby refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" compoundref="cost__computor_8cpp" startline="59" endline="74">ComputeGray</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1ac5e6f88ea6cc73476462c0cfc2d099ba" prot="private" static="no" mutable="no">
+        <type>vector&lt; <ref refid="adcensus__types_8h_1abc0f5bc07737e498f287334775dff2b6" kindref="member">uint64</ref> &gt;</type>
+        <definition>vector&lt;uint64&gt; CostComputor::census_left_</definition>
+        <argsstring></argsstring>
+        <name>census_left_</name>
+        <qualifiedname>CostComputor::census_left_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="74" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="74" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CensusTransform</referencedby>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1a63868bff46c78becad2896433a828b16" prot="private" static="no" mutable="no">
+        <type>vector&lt; <ref refid="adcensus__types_8h_1abc0f5bc07737e498f287334775dff2b6" kindref="member">uint64</ref> &gt;</type>
+        <definition>vector&lt;uint64&gt; CostComputor::census_right_</definition>
+        <argsstring></argsstring>
+        <name>census_right_</name>
+        <qualifiedname>CostComputor::census_right_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="76" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="76" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CensusTransform</referencedby>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1a11c6914176f721a8ad942fe089253cc1" prot="private" static="no" mutable="no">
+        <type>vector&lt; <ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref> &gt;</type>
+        <definition>vector&lt;float32&gt; CostComputor::cost_init_</definition>
+        <argsstring></argsstring>
+        <name>cost_init_</name>
+        <qualifiedname>CostComputor::cost_init_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="79" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="79" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a71bda788758f80cf6713a8f446bba398" compoundref="cost__computor_8cpp" startline="140" endline="148">get_cost_ptr</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1a5f9e67837567e23b35bab7ebd99682ea" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 CostComputor::lambda_ad_</definition>
+        <argsstring></argsstring>
+        <name>lambda_ad_</name>
+        <qualifiedname>CostComputor::lambda_ad_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="82" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="82" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1a22b8664c749d725103f005d20787eeb8" compoundref="cost__computor_8cpp" startline="53" endline="57">SetParams</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1a8a99b1de8481847f49ca7e9b2ceef40e" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 CostComputor::lambda_census_</definition>
+        <argsstring></argsstring>
+        <name>lambda_census_</name>
+        <qualifiedname>CostComputor::lambda_census_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="84" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="84" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1a22b8664c749d725103f005d20787eeb8" compoundref="cost__computor_8cpp" startline="53" endline="57">SetParams</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1afa830109dc2553dd5fc0b2a03227e7e0" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 CostComputor::min_disparity_</definition>
+        <argsstring></argsstring>
+        <name>min_disparity_</name>
+        <qualifiedname>CostComputor::min_disparity_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="87" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="87" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1aec0d42613fd57c827530c7433728bc11" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 CostComputor::max_disparity_</definition>
+        <argsstring></argsstring>
+        <name>max_disparity_</name>
+        <qualifiedname>CostComputor::max_disparity_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="89" column="8" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="89" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_cost_computor_1a135dc09333f826607cd5d727ace39614" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool CostComputor::is_initialized_</definition>
+        <argsstring></argsstring>
+        <name>is_initialized_</name>
+        <qualifiedname>CostComputor::is_initialized_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="92" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="92" bodyend="-1"/>
+        <referencedby refid="class_cost_computor_1ad94060cb58c98484f06ecc39f8df3c1c" compoundref="cost__computor_8cpp" startline="124" endline="138">Compute</referencedby>
+        <referencedby refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" compoundref="cost__computor_8cpp" startline="11" endline="13">CostComputor</referencedby>
+        <referencedby refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" compoundref="cost__computor_8cpp" startline="20" endline="45">Initialize</referencedby>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_cost_computor_1a22ab3b832275bef5727759912522365e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CostComputor::CostComputor</definition>
+        <argsstring>()</argsstring>
+        <name>CostComputor</name>
+        <qualifiedname>CostComputor::CostComputor</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="17" column="1" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="11" bodyend="13"/>
+        <references refid="class_cost_computor_1ad13ce101058129d31245ed39d3424096" compoundref="cost__computor_8h" startline="62">height_</references>
+        <references refid="class_cost_computor_1ab20edcd3bf07695560e0c220c0a7dc5b" compoundref="cost__computor_8h" startline="65">img_left_</references>
+        <references refid="class_cost_computor_1aed75ef93933df214740a649517f70d3f" compoundref="cost__computor_8h" startline="66">img_right_</references>
+        <references refid="class_cost_computor_1a135dc09333f826607cd5d727ace39614" compoundref="cost__computor_8h" startline="92">is_initialized_</references>
+        <references refid="class_cost_computor_1a5f9e67837567e23b35bab7ebd99682ea" compoundref="cost__computor_8h" startline="82">lambda_ad_</references>
+        <references refid="class_cost_computor_1a8a99b1de8481847f49ca7e9b2ceef40e" compoundref="cost__computor_8h" startline="84">lambda_census_</references>
+        <references refid="class_cost_computor_1aec0d42613fd57c827530c7433728bc11" compoundref="cost__computor_8h" startline="89">max_disparity_</references>
+        <references refid="class_cost_computor_1afa830109dc2553dd5fc0b2a03227e7e0" compoundref="cost__computor_8h" startline="87">min_disparity_</references>
+        <references refid="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" compoundref="cost__computor_8h" startline="61">width_</references>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1a5153b057efe419116022b7d3900d5ebd" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CostComputor::~CostComputor</definition>
+        <argsstring>()</argsstring>
+        <name>~CostComputor</name>
+        <qualifiedname>CostComputor::~CostComputor</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="18" column="1" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="15" bodyend="18"/>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool CostComputor::Initialize</definition>
+        <argsstring>(const sint32 &amp;width, const sint32 &amp;height, const sint32 &amp;min_disparity, const sint32 &amp;max_disparity)</argsstring>
+        <name>Initialize</name>
+        <qualifiedname>CostComputor::Initialize</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>width</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>height</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>min_disparity</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>max_disparity</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="28" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="20" bodyend="45"/>
+        <references refid="class_cost_computor_1ac5e6f88ea6cc73476462c0cfc2d099ba" compoundref="cost__computor_8h" startline="74">census_left_</references>
+        <references refid="class_cost_computor_1a63868bff46c78becad2896433a828b16" compoundref="cost__computor_8h" startline="76">census_right_</references>
+        <references refid="class_cost_computor_1a11c6914176f721a8ad942fe089253cc1" compoundref="cost__computor_8h" startline="79">cost_init_</references>
+        <references refid="class_cost_computor_1a99ba7264db4b47abc45cf5ad18886165" compoundref="cost__computor_8h" startline="69">gray_left_</references>
+        <references refid="class_cost_computor_1a54b06d4781f31323c19ab7df0e25fb58" compoundref="cost__computor_8h" startline="71">gray_right_</references>
+        <references refid="class_cost_computor_1ad13ce101058129d31245ed39d3424096" compoundref="cost__computor_8h" startline="62">height_</references>
+        <references refid="class_cost_computor_1a135dc09333f826607cd5d727ace39614" compoundref="cost__computor_8h" startline="92">is_initialized_</references>
+        <references refid="class_cost_computor_1aec0d42613fd57c827530c7433728bc11" compoundref="cost__computor_8h" startline="89">max_disparity_</references>
+        <references refid="class_cost_computor_1afa830109dc2553dd5fc0b2a03227e7e0" compoundref="cost__computor_8h" startline="87">min_disparity_</references>
+        <references refid="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" compoundref="cost__computor_8h" startline="61">width_</references>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1af102197b372e7b6aa4fd7b604afa8626" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void CostComputor::SetData</definition>
+        <argsstring>(const uint8 *img_left, const uint8 *img_right)</argsstring>
+        <name>SetData</name>
+        <qualifiedname>CostComputor::SetData</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+          <declname>img_left</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+          <declname>img_right</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="35" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="47" bodyend="51"/>
+        <references refid="class_cost_computor_1ab20edcd3bf07695560e0c220c0a7dc5b" compoundref="cost__computor_8h" startline="65">img_left_</references>
+        <references refid="class_cost_computor_1aed75ef93933df214740a649517f70d3f" compoundref="cost__computor_8h" startline="66">img_right_</references>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1a22b8664c749d725103f005d20787eeb8" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void CostComputor::SetParams</definition>
+        <argsstring>(const sint32 &amp;lambda_ad, const sint32 &amp;lambda_census)</argsstring>
+        <name>SetParams</name>
+        <qualifiedname>CostComputor::SetParams</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>lambda_ad</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>lambda_census</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="42" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="53" bodyend="57"/>
+        <references refid="class_cost_computor_1a5f9e67837567e23b35bab7ebd99682ea" compoundref="cost__computor_8h" startline="82">lambda_ad_</references>
+        <references refid="class_cost_computor_1a8a99b1de8481847f49ca7e9b2ceef40e" compoundref="cost__computor_8h" startline="84">lambda_census_</references>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1ad94060cb58c98484f06ecc39f8df3c1c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void CostComputor::Compute</definition>
+        <argsstring>()</argsstring>
+        <name>Compute</name>
+        <qualifiedname>CostComputor::Compute</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="45" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="124" bodyend="138"/>
+        <references refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CensusTransform</references>
+        <references refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">ComputeCost</references>
+        <references refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" compoundref="cost__computor_8cpp" startline="59" endline="74">ComputeGray</references>
+        <references refid="class_cost_computor_1a135dc09333f826607cd5d727ace39614" compoundref="cost__computor_8h" startline="92">is_initialized_</references>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1a71bda788758f80cf6713a8f446bba398" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref> *</type>
+        <definition>float32 * CostComputor::get_cost_ptr</definition>
+        <argsstring>()</argsstring>
+        <name>get_cost_ptr</name>
+        <qualifiedname>CostComputor::get_cost_ptr</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="48" column="9" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="140" bodyend="148"/>
+        <references refid="class_cost_computor_1a11c6914176f721a8ad942fe089253cc1" compoundref="cost__computor_8h" startline="79">cost_init_</references>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void CostComputor::ComputeGray</definition>
+        <argsstring>()</argsstring>
+        <name>ComputeGray</name>
+        <qualifiedname>CostComputor::ComputeGray</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="52" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="59" bodyend="74"/>
+        <references refid="class_cost_computor_1a99ba7264db4b47abc45cf5ad18886165" compoundref="cost__computor_8h" startline="69">gray_left_</references>
+        <references refid="class_cost_computor_1a54b06d4781f31323c19ab7df0e25fb58" compoundref="cost__computor_8h" startline="71">gray_right_</references>
+        <references refid="class_cost_computor_1ad13ce101058129d31245ed39d3424096" compoundref="cost__computor_8h" startline="62">height_</references>
+        <references refid="class_cost_computor_1ab20edcd3bf07695560e0c220c0a7dc5b" compoundref="cost__computor_8h" startline="65">img_left_</references>
+        <references refid="class_cost_computor_1aed75ef93933df214740a649517f70d3f" compoundref="cost__computor_8h" startline="66">img_right_</references>
+        <references refid="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" compoundref="cost__computor_8h" startline="61">width_</references>
+        <referencedby refid="class_cost_computor_1ad94060cb58c98484f06ecc39f8df3c1c" compoundref="cost__computor_8cpp" startline="124" endline="138">Compute</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void CostComputor::CensusTransform</definition>
+        <argsstring>()</argsstring>
+        <name>CensusTransform</name>
+        <qualifiedname>CostComputor::CensusTransform</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="55" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="76" bodyend="81"/>
+        <references refid="class_cost_computor_1ac5e6f88ea6cc73476462c0cfc2d099ba" compoundref="cost__computor_8h" startline="74">census_left_</references>
+        <references refid="class_cost_computor_1a63868bff46c78becad2896433a828b16" compoundref="cost__computor_8h" startline="76">census_right_</references>
+        <references refid="namespaceadcensus__util_1a7703fe07829da918a6068e859809b08d" compoundref="adcensus__util_8cpp" startline="10" endline="39">adcensus_util::census_transform_9x7</references>
+        <references refid="class_cost_computor_1a99ba7264db4b47abc45cf5ad18886165" compoundref="cost__computor_8h" startline="69">gray_left_</references>
+        <references refid="class_cost_computor_1a54b06d4781f31323c19ab7df0e25fb58" compoundref="cost__computor_8h" startline="71">gray_right_</references>
+        <references refid="class_cost_computor_1ad13ce101058129d31245ed39d3424096" compoundref="cost__computor_8h" startline="62">height_</references>
+        <references refid="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" compoundref="cost__computor_8h" startline="61">width_</references>
+        <referencedby refid="class_cost_computor_1ad94060cb58c98484f06ecc39f8df3c1c" compoundref="cost__computor_8cpp" startline="124" endline="138">Compute</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_cost_computor_1ae982647a69522230e6518358395144c0" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void CostComputor::ComputeCost</definition>
+        <argsstring>()</argsstring>
+        <name>ComputeCost</name>
+        <qualifiedname>CostComputor::ComputeCost</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cost_computor.h" line="58" column="6" bodyfile="com/project/DBM/adcensus/cost_computor.cpp" bodystart="83" bodyend="122"/>
+        <references refid="class_cost_computor_1ac5e6f88ea6cc73476462c0cfc2d099ba" compoundref="cost__computor_8h" startline="74">census_left_</references>
+        <references refid="class_cost_computor_1a63868bff46c78becad2896433a828b16" compoundref="cost__computor_8h" startline="76">census_right_</references>
+        <references refid="class_cost_computor_1a11c6914176f721a8ad942fe089253cc1" compoundref="cost__computor_8h" startline="79">cost_init_</references>
+        <references refid="namespaceadcensus__util_1a99a690c8f0152aeeb3f51cae3a900816" compoundref="adcensus__util_8cpp" startline="42" endline="53">adcensus_util::Hamming64</references>
+        <references refid="class_cost_computor_1ad13ce101058129d31245ed39d3424096" compoundref="cost__computor_8h" startline="62">height_</references>
+        <references refid="class_cost_computor_1ab20edcd3bf07695560e0c220c0a7dc5b" compoundref="cost__computor_8h" startline="65">img_left_</references>
+        <references refid="class_cost_computor_1aed75ef93933df214740a649517f70d3f" compoundref="cost__computor_8h" startline="66">img_right_</references>
+        <references refid="class_cost_computor_1a5f9e67837567e23b35bab7ebd99682ea" compoundref="cost__computor_8h" startline="82">lambda_ad_</references>
+        <references refid="class_cost_computor_1a8a99b1de8481847f49ca7e9b2ceef40e" compoundref="cost__computor_8h" startline="84">lambda_census_</references>
+        <references refid="class_cost_computor_1aec0d42613fd57c827530c7433728bc11" compoundref="cost__computor_8h" startline="89">max_disparity_</references>
+        <references refid="class_cost_computor_1afa830109dc2553dd5fc0b2a03227e7e0" compoundref="cost__computor_8h" startline="87">min_disparity_</references>
+        <references refid="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" compoundref="cost__computor_8h" startline="61">width_</references>
+        <referencedby refid="class_cost_computor_1ad94060cb58c98484f06ecc39f8df3c1c" compoundref="cost__computor_8cpp" startline="124" endline="138">Compute</referencedby>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/adcensus/cost_computor.h" line="15" column="1" bodyfile="com/project/DBM/adcensus/cost_computor.h" bodystart="15" bodyend="93"/>
+    <listofallmembers>
+      <member refid="class_cost_computor_1ac5e6f88ea6cc73476462c0cfc2d099ba" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>census_left_</name></member>
+      <member refid="class_cost_computor_1a63868bff46c78becad2896433a828b16" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>census_right_</name></member>
+      <member refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>CensusTransform</name></member>
+      <member refid="class_cost_computor_1ad94060cb58c98484f06ecc39f8df3c1c" prot="public" virt="non-virtual"><scope>CostComputor</scope><name>Compute</name></member>
+      <member refid="class_cost_computor_1ae982647a69522230e6518358395144c0" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>ComputeCost</name></member>
+      <member refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>ComputeGray</name></member>
+      <member refid="class_cost_computor_1a11c6914176f721a8ad942fe089253cc1" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>cost_init_</name></member>
+      <member refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" prot="public" virt="non-virtual"><scope>CostComputor</scope><name>CostComputor</name></member>
+      <member refid="class_cost_computor_1a71bda788758f80cf6713a8f446bba398" prot="public" virt="non-virtual"><scope>CostComputor</scope><name>get_cost_ptr</name></member>
+      <member refid="class_cost_computor_1a99ba7264db4b47abc45cf5ad18886165" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>gray_left_</name></member>
+      <member refid="class_cost_computor_1a54b06d4781f31323c19ab7df0e25fb58" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>gray_right_</name></member>
+      <member refid="class_cost_computor_1ad13ce101058129d31245ed39d3424096" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>height_</name></member>
+      <member refid="class_cost_computor_1ab20edcd3bf07695560e0c220c0a7dc5b" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>img_left_</name></member>
+      <member refid="class_cost_computor_1aed75ef93933df214740a649517f70d3f" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>img_right_</name></member>
+      <member refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" prot="public" virt="non-virtual"><scope>CostComputor</scope><name>Initialize</name></member>
+      <member refid="class_cost_computor_1a135dc09333f826607cd5d727ace39614" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>is_initialized_</name></member>
+      <member refid="class_cost_computor_1a5f9e67837567e23b35bab7ebd99682ea" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>lambda_ad_</name></member>
+      <member refid="class_cost_computor_1a8a99b1de8481847f49ca7e9b2ceef40e" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>lambda_census_</name></member>
+      <member refid="class_cost_computor_1aec0d42613fd57c827530c7433728bc11" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>max_disparity_</name></member>
+      <member refid="class_cost_computor_1afa830109dc2553dd5fc0b2a03227e7e0" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>min_disparity_</name></member>
+      <member refid="class_cost_computor_1af102197b372e7b6aa4fd7b604afa8626" prot="public" virt="non-virtual"><scope>CostComputor</scope><name>SetData</name></member>
+      <member refid="class_cost_computor_1a22b8664c749d725103f005d20787eeb8" prot="public" virt="non-virtual"><scope>CostComputor</scope><name>SetParams</name></member>
+      <member refid="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" prot="private" virt="non-virtual"><scope>CostComputor</scope><name>width_</name></member>
+      <member refid="class_cost_computor_1a5153b057efe419116022b7d3900d5ebd" prot="public" virt="non-virtual"><scope>CostComputor</scope><name>~CostComputor</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>
