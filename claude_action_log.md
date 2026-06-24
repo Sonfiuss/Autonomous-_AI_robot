@@ -13,6 +13,28 @@ Notes: `command.txt` left empty (no commands supplied yet). doxygen / graphviz /
 working python are NOT installed on this machine, so the pipeline was authored but
 not executed. C: drive is full — shell/PowerShell output capture failing.
 
+## 2026-06-24 — Deep DBM tracing + Shift-JIS robustness (outscope/)
+
+Root cause found: tracer anchored entries in `testtool` and only allowed one hop
+into DBM, but the test-tool functions (DBMDownLoadTest.cpp::Refine/OutlierDetection)
+are standalone *copies* that only call MedianFilter — so the walk dead-ended and
+never reached the real DBM call graph. Fixes:
+- `tools/callgraph_trace.py`: replaced `in_testtool` anchor with `defined_in_project`
+  (DBM-defined entries preferred over identically-named test-tool copies); raised
+  default `MAX_NODES` 8→50; added `--max-nodes` CLI flag.
+- `tools/command.txt`: switched to qualified DBM entries (ADCensusStereo::Match,
+  MultiStepRefiner::Refine/OutlierDetection).
+- Shift-JIS risk (real source has CP932 Japanese files like DBMuim/*): added
+  `tools/gen_encoding_map.py` to auto-detect non-UTF-8 sources and emit a
+  `doxygen_out/encoding.inc` (`INPUT_FILE_ENCODING = *path=CP932`) @INCLUDE'd by
+  `Doxyfile`; set `INPUT_ENCODING = UTF-8`. Wired Step 0 (encoding map) into
+  `run_callgraph.sh`/`.bat` before Doxygen.
+Verified on local XML: Match → ComputeCost/CostAggregation/ScanlineOptimize/
+MultiStepRefine/ComputeDisparity(+Right); Refine → OutlierDetection/IterativeRegionVoting/
+ProperInterpolation/DepthDiscontinuityAdjustment/EdgeDetect/MedianFilter. Local repo
+has no Shift-JIS files (encoding map empty as expected); map will populate on the
+real DBMuim source.
+
 ## 2026-06-24 — Install tools + node cap + default-method break rule (outscope/)
 
 Per user request: installed Doxygen 1.17.0 and Graphviz 15.1.0 via winget; added

@@ -52,8 +52,10 @@ STDLIB_NAMES = {
 STDLIB_REGEXES = (re.compile(r"^pthread_\w+$"),)
 
 # Break rule 4: stop once the traced tree reaches this many nodes (the entry
-# function counts as node 1). Set per spec: "break if tree node > 8".
-MAX_NODES = 8
+# function counts as node 1). The DBM pipeline (e.g. ADCensusStereo::Match) is
+# far larger than the old test-tool-anchored trees, so the default is raised;
+# override per run with --max-nodes.
+MAX_NODES = 50
 
 # Secondary safety net against pathological recursion depth.
 MAX_DEPTH = 50
@@ -180,14 +182,16 @@ def load_xml(xml_dir: str) -> dict[str, Func]:
 # 4.2 Match each command to entry function(s)
 # ---------------------------------------------------------------------------
 
-def in_testtool(fn: "Func") -> bool:
-    """Entry functions must be *defined* (body) in the test tool, not in DBM.
+def defined_in_project(fn: "Func") -> bool:
+    """An entry is anchored in DBM when its definition (or declaration) lives
+    under the DBM tree, not in the test tool.
 
-    Doxygen records the declaration in location/@file (often a DBM header) and
-    the definition in location/@bodyfile. The test tool supplies the bodies in
-    testtool/main.cpp, so we anchor on bodyfile (falling back to file)."""
-    kw = TESTTOOL_KEYWORD.lower()
-    return kw in (fn.bodyfile or "").lower() or kw in (fn.file or "").lower()
+    The test tool holds standalone *copies* of some DBM methods (e.g. a
+    DBMDownLoadTest.cpp::Refine that only calls MedianFilter); the rich call
+    graph hangs off the real class methods (MultiStepRefiner::Refine, ...).
+    Anchoring on DBM makes a command resolve to the real method, so the walk can
+    actually descend into the DBM pipeline."""
+    return in_project(fn.bodyfile) or in_project(fn.file)
 
 
 def match_entries(command: str, funcs: dict[str, Func]) -> list[Func]:
@@ -199,9 +203,12 @@ def match_entries(command: str, funcs: dict[str, Func]) -> list[Func]:
     else:  # substring
         c = command.lower()
         pred = lambda f: c in f.name.lower() or c in f.qname.lower()
-    # Anchor the entry in the test tool: a command maps to the function the test
-    # tool defines, not the identically-named DBM method it calls.
-    return [f for f in funcs.values() if in_testtool(f) and pred(f)]
+    matches = [f for f in funcs.values() if pred(f)]
+    # Prefer the DBM-defined function over an identically-named test-tool copy,
+    # so the walk enters the real DBM call graph. Fall back to whatever matched
+    # if the command only exists in the test tool.
+    dbm = [f for f in matches if defined_in_project(f)]
+    return dbm or matches
 
 
 # ---------------------------------------------------------------------------
@@ -295,13 +302,18 @@ def read_commands(path: str) -> list[str]:
 
 
 def main(argv=None):
+    global MAX_NODES
     ap = argparse.ArgumentParser(description="C++ call-graph tracer (Doxygen XML -> DOT).")
     ap.add_argument("--xml", default="doxygen_out/xml", help="Doxygen XML directory.")
     ap.add_argument("--commands", default="command.txt", help="Command list file.")
     ap.add_argument("--out", default="callgraph_output", help="Output folder for .dot files.")
     ap.add_argument("--defaults", default=DEFAULTMETHOD_FILE,
                     help="File listing default methods to treat as leaves.")
+    ap.add_argument("--max-nodes", type=int, default=MAX_NODES,
+                    help="Break rule 4: stop a tree once it reaches this many "
+                         f"nodes (default {MAX_NODES}).")
     args = ap.parse_args(argv)
+    MAX_NODES = args.max_nodes
 
     global DEFAULT_METHODS
     DEFAULT_METHODS = load_default_methods(args.defaults)

@@ -11,6 +11,17 @@ INPUT                  = testtool com/project
 RECURSIVE              = YES
 FILE_PATTERNS          = *.c *.cc *.cpp *.cxx *.h *.hh *.hpp *.hxx
 
+# --- Source encoding ---------------------------------------------------------
+# Default everything to UTF-8, then override the Shift-JIS / Japanese files via
+# an auto-generated per-file map. Regenerate the map before each run:
+#     python tools/gen_encoding_map.py --roots testtool com/project \
+#         --out doxygen_out/encoding.inc
+# Without this, a Shift-JIS byte 0x5C (e.g. inside 表/ソ/十) read as UTF-8 eats
+# the next code token and the affected function loses its call references.
+INPUT_ENCODING         = UTF-8
+@INCLUDE_PATH          = doxygen_out
+@INCLUDE               = encoding.inc
+
 # Skip build artifacts and vendored / third-party trees that we never trace into.
 EXCLUDE_PATTERNS       = */build/* */third_party/* */captures/* */.git/*
 

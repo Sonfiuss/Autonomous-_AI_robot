@@ -14,6 +14,10 @@ if "%PYTHON%"=="" set "PYTHON=python"
 where doxygen >nul 2>&1 || (echo [fatal] doxygen not installed & exit /b 1)
 where dot     >nul 2>&1 || (echo [fatal] graphviz 'dot' not installed & exit /b 1)
 
+echo == Step 0: Encoding map (Shift-JIS / CP932 detection) ==
+if not exist doxygen_out mkdir doxygen_out
+"%PYTHON%" tools\gen_encoding_map.py --roots testtool com/project --out doxygen_out\encoding.inc || exit /b 1
+
 echo == Step 1: Doxygen (XML extraction) ==
 doxygen Doxyfile || exit /b 1
 
