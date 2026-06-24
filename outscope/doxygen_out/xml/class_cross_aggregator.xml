@@ -11,7 +11,6 @@
         <name>width_</name>
         <qualifiedname>CrossAggregator::width_</qualifiedname>
         <briefdescription>
-<para>图像尺寸 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -55,7 +54,6 @@
         <name>vec_cross_arms_</name>
         <qualifiedname>CrossAggregator::vec_cross_arms_</qualifiedname>
         <briefdescription>
-<para>交叉臂 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -75,7 +73,6 @@
         <name>img_left_</name>
         <qualifiedname>CrossAggregator::img_left_</qualifiedname>
         <briefdescription>
-<para>影像数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -110,7 +107,6 @@
         <name>cost_init_</name>
         <qualifiedname>CrossAggregator::cost_init_</qualifiedname>
         <briefdescription>
-<para>初始代价数组指针 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -128,7 +124,6 @@
         <name>cost_aggr_</name>
         <qualifiedname>CrossAggregator::cost_aggr_</qualifiedname>
         <briefdescription>
-<para>聚合代价数组 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -147,7 +142,6 @@
         <name>vec_cost_tmp_</name>
         <qualifiedname>CrossAggregator::vec_cost_tmp_</qualifiedname>
         <briefdescription>
-<para>临时代价数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -164,7 +158,6 @@
         <name>vec_sup_count_</name>
         <qualifiedname>CrossAggregator::vec_sup_count_</qualifiedname>
         <briefdescription>
-<para>支持区像素数量数组 0：水平臂优先 1：竖直臂优先 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -306,7 +299,6 @@
         <name>is_initialized_</name>
         <qualifiedname>CrossAggregator::is_initialized_</qualifiedname>
         <briefdescription>
-<para>是否成功初始化标志 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -382,29 +374,8 @@
           <declname>max_disparity</declname>
         </param>
         <briefdescription>
-<para>初始化代价聚合器 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>影像宽 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>影像高 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-<simplesect kind="return"><para>true:初始化成功 </para>
-</simplesect>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -439,35 +410,8 @@
           <declname>cost_init</declname>
         </param>
         <briefdescription>
-<para>设置代价聚合器的数据 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>img_left</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 左影像数据，三通道 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>img_right</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 右影像数据，三通道 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cost_init</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 初始代价数组 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -499,43 +443,8 @@
           <declname>cross_t2</declname>
         </param>
         <briefdescription>
-<para>设置代价聚合器的参数 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>cross_L1</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// L1 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cross_L2</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// L2 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cross_t1</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// t1 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cross_t2</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// t2 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -556,7 +465,6 @@
           <declname>num_iters</declname>
         </param>
         <briefdescription>
-<para>聚合 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -581,7 +489,6 @@
         <name>get_arms_ptr</name>
         <qualifiedname>CrossAggregator::get_arms_ptr</qualifiedname>
         <briefdescription>
-<para>获取所有像素的十字交叉臂数据指针 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -597,7 +504,6 @@
         <name>get_cost_ptr</name>
         <qualifiedname>CrossAggregator::get_cost_ptr</qualifiedname>
         <briefdescription>
-<para>获取聚合代价数组指针 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -615,7 +521,6 @@
         <name>BuildArms</name>
         <qualifiedname>CrossAggregator::BuildArms</qualifiedname>
         <briefdescription>
-<para>构建十字交叉臂 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -656,7 +561,6 @@
           <declname>right</declname>
         </param>
         <briefdescription>
-<para>搜索水平臂 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -696,7 +600,6 @@
           <declname>bottom</declname>
         </param>
         <briefdescription>
-<para>搜索竖直臂 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -721,7 +624,6 @@
         <name>ComputeSupPixelCount</name>
         <qualifiedname>CrossAggregator::ComputeSupPixelCount</qualifiedname>
         <briefdescription>
-<para>计算像素的支持区像素数量 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -750,7 +652,6 @@
           <declname>horizontal_first</declname>
         </param>
         <briefdescription>
-<para>聚合某个视差 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -782,7 +683,6 @@
           <declname>c2</declname>
         </param>
         <briefdescription>
-<para>计算颜色距离 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -797,7 +697,6 @@
       </memberdef>
     </sectiondef>
     <briefdescription>
-<para>十字交叉域代价聚合器 </para>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>

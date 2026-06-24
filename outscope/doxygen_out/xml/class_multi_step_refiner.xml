@@ -11,7 +11,6 @@
         <name>width_</name>
         <qualifiedname>MultiStepRefiner::width_</qualifiedname>
         <briefdescription>
-<para>图像尺寸 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -53,7 +52,6 @@
         <name>img_left_</name>
         <qualifiedname>MultiStepRefiner::img_left_</qualifiedname>
         <briefdescription>
-<para>左影像数据（三通道） </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -71,7 +69,6 @@
         <name>cost_</name>
         <qualifiedname>MultiStepRefiner::cost_</qualifiedname>
         <briefdescription>
-<para>代价数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -90,7 +87,6 @@
         <name>cross_arms_</name>
         <qualifiedname>MultiStepRefiner::cross_arms_</qualifiedname>
         <briefdescription>
-<para>交叉臂数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -109,7 +105,6 @@
         <name>disp_left_</name>
         <qualifiedname>MultiStepRefiner::disp_left_</qualifiedname>
         <briefdescription>
-<para>左视图视差数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -131,7 +126,6 @@
         <name>disp_right_</name>
         <qualifiedname>MultiStepRefiner::disp_right_</qualifiedname>
         <briefdescription>
-<para>右视图视差数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -150,7 +144,6 @@
         <name>vec_edge_left_</name>
         <qualifiedname>MultiStepRefiner::vec_edge_left_</qualifiedname>
         <briefdescription>
-<para>左视图边缘数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -167,7 +160,6 @@
         <name>min_disparity_</name>
         <qualifiedname>MultiStepRefiner::min_disparity_</qualifiedname>
         <briefdescription>
-<para>最小视差值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -187,7 +179,6 @@
         <name>max_disparity_</name>
         <qualifiedname>MultiStepRefiner::max_disparity_</qualifiedname>
         <briefdescription>
-<para>最大视差值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -207,7 +198,6 @@
         <name>irv_ts_</name>
         <qualifiedname>MultiStepRefiner::irv_ts_</qualifiedname>
         <briefdescription>
-<para>Iterative Region Voting参数ts. </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -225,7 +215,6 @@
         <name>irv_th_</name>
         <qualifiedname>MultiStepRefiner::irv_th_</qualifiedname>
         <briefdescription>
-<para>Iterative Region Voting参数th. </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -260,7 +249,6 @@
         <name>do_lr_check_</name>
         <qualifiedname>MultiStepRefiner::do_lr_check_</qualifiedname>
         <briefdescription>
-<para>是否检查左右一致性 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -278,7 +266,6 @@
         <name>do_region_voting_</name>
         <qualifiedname>MultiStepRefiner::do_region_voting_</qualifiedname>
         <briefdescription>
-<para>是否局部投票填充 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -296,7 +283,6 @@
         <name>do_interpolating_</name>
         <qualifiedname>MultiStepRefiner::do_interpolating_</qualifiedname>
         <briefdescription>
-<para>是否做内插填充 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -314,7 +300,6 @@
         <name>do_discontinuity_adjustment_</name>
         <qualifiedname>MultiStepRefiner::do_discontinuity_adjustment_</qualifiedname>
         <briefdescription>
-<para>是否做非连续区调整 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -332,7 +317,6 @@
         <name>occlusions_</name>
         <qualifiedname>MultiStepRefiner::occlusions_</qualifiedname>
         <briefdescription>
-<para>遮挡区像素集 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -350,7 +334,6 @@
         <name>mismatches_</name>
         <qualifiedname>MultiStepRefiner::mismatches_</qualifiedname>
         <briefdescription>
-<para>误匹配区像素集 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -422,29 +405,8 @@
           <declname>height</declname>
         </param>
         <briefdescription>
-<para>初始化 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>影像宽 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>影像高 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-<simplesect kind="return"><para>true:初始化成功 </para>
-</simplesect>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -480,51 +442,8 @@
           <declname>disp_right</declname>
         </param>
         <briefdescription>
-<para>设置多步优化的数据 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>img_left</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 左影像数据，三通道 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cost</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 代价数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cross_arms</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 十字交叉臂数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>disp_left</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 左视图视差数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>disp_right</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 右视图视差数据 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -578,83 +497,8 @@
           <declname>do_discontinuity_adjustment</declname>
         </param>
         <briefdescription>
-<para>设置多步优化的参数 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>min_disparity</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 最小视差 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>max_disparity</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 最大视差 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>irv_ts</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// Iterative Region Voting参数ts </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>irv_th</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// Iterative Region Voting参数th </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>lrcheck_thres</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 一致性检查阈值 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>do_lr_check</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 是否检查左右一致性 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>do_region_voting</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 是否做内插填充 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>do_interpolating</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 是否局部投票填充 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>do_discontinuity_adjustment</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 是否做非连续区调整 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -676,7 +520,6 @@
         <name>Refine</name>
         <qualifiedname>MultiStepRefiner::Refine</qualifiedname>
         <briefdescription>
-<para>多步视差优化 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -708,7 +551,6 @@
         <name>OutlierDetection</name>
         <qualifiedname>MultiStepRefiner::OutlierDetection</qualifiedname>
         <briefdescription>
-<para>离群点检测 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -732,7 +574,6 @@
         <name>IterativeRegionVoting</name>
         <qualifiedname>MultiStepRefiner::IterativeRegionVoting</qualifiedname>
         <briefdescription>
-<para>迭代局部投票 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -758,7 +599,6 @@
         <name>ProperInterpolation</name>
         <qualifiedname>MultiStepRefiner::ProperInterpolation</qualifiedname>
         <briefdescription>
-<para>内插填充 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -784,7 +624,6 @@
         <name>DepthDiscontinuityAdjustment</name>
         <qualifiedname>MultiStepRefiner::DepthDiscontinuityAdjustment</qualifiedname>
         <briefdescription>
-<para>深度非连续区视差调整 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -831,7 +670,6 @@
           <declname>threshold</declname>
         </param>
         <briefdescription>
-<para>视差图边缘检测 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>

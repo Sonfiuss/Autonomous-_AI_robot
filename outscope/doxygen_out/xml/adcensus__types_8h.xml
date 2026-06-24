@@ -167,7 +167,6 @@
           </detaileddescription>
         </enumvalue>
         <briefdescription>
-<para>Census窗口尺寸类型 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -183,7 +182,6 @@
         <argsstring></argsstring>
         <name>sint8</name>
         <briefdescription>
-<para>基础类型别名 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -317,7 +315,6 @@
         <name>Invalid_Float</name>
         <initializer>= std::numeric_limits&lt;<ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref>&gt;::infinity()</initializer>
         <briefdescription>
-<para>float32无效值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>

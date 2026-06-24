@@ -182,16 +182,14 @@ def load_xml(xml_dir: str) -> dict[str, Func]:
 # 4.2 Match each command to entry function(s)
 # ---------------------------------------------------------------------------
 
-def defined_in_project(fn: "Func") -> bool:
-    """An entry is anchored in DBM when its definition (or declaration) lives
-    under the DBM tree, not in the test tool.
+def in_testtool(fn: "Func") -> bool:
+    """A command names a function *in the test tool* (testtool/DBMDownLoadTest.cpp).
 
-    The test tool holds standalone *copies* of some DBM methods (e.g. a
-    DBMDownLoadTest.cpp::Refine that only calls MedianFilter); the rich call
-    graph hangs off the real class methods (MultiStepRefiner::Refine, ...).
-    Anchoring on DBM makes a command resolve to the real method, so the walk can
-    actually descend into the DBM pipeline."""
-    return in_project(fn.bodyfile) or in_project(fn.file)
+    The walk enters that exact function, then descends into whichever callees
+    live in DBM (break rule 2). Doxygen records the declaration in location/@file
+    and the definition in location/@bodyfile, so we accept either."""
+    kw = TESTTOOL_KEYWORD.lower()
+    return kw in (fn.bodyfile or "").lower() or kw in (fn.file or "").lower()
 
 
 def match_entries(command: str, funcs: dict[str, Func]) -> list[Func]:
@@ -204,11 +202,11 @@ def match_entries(command: str, funcs: dict[str, Func]) -> list[Func]:
         c = command.lower()
         pred = lambda f: c in f.name.lower() or c in f.qname.lower()
     matches = [f for f in funcs.values() if pred(f)]
-    # Prefer the DBM-defined function over an identically-named test-tool copy,
-    # so the walk enters the real DBM call graph. Fall back to whatever matched
-    # if the command only exists in the test tool.
-    dbm = [f for f in matches if defined_in_project(f)]
-    return dbm or matches
+    # The command is a test-tool function name. Prefer the test-tool definition
+    # over an identically-named DBM method, so the walk starts at the harness
+    # function and the first hop reveals the DBM call it exercises.
+    tt = [f for f in matches if in_testtool(f)]
+    return tt or matches
 
 
 # ---------------------------------------------------------------------------

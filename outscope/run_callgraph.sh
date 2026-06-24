@@ -17,11 +17,9 @@ command -v doxygen >/dev/null || { echo "[fatal] doxygen not installed"; exit 1;
 command -v dot     >/dev/null || { echo "[fatal] graphviz 'dot' not installed"; exit 1; }
 PYTHON="${PYTHON:-python3}"
 
-echo "== Step 0: Encoding map (Shift-JIS / CP932 detection) =="
-mkdir -p doxygen_out
-"$PYTHON" tools/gen_encoding_map.py --roots testtool com/project --out doxygen_out/encoding.inc
-
 echo "== Step 1: Doxygen (XML extraction) =="
+# Sources are piped through tools/strip_comments.py (INPUT_FILTER in Doxyfile),
+# which handles Shift-JIS/CP932 decoding and strips comments before parsing.
 doxygen Doxyfile
 
 echo "== Step 2: Trace script (DOT generation) =="

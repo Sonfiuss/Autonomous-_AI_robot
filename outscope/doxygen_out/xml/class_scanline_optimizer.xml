@@ -11,7 +11,6 @@
         <name>width_</name>
         <qualifiedname>ScanlineOptimizer::width_</qualifiedname>
         <briefdescription>
-<para>图像尺寸 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -50,7 +49,6 @@
         <name>img_left_</name>
         <qualifiedname>ScanlineOptimizer::img_left_</qualifiedname>
         <briefdescription>
-<para>影像数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -89,7 +87,6 @@
         <name>cost_init_</name>
         <qualifiedname>ScanlineOptimizer::cost_init_</qualifiedname>
         <briefdescription>
-<para>初始代价数组 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -107,7 +104,6 @@
         <name>cost_aggr_</name>
         <qualifiedname>ScanlineOptimizer::cost_aggr_</qualifiedname>
         <briefdescription>
-<para>聚合代价数组 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -125,7 +121,6 @@
         <name>min_disparity_</name>
         <qualifiedname>ScanlineOptimizer::min_disparity_</qualifiedname>
         <briefdescription>
-<para>最小视差值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -144,7 +139,6 @@
         <name>max_disparity_</name>
         <qualifiedname>ScanlineOptimizer::max_disparity_</qualifiedname>
         <briefdescription>
-<para>最大视差值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -163,7 +157,6 @@
         <name>so_p1_</name>
         <qualifiedname>ScanlineOptimizer::so_p1_</qualifiedname>
         <briefdescription>
-<para>初始的p1值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -182,7 +175,6 @@
         <name>so_p2_</name>
         <qualifiedname>ScanlineOptimizer::so_p2_</qualifiedname>
         <briefdescription>
-<para>初始的p2值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -201,7 +193,6 @@
         <name>so_tso_</name>
         <qualifiedname>ScanlineOptimizer::so_tso_</qualifiedname>
         <briefdescription>
-<para>tso阈值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -277,43 +268,8 @@
           <declname>cost_aggr</declname>
         </param>
         <briefdescription>
-<para>设置数据 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>img_left</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 左影像数据，三通道 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>img_right</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 右影像数据，三通道 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cost_init</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 初始代价数组 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cost_aggr</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 聚合代价数组 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -360,64 +316,6 @@
         <briefdescription>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 影像宽 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 影像高 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>min_disparity</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 最小视差 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>max_disparity</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 最大视差 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>p1</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// p1 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>p2</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// p2 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>tso</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// tso </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -437,7 +335,6 @@
         <name>Optimize</name>
         <qualifiedname>ScanlineOptimizer::Optimize</qualifiedname>
         <briefdescription>
-<para>优化 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -475,35 +372,8 @@
           <defval>true</defval>
         </param>
         <briefdescription>
-<para>左右路径优化 → ← </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>cost_so_src</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，SO前代价数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cost_so_dst</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输出，SO后代价数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>is_forward</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，是否为正方向（正方向为从左到右，反方向为从右到左） </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -541,35 +411,8 @@
           <defval>true</defval>
         </param>
         <briefdescription>
-<para>上下路径优化 ↓ ↑ </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>cost_so_src</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，SO前代价数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>cost_so_dst</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输出，SO后代价数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>is_forward</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，是否为正方向（正方向为从上到下，反方向为从下到上） </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -602,7 +445,6 @@
           <declname>c2</declname>
         </param>
         <briefdescription>
-<para>计算颜色距离 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -617,7 +459,6 @@
       </memberdef>
     </sectiondef>
     <briefdescription>
-<para>扫描线优化器 </para>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>

@@ -26,43 +26,8 @@
           <declname>height</declname>
         </param>
         <briefdescription>
-<para>census变换 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>source</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，影像数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>census</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输出，census值数组，预分配空间 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，影像宽 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，影像高 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -119,51 +84,8 @@
           <declname>wnd_size</declname>
         </param>
         <briefdescription>
-<para>中值滤波 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>in</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，源数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>out</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输出，目标数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，宽度 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，高度 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>wnd_size</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，窗口宽度 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>

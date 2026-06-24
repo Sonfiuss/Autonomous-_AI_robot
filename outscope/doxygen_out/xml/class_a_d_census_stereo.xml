@@ -11,7 +11,6 @@
         <name>option_</name>
         <qualifiedname>ADCensusStereo::option_</qualifiedname>
         <briefdescription>
-<para>算法参数 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -33,7 +32,6 @@
         <name>width_</name>
         <qualifiedname>ADCensusStereo::width_</qualifiedname>
         <briefdescription>
-<para>影像宽 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -54,7 +52,6 @@
         <name>height_</name>
         <qualifiedname>ADCensusStereo::height_</qualifiedname>
         <briefdescription>
-<para>影像高 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -75,7 +72,6 @@
         <name>img_left_</name>
         <qualifiedname>ADCensusStereo::img_left_</qualifiedname>
         <briefdescription>
-<para>左影像数据，3通道彩色数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -96,7 +92,6 @@
         <name>img_right_</name>
         <qualifiedname>ADCensusStereo::img_right_</qualifiedname>
         <briefdescription>
-<para>右影像数据 ，3通道彩色数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -116,7 +111,6 @@
         <name>cost_computer_</name>
         <qualifiedname>ADCensusStereo::cost_computer_</qualifiedname>
         <briefdescription>
-<para>代价计算器 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -135,7 +129,6 @@
         <name>aggregator_</name>
         <qualifiedname>ADCensusStereo::aggregator_</qualifiedname>
         <briefdescription>
-<para>代价聚合器 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -156,7 +149,6 @@
         <name>scan_line_</name>
         <qualifiedname>ADCensusStereo::scan_line_</qualifiedname>
         <briefdescription>
-<para>扫描线优化器 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -172,7 +164,6 @@
         <name>refiner_</name>
         <qualifiedname>ADCensusStereo::refiner_</qualifiedname>
         <briefdescription>
-<para>多步优化器 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -189,7 +180,6 @@
         <name>disp_left_</name>
         <qualifiedname>ADCensusStereo::disp_left_</qualifiedname>
         <briefdescription>
-<para>左影像视差图 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -210,7 +200,6 @@
         <name>disp_right_</name>
         <qualifiedname>ADCensusStereo::disp_right_</qualifiedname>
         <briefdescription>
-<para>右影像视差图 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -230,7 +219,6 @@
         <name>is_initialized_</name>
         <qualifiedname>ADCensusStereo::is_initialized_</qualifiedname>
         <briefdescription>
-<para>是否初始化标志 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -301,35 +289,8 @@
           <declname>option</declname>
         </param>
         <briefdescription>
-<para>类的初始化，完成一些内存的预分配、参数的预设置等 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，核线像对影像宽 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，核线像对影像高 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>option</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，算法参数 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -365,35 +326,8 @@
           <declname>disp_left</declname>
         </param>
         <briefdescription>
-<para>执行匹配 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>img_left</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，左影像数据指针，3通道彩色数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>img_right</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，右影像数据指针，3通道彩色数据 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>disp_left</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输出，左影像视差图指针，预先分配和影像等尺寸的内存空间 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -431,35 +365,8 @@
           <declname>option</declname>
         </param>
         <briefdescription>
-<para>重设 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，核线像对影像宽 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，核线像对影像高 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>option</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>输入，算法参数 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -477,7 +384,6 @@
         <name>ComputeCost</name>
         <qualifiedname>ADCensusStereo::ComputeCost</qualifiedname>
         <briefdescription>
-<para>代价计算 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -497,7 +403,6 @@
         <name>CostAggregation</name>
         <qualifiedname>ADCensusStereo::CostAggregation</qualifiedname>
         <briefdescription>
-<para>代价聚合 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -518,7 +423,6 @@
         <name>ScanlineOptimize</name>
         <qualifiedname>ADCensusStereo::ScanlineOptimize</qualifiedname>
         <briefdescription>
-<para>扫描线优化 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -542,7 +446,6 @@
         <name>MultiStepRefine</name>
         <qualifiedname>ADCensusStereo::MultiStepRefine</qualifiedname>
         <briefdescription>
-<para>多步骤视差优化 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -564,7 +467,6 @@
         <name>ComputeDisparity</name>
         <qualifiedname>ADCensusStereo::ComputeDisparity</qualifiedname>
         <briefdescription>
-<para>视差计算（左视图） </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -587,7 +489,6 @@
         <name>ComputeDisparityRight</name>
         <qualifiedname>ADCensusStereo::ComputeDisparityRight</qualifiedname>
         <briefdescription>
-<para>视差计算（右视图） </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -609,7 +510,6 @@
         <name>Release</name>
         <qualifiedname>ADCensusStereo::Release</qualifiedname>
         <briefdescription>
-<para>内存释放 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>

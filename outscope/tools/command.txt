@@ -1,3 +1,2 @@
-ADCensusStereo::Match
-MultiStepRefiner::Refine
-MultiStepRefiner::OutlierDetection
+OutlierDetection
+Refine

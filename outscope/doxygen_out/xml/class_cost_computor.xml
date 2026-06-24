@@ -11,7 +11,6 @@
         <name>width_</name>
         <qualifiedname>CostComputor::width_</qualifiedname>
         <briefdescription>
-<para>图像尺寸 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -50,7 +49,6 @@
         <name>img_left_</name>
         <qualifiedname>CostComputor::img_left_</qualifiedname>
         <briefdescription>
-<para>影像数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -87,7 +85,6 @@
         <name>gray_left_</name>
         <qualifiedname>CostComputor::gray_left_</qualifiedname>
         <briefdescription>
-<para>左影像灰度数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -105,7 +102,6 @@
         <name>gray_right_</name>
         <qualifiedname>CostComputor::gray_right_</qualifiedname>
         <briefdescription>
-<para>右影像灰度数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -123,7 +119,6 @@
         <name>census_left_</name>
         <qualifiedname>CostComputor::census_left_</qualifiedname>
         <briefdescription>
-<para>左影像census数组 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -141,7 +136,6 @@
         <name>census_right_</name>
         <qualifiedname>CostComputor::census_right_</qualifiedname>
         <briefdescription>
-<para>右影像census数组 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -159,7 +153,6 @@
         <name>cost_init_</name>
         <qualifiedname>CostComputor::cost_init_</qualifiedname>
         <briefdescription>
-<para>初始匹配代价 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -177,7 +170,6 @@
         <name>lambda_ad_</name>
         <qualifiedname>CostComputor::lambda_ad_</qualifiedname>
         <briefdescription>
-<para>lambda_ad </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -195,7 +187,6 @@
         <name>lambda_census_</name>
         <qualifiedname>CostComputor::lambda_census_</qualifiedname>
         <briefdescription>
-<para>lambda_census </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -213,7 +204,6 @@
         <name>min_disparity_</name>
         <qualifiedname>CostComputor::min_disparity_</qualifiedname>
         <briefdescription>
-<para>最小视差值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -231,7 +221,6 @@
         <name>max_disparity_</name>
         <qualifiedname>CostComputor::max_disparity_</qualifiedname>
         <briefdescription>
-<para>最大视差值 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -249,7 +238,6 @@
         <name>is_initialized_</name>
         <qualifiedname>CostComputor::is_initialized_</qualifiedname>
         <briefdescription>
-<para>是否成功初始化标志 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -322,45 +310,8 @@
           <declname>max_disparity</declname>
         </param>
         <briefdescription>
-<para>初始化 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>width</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>影像宽 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>height</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>影像高 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>min_disparity</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>最小视差 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>max_disparity</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>最大视差 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-<simplesect kind="return"><para>true: 初始化成功 </para>
-</simplesect>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -391,27 +342,8 @@
           <declname>img_right</declname>
         </param>
         <briefdescription>
-<para>设置代价计算器的数据 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>img_left</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 左影像数据，三通道 </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>img_right</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// 右影像数据，三通道 </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -434,27 +366,8 @@
           <declname>lambda_census</declname>
         </param>
         <briefdescription>
-<para>设置代价计算器的参数 </para>
         </briefdescription>
         <detaileddescription>
-<para><parameterlist kind="param"><parameteritem>
-<parameternamelist>
-<parametername>lambda_ad</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// lambda_ad </para>
-</parameterdescription>
-</parameteritem>
-<parameteritem>
-<parameternamelist>
-<parametername>lambda_census</parametername>
-</parameternamelist>
-<parameterdescription>
-<para>// lambda_census </para>
-</parameterdescription>
-</parameteritem>
-</parameterlist>
-</para>
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
@@ -469,7 +382,6 @@
         <name>Compute</name>
         <qualifiedname>CostComputor::Compute</qualifiedname>
         <briefdescription>
-<para>计算初始代价 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -488,7 +400,6 @@
         <name>get_cost_ptr</name>
         <qualifiedname>CostComputor::get_cost_ptr</qualifiedname>
         <briefdescription>
-<para>获取初始代价数组指针 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -506,7 +417,6 @@
         <name>ComputeGray</name>
         <qualifiedname>CostComputor::ComputeGray</qualifiedname>
         <briefdescription>
-<para>计算灰度数据 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -528,7 +438,6 @@
         <name>CensusTransform</name>
         <qualifiedname>CostComputor::CensusTransform</qualifiedname>
         <briefdescription>
-<para>Census变换 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -551,7 +460,6 @@
         <name>ComputeCost</name>
         <qualifiedname>CostComputor::ComputeCost</qualifiedname>
         <briefdescription>
-<para>计算代价 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>
@@ -574,7 +482,6 @@
       </memberdef>
     </sectiondef>
     <briefdescription>
-<para>代价计算器类 </para>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>

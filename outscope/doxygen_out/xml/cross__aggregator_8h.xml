@@ -90,7 +90,6 @@
         <name>MAX_ARM_LENGTH</name>
         <initializer>255</initializer>
         <briefdescription>
-<para>最大臂长 </para>
         </briefdescription>
         <detaileddescription>
         </detaileddescription>

@@ -167,10 +167,10 @@
   <option  id='EXAMPLE_RECURSIVE' default='yes' type='bool'><value>NO</value></option>
   <option  id='IMAGE_PATH' default='yes' type='stringlist'>
   </option>
-  <option  id='INPUT_FILTER' default='yes' type='string'><value><![CDATA[]]></value></option>
+  <option  id='INPUT_FILTER' default='no' type='string'><value><![CDATA["python tools/strip_comments.py"]]></value></option>
   <option  id='FILTER_PATTERNS' default='yes' type='stringlist'>
   </option>
-  <option  id='FILTER_SOURCE_FILES' default='yes' type='bool'><value>NO</value></option>
+  <option  id='FILTER_SOURCE_FILES' default='no' type='bool'><value>YES</value></option>
   <option  id='FILTER_SOURCE_PATTERNS' default='yes' type='stringlist'>
   </option>
   <option  id='USE_MDFILE_AS_MAINPAGE' default='yes' type='string'><value><![CDATA[]]></value></option>
