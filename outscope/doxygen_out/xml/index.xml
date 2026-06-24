@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.17.0" xml:lang="en-US">
+  <compound refid="struct_a_d_census_option" kind="struct"><name>ADCensusOption</name>
+    <member refid="struct_a_d_census_option_1a2fa14a3fdc1e3f0391fa53366ff20ee5" kind="variable"><name>min_disparity</name></member>
+    <member refid="struct_a_d_census_option_1a311e9f5bd88080f880ed0dcf7f4922b0" kind="variable"><name>max_disparity</name></member>
+    <member refid="struct_a_d_census_option_1a48827be3a0b5c810737b52ece234e1c4" kind="variable"><name>lambda_ad</name></member>
+    <member refid="struct_a_d_census_option_1acdcc9ee178e484593d25bd9f85c82b8a" kind="variable"><name>lambda_census</name></member>
+    <member refid="struct_a_d_census_option_1a534ef2f4deb072d14da4f3084037931c" kind="variable"><name>cross_L1</name></member>
+    <member refid="struct_a_d_census_option_1afec132cea3105988a21612ab673e74a6" kind="variable"><name>cross_L2</name></member>
+    <member refid="struct_a_d_census_option_1a7e25d3655c978b61afc27934176640ec" kind="variable"><name>cross_t1</name></member>
+    <member refid="struct_a_d_census_option_1a7e1f1192fe1eae2fe0faf7c3befbf9d3" kind="variable"><name>cross_t2</name></member>
+    <member refid="struct_a_d_census_option_1af71838022171dab9f345aff28bea993d" kind="variable"><name>so_p1</name></member>
+    <member refid="struct_a_d_census_option_1ad747892e970db5f07de81d953ac45438" kind="variable"><name>so_p2</name></member>
+    <member refid="struct_a_d_census_option_1a0d7e991099ddf2784a981c09e8227779" kind="variable"><name>so_tso</name></member>
+    <member refid="struct_a_d_census_option_1a7a971c993d751b35e5d6cdb82468349e" kind="variable"><name>irv_ts</name></member>
+    <member refid="struct_a_d_census_option_1ad3614d7aa5570d39c2da8c1fde59364a" kind="variable"><name>irv_th</name></member>
+    <member refid="struct_a_d_census_option_1ae40e8d189dc246cd830ea1a0bd4f12f8" kind="variable"><name>lrcheck_thres</name></member>
+    <member refid="struct_a_d_census_option_1a0c68b647347900a5cf0799eb0c7f7942" kind="variable"><name>do_lr_check</name></member>
+    <member refid="struct_a_d_census_option_1acd5a4342674da2548d50ae6fa821c015" kind="variable"><name>do_filling</name></member>
+    <member refid="struct_a_d_census_option_1a8c9fd3e64787a78b154a3dc5960b0de3" kind="variable"><name>do_discontinuity_adjustment</name></member>
+    <member refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" kind="function"><name>ADCensusOption</name></member>
+  </compound>
+  <compound refid="class_a_d_census_stereo" kind="class"><name>ADCensusStereo</name>
+    <member refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" kind="variable"><name>option_</name></member>
+    <member refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" kind="variable"><name>width_</name></member>
+    <member refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" kind="variable"><name>height_</name></member>
+    <member refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" kind="variable"><name>img_left_</name></member>
+    <member refid="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" kind="variable"><name>img_right_</name></member>
+    <member refid="class_a_d_census_stereo_1a619a7908e562cd0c0645bac6c4ea1d8d" kind="variable"><name>cost_computer_</name></member>
+    <member refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" kind="variable"><name>aggregator_</name></member>
+    <member refid="class_a_d_census_stereo_1ac41d0042e39b4f1e6bfa37542c78de9c" kind="variable"><name>scan_line_</name></member>
+    <member refid="class_a_d_census_stereo_1aa68f87333a51e11a5c8ee4ea785b9eb7" kind="variable"><name>refiner_</name></member>
+    <member refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" kind="variable"><name>disp_left_</name></member>
+    <member refid="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" kind="variable"><name>disp_right_</name></member>
+    <member refid="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" kind="variable"><name>is_initialized_</name></member>
+    <member refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" kind="function"><name>ADCensusStereo</name></member>
+    <member refid="class_a_d_census_stereo_1a3e36430e1e0dc89fd7df5087b6e126c5" kind="function"><name>~ADCensusStereo</name></member>
+    <member refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" kind="function"><name>Initialize</name></member>
+    <member refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" kind="function"><name>Match</name></member>
+    <member refid="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" kind="function"><name>Reset</name></member>
+    <member refid="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" kind="function"><name>ComputeCost</name></member>
+    <member refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" kind="function"><name>CostAggregation</name></member>
+    <member refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" kind="function"><name>ScanlineOptimize</name></member>
+    <member refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" kind="function"><name>MultiStepRefine</name></member>
+    <member refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" kind="function"><name>ComputeDisparity</name></member>
+    <member refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" kind="function"><name>ComputeDisparityRight</name></member>
+    <member refid="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" kind="function"><name>Release</name></member>
+  </compound>
+  <compound refid="struct_a_d_color" kind="struct"><name>ADColor</name>
+    <member refid="struct_a_d_color_1a715d4818fb783a189dd3d3e002140174" kind="variable"><name>r</name></member>
+    <member refid="struct_a_d_color_1ac5b6936b40cdd5b02b8c1979abefe597" kind="variable"><name>g</name></member>
+    <member refid="struct_a_d_color_1a55e37ddf610f5076e86150ddc639feec" kind="variable"><name>b</name></member>
+    <member refid="struct_a_d_color_1a2d3bf431f051bde19d06668bc3064246" kind="function"><name>ADColor</name></member>
+    <member refid="struct_a_d_color_1a775f3e014896d0615572b1006267ff5b" kind="function"><name>ADColor</name></member>
+  </compound>
+  <compound refid="class_cost_computor" kind="class"><name>CostComputor</name>
+    <member refid="class_cost_computor_1afdb52d07b33dea2a52921335101d5593" kind="variable"><name>width_</name></member>
+    <member refid="class_cost_computor_1ad13ce101058129d31245ed39d3424096" kind="variable"><name>height_</name></member>
+    <member refid="class_cost_computor_1ab20edcd3bf07695560e0c220c0a7dc5b" kind="variable"><name>img_left_</name></member>
+    <member refid="class_cost_computor_1aed75ef93933df214740a649517f70d3f" kind="variable"><name>img_right_</name></member>
+    <member refid="class_cost_computor_1a99ba7264db4b47abc45cf5ad18886165" kind="variable"><name>gray_left_</name></member>
+    <member refid="class_cost_computor_1a54b06d4781f31323c19ab7df0e25fb58" kind="variable"><name>gray_right_</name></member>
+    <member refid="class_cost_computor_1ac5e6f88ea6cc73476462c0cfc2d099ba" kind="variable"><name>census_left_</name></member>
+    <member refid="class_cost_computor_1a63868bff46c78becad2896433a828b16" kind="variable"><name>census_right_</name></member>
+    <member refid="class_cost_computor_1a11c6914176f721a8ad942fe089253cc1" kind="variable"><name>cost_init_</name></member>
+    <member refid="class_cost_computor_1a5f9e67837567e23b35bab7ebd99682ea" kind="variable"><name>lambda_ad_</name></member>
+    <member refid="class_cost_computor_1a8a99b1de8481847f49ca7e9b2ceef40e" kind="variable"><name>lambda_census_</name></member>
+    <member refid="class_cost_computor_1afa830109dc2553dd5fc0b2a03227e7e0" kind="variable"><name>min_disparity_</name></member>
+    <member refid="class_cost_computor_1aec0d42613fd57c827530c7433728bc11" kind="variable"><name>max_disparity_</name></member>
+    <member refid="class_cost_computor_1a135dc09333f826607cd5d727ace39614" kind="variable"><name>is_initialized_</name></member>
+    <member refid="class_cost_computor_1a22ab3b832275bef5727759912522365e" kind="function"><name>CostComputor</name></member>
+    <member refid="class_cost_computor_1a5153b057efe419116022b7d3900d5ebd" kind="function"><name>~CostComputor</name></member>
+    <member refid="class_cost_computor_1a913203bb80f5c3b17074a3578dccf763" kind="function"><name>Initialize</name></member>
+    <member refid="class_cost_computor_1af102197b372e7b6aa4fd7b604afa8626" kind="function"><name>SetData</name></member>
+    <member refid="class_cost_computor_1a22b8664c749d725103f005d20787eeb8" kind="function"><name>SetParams</name></member>
+    <member refid="class_cost_computor_1ad94060cb58c98484f06ecc39f8df3c1c" kind="function"><name>Compute</name></member>
+    <member refid="class_cost_computor_1a71bda788758f80cf6713a8f446bba398" kind="function"><name>get_cost_ptr</name></member>
+    <member refid="class_cost_computor_1a691f757b5c9127ad15fb4717c79e57c4" kind="function"><name>ComputeGray</name></member>
+    <member refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" kind="function"><name>CensusTransform</name></member>
+    <member refid="class_cost_computor_1ae982647a69522230e6518358395144c0" kind="function"><name>ComputeCost</name></member>
+  </compound>
+  <compound refid="class_cross_aggregator" kind="class"><name>CrossAggregator</name>
+    <member refid="class_cross_aggregator_1ab542014a5e1159d8fc175b1d93063281" kind="variable"><name>width_</name></member>
+    <member refid="class_cross_aggregator_1a4690b5bad29404f3e8a63bcd3074bacd" kind="variable"><name>height_</name></member>
+    <member refid="class_cross_aggregator_1aba2336cd17e5c409b470ee00377163e4" kind="variable"><name>vec_cross_arms_</name></member>
+    <member refid="class_cross_aggregator_1aefe059fffb8b6c78d11c4de1b54e7f5d" kind="variable"><name>img_left_</name></member>
+    <member refid="class_cross_aggregator_1afeb4393719dd953209377391954f88bf" kind="variable"><name>img_right_</name></member>
+    <member refid="class_cross_aggregator_1a184d42aa4fd16e8e630573a0484f614a" kind="variable"><name>cost_init_</name></member>
+    <member refid="class_cross_aggregator_1a94d87022b8ba8dae1540aa188e1302c9" kind="variable"><name>cost_aggr_</name></member>
+    <member refid="class_cross_aggregator_1a1db98d4626e9d8ab2cc808bc0225a381" kind="variable"><name>vec_cost_tmp_</name></member>
+    <member refid="class_cross_aggregator_1af59fe58f721af11bf9256dd14e6646bd" kind="variable"><name>vec_sup_count_</name></member>
+    <member refid="class_cross_aggregator_1aeae083634460abfd0709c194c640f92e" kind="variable"><name>vec_sup_count_tmp_</name></member>
+    <member refid="class_cross_aggregator_1a20f4fe524a112007383ad72f23b0401c" kind="variable"><name>cross_L1_</name></member>
+    <member refid="class_cross_aggregator_1a7de82597364787b1e11ad3beb4d2bec6" kind="variable"><name>cross_L2_</name></member>
+    <member refid="class_cross_aggregator_1a3329bf80543f4e88ee2f7a2514453a93" kind="variable"><name>cross_t1_</name></member>
+    <member refid="class_cross_aggregator_1ae0554c9a92299ac950f6c07092a03539" kind="variable"><name>cross_t2_</name></member>
+    <member refid="class_cross_aggregator_1a3adc535f1e57703fbc30cce0b6eb1840" kind="variable"><name>min_disparity_</name></member>
+    <member refid="class_cross_aggregator_1aab0c0bf60fd9fb098f792a19e90df275" kind="variable"><name>max_disparity_</name></member>
+    <member refid="class_cross_aggregator_1a76bcb10f002210a7ceeafca182a2ad3b" kind="variable"><name>is_initialized_</name></member>
+    <member refid="class_cross_aggregator_1a707e744dd5e577d6f5567e2b2c822088" kind="function"><name>CrossAggregator</name></member>
+    <member refid="class_cross_aggregator_1a19a5da545b03f89cad6f8c1650b0741e" kind="function"><name>~CrossAggregator</name></member>
+    <member refid="class_cross_aggregator_1a40708b5171a8509ee90bcb5f380b5efd" kind="function"><name>Initialize</name></member>
+    <member refid="class_cross_aggregator_1a14c71e19fd86c491f7ba8c5267e221e2" kind="function"><name>SetData</name></member>
+    <member refid="class_cross_aggregator_1a4555029c63e7a39ee0722986df00c69b" kind="function"><name>SetParams</name></member>
+    <member refid="class_cross_aggregator_1a6a5c0c8db661af474f1d9a18470d94c6" kind="function"><name>Aggregate</name></member>
+    <member refid="class_cross_aggregator_1afb603ae65c71c7f2d352f16f8f3e8cae" kind="function"><name>get_arms_ptr</name></member>
+    <member refid="class_cross_aggregator_1ac668aa51e99ab5b62a24bf776ec80c4b" kind="function"><name>get_cost_ptr</name></member>
+    <member refid="class_cross_aggregator_1a4100aee1061ce305bc8a5372d552700f" kind="function"><name>BuildArms</name></member>
+    <member refid="class_cross_aggregator_1a370e1172368ed8ddef218157fdefc080" kind="function"><name>FindHorizontalArm</name></member>
+    <member refid="class_cross_aggregator_1a26441c93a439a52323d8af4b24c2d5b3" kind="function"><name>FindVerticalArm</name></member>
+    <member refid="class_cross_aggregator_1a64203833ce13e2f9f4de56598944f42f" kind="function"><name>ComputeSupPixelCount</name></member>
+    <member refid="class_cross_aggregator_1a350dc64c3a792f166e874bff045be6e4" kind="function"><name>AggregateInArms</name></member>
+    <member refid="class_cross_aggregator_1a057803a123c0ceaac89a967c943a907f" kind="function"><name>ColorDist</name></member>
+  </compound>
+  <compound refid="struct_cross_arm" kind="struct"><name>CrossArm</name>
+    <member refid="struct_cross_arm_1a1ede06f02b01954370b474c766c49816" kind="variable"><name>left</name></member>
+    <member refid="struct_cross_arm_1a88888e2c9870e95d73444b7ce16d60ac" kind="variable"><name>right</name></member>
+    <member refid="struct_cross_arm_1aec7032aa1433f7fdea99e60304142c35" kind="variable"><name>top</name></member>
+    <member refid="struct_cross_arm_1acb901c1e192ca74c777d0f4924c13b11" kind="variable"><name>bottom</name></member>
+    <member refid="struct_cross_arm_1a79cf430931f966013ee099e83cee718b" kind="function"><name>CrossArm</name></member>
+  </compound>
+  <compound refid="class_multi_step_refiner" kind="class"><name>MultiStepRefiner</name>
+    <member refid="class_multi_step_refiner_1acd65795cb4c5b730c92e2e3f5c53f752" kind="variable"><name>width_</name></member>
+    <member refid="class_multi_step_refiner_1ae1dd3b6cbcbd61f413644b809687f4a0" kind="variable"><name>height_</name></member>
+    <member refid="class_multi_step_refiner_1ac267c189cc56ca67f3b07db2ca61a291" kind="variable"><name>img_left_</name></member>
+    <member refid="class_multi_step_refiner_1a93824157d0395fe216cee729a0fd2254" kind="variable"><name>cost_</name></member>
+    <member refid="class_multi_step_refiner_1a3871cb2263e8136cd89be2f2101e4574" kind="variable"><name>cross_arms_</name></member>
+    <member refid="class_multi_step_refiner_1ac30faac65b700f36aff5b279bb45b747" kind="variable"><name>disp_left_</name></member>
+    <member refid="class_multi_step_refiner_1a0769b477c8075f14694fc85e163922a6" kind="variable"><name>disp_right_</name></member>
+    <member refid="class_multi_step_refiner_1a3e3b7c69045146840b6a6d15eea3970a" kind="variable"><name>vec_edge_left_</name></member>
+    <member refid="class_multi_step_refiner_1a909364d9984349872808bfae10ea9d07" kind="variable"><name>min_disparity_</name></member>
+    <member refid="class_multi_step_refiner_1a55a899dadebfbb2ba01f20615386c011" kind="variable"><name>max_disparity_</name></member>
+    <member refid="class_multi_step_refiner_1a77f4f2c985076fe5fe8264e9bae1c460" kind="variable"><name>irv_ts_</name></member>
+    <member refid="class_multi_step_refiner_1a22bd1d21aac47797c2e64366ef18347c" kind="variable"><name>irv_th_</name></member>
+    <member refid="class_multi_step_refiner_1aac5849774e001c94f87ea6fee82199d9" kind="variable"><name>lrcheck_thres_</name></member>
+    <member refid="class_multi_step_refiner_1a6c9ef785e6b3ddfc8c890d3a64ac58f7" kind="variable"><name>do_lr_check_</name></member>
+    <member refid="class_multi_step_refiner_1add62f1920f580c701b3c4fe853c162d7" kind="variable"><name>do_region_voting_</name></member>
+    <member refid="class_multi_step_refiner_1a98c119c309156945214cf23fd82a88f4" kind="variable"><name>do_interpolating_</name></member>
+    <member refid="class_multi_step_refiner_1aef6930dee25b265d367dfea4a44d6aed" kind="variable"><name>do_discontinuity_adjustment_</name></member>
+    <member refid="class_multi_step_refiner_1a8fb5e8d5708e44af1ef702dfe5b1736c" kind="variable"><name>occlusions_</name></member>
+    <member refid="class_multi_step_refiner_1a9948b0bdedd817ab579d21ebebfab044" kind="variable"><name>mismatches_</name></member>
+    <member refid="class_multi_step_refiner_1aa0c0b34d0737602a2e393315f22d4d14" kind="function"><name>MultiStepRefiner</name></member>
+    <member refid="class_multi_step_refiner_1a1d1de7618ef1588673668af53ef6476a" kind="function"><name>~MultiStepRefiner</name></member>
+    <member refid="class_multi_step_refiner_1a7fded02bd21c3750ca20429dd448db84" kind="function"><name>Initialize</name></member>
+    <member refid="class_multi_step_refiner_1ae36280e2f6809daca4382104cb8cfd51" kind="function"><name>SetData</name></member>
+    <member refid="class_multi_step_refiner_1ab77f66217afb4831db0b34d3cc9bce65" kind="function"><name>SetParam</name></member>
+    <member refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" kind="function"><name>Refine</name></member>
+    <member refid="class_multi_step_refiner_1ab84aed06a27567252c1a25ace6523314" kind="function"><name>OutlierDetection</name></member>
+    <member refid="class_multi_step_refiner_1aa7a280ce90ea4bd9b11c5a9859c9eff2" kind="function"><name>IterativeRegionVoting</name></member>
+    <member refid="class_multi_step_refiner_1a86a69db4ccebb37e2d3b4987826c5099" kind="function"><name>ProperInterpolation</name></member>
+    <member refid="class_multi_step_refiner_1a6a8848b32ef5cb4030db9b75a171961e" kind="function"><name>DepthDiscontinuityAdjustment</name></member>
+    <member refid="class_multi_step_refiner_1a11f8aac46a857cf14f712a0364cd10c3" kind="function"><name>EdgeDetect</name></member>
+  </compound>
+  <compound refid="class_scanline_optimizer" kind="class"><name>ScanlineOptimizer</name>
+    <member refid="class_scanline_optimizer_1a9c16cd1eb209a292cdbec0dfa820d495" kind="variable"><name>width_</name></member>
+    <member refid="class_scanline_optimizer_1a69b55bcf417be0fb6175092af030cc40" kind="variable"><name>height_</name></member>
+    <member refid="class_scanline_optimizer_1a097ddae37db36fb5aa2caea8be6a2e01" kind="variable"><name>img_left_</name></member>
+    <member refid="class_scanline_optimizer_1a8409151124fd0bc0f6c131cd1f3e49b6" kind="variable"><name>img_right_</name></member>
+    <member refid="class_scanline_optimizer_1a1f5b315389af3aba3073b56bc97f6417" kind="variable"><name>cost_init_</name></member>
+    <member refid="class_scanline_optimizer_1ac8bd523ee668574f0cf7f4e9291b4caa" kind="variable"><name>cost_aggr_</name></member>
+    <member refid="class_scanline_optimizer_1af981dbc09556513864087993f5f8b39a" kind="variable"><name>min_disparity_</name></member>
+    <member refid="class_scanline_optimizer_1a5bd72d8785cd6c25c670bb94db2afac4" kind="variable"><name>max_disparity_</name></member>
+    <member refid="class_scanline_optimizer_1af0e8bd8028e830f76335bd7b8d60b724" kind="variable"><name>so_p1_</name></member>
+    <member refid="class_scanline_optimizer_1a3b7d31d7f4a7ce8aff1d6b79d0361213" kind="variable"><name>so_p2_</name></member>
+    <member refid="class_scanline_optimizer_1aca37812e7bbdbaf39f40db65720ed725" kind="variable"><name>so_tso_</name></member>
+    <member refid="class_scanline_optimizer_1a82146d306594d9f8eff00eec3559d85d" kind="function"><name>ScanlineOptimizer</name></member>
+    <member refid="class_scanline_optimizer_1a6628aa77add71b66e865773fd69e1871" kind="function"><name>~ScanlineOptimizer</name></member>
+    <member refid="class_scanline_optimizer_1a78b7066116c9f5d1a711d139e691016d" kind="function"><name>SetData</name></member>
+    <member refid="class_scanline_optimizer_1a2ef07e231177f8360511bf24262f06d7" kind="function"><name>SetParam</name></member>
+    <member refid="class_scanline_optimizer_1a1a5e3667eea447c9ac9c579e3e422be9" kind="function"><name>Optimize</name></member>
+    <member refid="class_scanline_optimizer_1a4ddb87dae7151baf5ca67026e8b69c0d" kind="function"><name>ScanlineOptimizeLeftRight</name></member>
+    <member refid="class_scanline_optimizer_1a8dda679d8cd992a069c9dc02b1fc2074" kind="function"><name>ScanlineOptimizeUpDown</name></member>
+    <member refid="class_scanline_optimizer_1ac95e47b513b40e692bd322500b88648b" kind="function"><name>ColorDist</name></member>
+  </compound>
+  <compound refid="namespaceadcensus__util" kind="namespace"><name>adcensus_util</name>
+    <member refid="namespaceadcensus__util_1a7703fe07829da918a6068e859809b08d" kind="function"><name>census_transform_9x7</name></member>
+    <member refid="namespaceadcensus__util_1a99a690c8f0152aeeb3f51cae3a900816" kind="function"><name>Hamming64</name></member>
+    <member refid="namespaceadcensus__util_1aaaebd40b291ee87e94d4d9e107d760ee" kind="function"><name>MedianFilter</name></member>
+  </compound>
+  <compound refid="namespacestd_1_1chrono" kind="namespace"><name>std::chrono</name>
+  </compound>
+  <compound refid="adcensus__types_8h" kind="file"><name>adcensus_types.h</name>
+    <member refid="adcensus__types_8h_1abdf73516460d2bbbfdea4a92bcecc080" kind="define"><name>SAFE_DELETE</name></member>
+    <member refid="adcensus__types_8h_1ac8993191d9e5604cecade1988893f666" kind="enum"><name>CensusSize</name></member>
+    <member refid="adcensus__types_8h_1ac8993191d9e5604cecade1988893f666a141d3ca89a3b0ef23c1dc332bf54b6d5" kind="enumvalue"><name>Census5x5</name></member>
+    <member refid="adcensus__types_8h_1ac8993191d9e5604cecade1988893f666a8fc33a293faaf2fab176ad8acbeab5b3" kind="enumvalue"><name>Census9x7</name></member>
+    <member refid="adcensus__types_8h_1a3e55e6174885a377573f0f04b8be2e54" kind="typedef"><name>sint8</name></member>
+    <member refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kind="typedef"><name>uint8</name></member>
+    <member refid="adcensus__types_8h_1aa961e2cfd0d472f8870c6032a6773e36" kind="typedef"><name>sint16</name></member>
+    <member refid="adcensus__types_8h_1ac2a9e79eb120216f855626495b7bd18a" kind="typedef"><name>uint16</name></member>
+    <member refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kind="typedef"><name>sint32</name></member>
+    <member refid="adcensus__types_8h_1acbd4acd0d29e2d6c43104827f77d9cd2" kind="typedef"><name>uint32</name></member>
+    <member refid="adcensus__types_8h_1a4a4dc5c711b664e54ebabbb396e2a9d8" kind="typedef"><name>sint64</name></member>
+    <member refid="adcensus__types_8h_1abc0f5bc07737e498f287334775dff2b6" kind="typedef"><name>uint64</name></member>
+    <member refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kind="typedef"><name>float32</name></member>
+    <member refid="adcensus__types_8h_1a232fad1b0d6dcc7c16aabde98b2e2a80" kind="typedef"><name>float64</name></member>
+    <member refid="adcensus__types_8h_1a118c72a78435968038ba96390aa41576" kind="variable"><name>Invalid_Float</name></member>
+    <member refid="adcensus__types_8h_1a0fdd98eecb058201560ee2ff1fea3dcf" kind="variable"><name>Large_Float</name></member>
+    <member refid="adcensus__types_8h_1a1dd4d5dfcd3301a0b6b4a3b06d9bd1cc" kind="variable"><name>Small_Float</name></member>
+  </compound>
+  <compound refid="adcensus__util_8cpp" kind="file"><name>adcensus_util.cpp</name>
+  </compound>
+  <compound refid="adcensus__util_8h" kind="file"><name>adcensus_util.h</name>
+  </compound>
+  <compound refid="_a_d_census_stereo_8cpp" kind="file"><name>ADCensusStereo.cpp</name>
+  </compound>
+  <compound refid="_a_d_census_stereo_8h" kind="file"><name>ADCensusStereo.h</name>
+  </compound>
+  <compound refid="cost__computor_8cpp" kind="file"><name>cost_computor.cpp</name>
+  </compound>
+  <compound refid="cost__computor_8h" kind="file"><name>cost_computor.h</name>
+  </compound>
+  <compound refid="cross__aggregator_8cpp" kind="file"><name>cross_aggregator.cpp</name>
+  </compound>
+  <compound refid="cross__aggregator_8h" kind="file"><name>cross_aggregator.h</name>
+    <member refid="cross__aggregator_8h_1aa1350303b00dd20e9ad8118e0b540443" kind="define"><name>MAX_ARM_LENGTH</name></member>
+  </compound>
+  <compound refid="multistep__refiner_8cpp" kind="file"><name>multistep_refiner.cpp</name>
+  </compound>
+  <compound refid="multistep__refiner_8h" kind="file"><name>multistep_refiner.h</name>
+  </compound>
+  <compound refid="scanline__optimizer_8cpp" kind="file"><name>scanline_optimizer.cpp</name>
+  </compound>
+  <compound refid="scanline__optimizer_8h" kind="file"><name>scanline_optimizer.h</name>
+  </compound>
+  <compound refid="com_2project_2_d_b_m_2main_8cpp" kind="file"><name>main.cpp</name>
+    <member refid="com_2project_2_d_b_m_2main_8cpp_1af7e59fc879d4a02c4222160510de3191" kind="function"><name>SaveDisparityMap</name></member>
+    <member refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" kind="function"><name>main</name></member>
+  </compound>
+  <compound refid="testtool_2main_8cpp" kind="file"><name>main.cpp</name>
+  </compound>
+  <compound refid="dir_fd67cc6cefbbc94f215ae4fb2c2646eb" kind="dir"><name>com/project/DBM/adcensus</name>
+  </compound>
+  <compound refid="dir_194442ccfdda5330a9fc879f923cbd7f" kind="dir"><name>com</name>
+  </compound>
+  <compound refid="dir_f63a7b7172f77b7276722d574f87b69f" kind="dir"><name>com/project/DBM</name>
+  </compound>
+  <compound refid="dir_991881956368039563a05e6a82ce191a" kind="dir"><name>com/project</name>
+  </compound>
+  <compound refid="dir_95b6f87e81f5573dd87fb2e8b966a3ed" kind="dir"><name>testtool</name>
+  </compound>
+</doxygenindex>

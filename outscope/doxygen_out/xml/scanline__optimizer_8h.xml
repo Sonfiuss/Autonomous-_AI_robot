@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="scanline__optimizer_8h" kind="file" language="C++">
+    <compoundname>scanline_optimizer.h</compoundname>
+    <includes local="no">algorithm</includes>
+    <includes refid="adcensus__types_8h" local="yes">adcensus_types.h</includes>
+    <includedby refid="_a_d_census_stereo_8h" local="yes">com/project/DBM/adcensus/ADCensusStereo.h</includedby>
+    <includedby refid="scanline__optimizer_8cpp" local="yes">com/project/DBM/adcensus/scanline_optimizer.cpp</includedby>
+    <incdepgraph>
+      <node id="2">
+        <label>algorithm</label>
+      </node>
+      <node id="4">
+        <label>cstdint</label>
+      </node>
+      <node id="3">
+        <label>adcensus_types.h</label>
+        <link refid="adcensus__types_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>com/project/DBM/adcensus/scanline_optimizer.h</label>
+        <link refid="scanline__optimizer_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>limits</label>
+      </node>
+      <node id="6">
+        <label>vector</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3">
+        <label>com/project/DBM/adcensus/ADCensusStereo.cpp</label>
+        <link refid="_a_d_census_stereo_8cpp"/>
+      </node>
+      <node id="2">
+        <label>com/project/DBM/adcensus/ADCensusStereo.h</label>
+        <link refid="_a_d_census_stereo_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>com/project/DBM/adcensus/scanline_optimizer.cpp</label>
+        <link refid="scanline__optimizer_8cpp"/>
+      </node>
+      <node id="1">
+        <label>com/project/DBM/adcensus/scanline_optimizer.h</label>
+        <link refid="scanline__optimizer_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>com/project/DBM/main.cpp</label>
+        <link refid="com_2project_2_d_b_m_2main_8cpp"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="class_scanline_optimizer" prot="public">ScanlineOptimizer</innerclass>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/adcensus/scanline_optimizer.h"/>
+  </compounddef>
+</doxygen>

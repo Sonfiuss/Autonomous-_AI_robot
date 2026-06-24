@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="dir_f63a7b7172f77b7276722d574f87b69f" kind="dir">
+    <compoundname>com/project/DBM</compoundname>
+    <innerdir refid="dir_fd67cc6cefbbc94f215ae4fb2c2646eb">com/project/DBM/adcensus</innerdir>
+    <innerfile refid="com_2project_2_d_b_m_2main_8cpp">main.cpp</innerfile>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="cross__aggregator_8h" kind="file" language="C++">
+    <compoundname>cross_aggregator.h</compoundname>
+    <includes refid="adcensus__types_8h" local="yes">adcensus_types.h</includes>
+    <includes local="no">algorithm</includes>
+    <includedby refid="_a_d_census_stereo_8h" local="yes">com/project/DBM/adcensus/ADCensusStereo.h</includedby>
+    <includedby refid="cross__aggregator_8cpp" local="yes">com/project/DBM/adcensus/cross_aggregator.cpp</includedby>
+    <includedby refid="multistep__refiner_8h" local="yes">com/project/DBM/adcensus/multistep_refiner.h</includedby>
+    <incdepgraph>
+      <node id="6">
+        <label>algorithm</label>
+      </node>
+      <node id="3">
+        <label>cstdint</label>
+      </node>
+      <node id="2">
+        <label>adcensus_types.h</label>
+        <link refid="adcensus__types_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>com/project/DBM/adcensus/cross_aggregator.h</label>
+        <link refid="cross__aggregator_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>limits</label>
+      </node>
+      <node id="5">
+        <label>vector</label>
+      </node>
+    </incdepgraph>
+    <invincdepgraph>
+      <node id="3">
+        <label>com/project/DBM/adcensus/ADCensusStereo.cpp</label>
+        <link refid="_a_d_census_stereo_8cpp"/>
+      </node>
+      <node id="2">
+        <label>com/project/DBM/adcensus/ADCensusStereo.h</label>
+        <link refid="_a_d_census_stereo_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>com/project/DBM/adcensus/cross_aggregator.cpp</label>
+        <link refid="cross__aggregator_8cpp"/>
+      </node>
+      <node id="1">
+        <label>com/project/DBM/adcensus/cross_aggregator.h</label>
+        <link refid="cross__aggregator_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="7">
+        <label>com/project/DBM/adcensus/multistep_refiner.cpp</label>
+        <link refid="multistep__refiner_8cpp"/>
+      </node>
+      <node id="6">
+        <label>com/project/DBM/adcensus/multistep_refiner.h</label>
+        <link refid="multistep__refiner_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+      </node>
+      <node id="4">
+        <label>com/project/DBM/main.cpp</label>
+        <link refid="com_2project_2_d_b_m_2main_8cpp"/>
+      </node>
+    </invincdepgraph>
+    <innerclass refid="struct_cross_arm" prot="public">CrossArm</innerclass>
+    <innerclass refid="class_cross_aggregator" prot="public">CrossAggregator</innerclass>
+    <sectiondef kind="define">
+      <memberdef kind="define" id="cross__aggregator_8h_1aa1350303b00dd20e9ad8118e0b540443" prot="public" static="no">
+        <name>MAX_ARM_LENGTH</name>
+        <initializer>255</initializer>
+        <briefdescription>
+<para>最大臂长 </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/cross_aggregator.h" line="22" column="9" bodyfile="com/project/DBM/adcensus/cross_aggregator.h" bodystart="22" bodyend="-1"/>
+        <referencedby refid="class_cross_aggregator_1a370e1172368ed8ddef218157fdefc080" compoundref="cross__aggregator_8cpp" startline="136" endline="202">CrossAggregator::FindHorizontalArm</referencedby>
+        <referencedby refid="class_cross_aggregator_1a26441c93a439a52323d8af4b24c2d5b3" compoundref="cross__aggregator_8cpp" startline="204" endline="270">CrossAggregator::FindVerticalArm</referencedby>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/adcensus/cross_aggregator.h"/>
+  </compounddef>
+</doxygen>

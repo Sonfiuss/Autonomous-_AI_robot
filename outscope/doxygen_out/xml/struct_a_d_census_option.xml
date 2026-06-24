@@ -1,0 +1,328 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="struct_a_d_census_option" kind="struct" language="C++" prot="public">
+    <compoundname>ADCensusOption</compoundname>
+    <includes refid="adcensus__types_8h" local="no">adcensus_types.h</includes>
+    <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="struct_a_d_census_option_1a2fa14a3fdc1e3f0391fa53366ff20ee5" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::min_disparity</definition>
+        <argsstring></argsstring>
+        <name>min_disparity</name>
+        <qualifiedname>ADCensusOption::min_disparity</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="46" column="9" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="46" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+        <referencedby refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="com_2project_2_d_b_m_2main_8cpp" startline="66" endline="146">main</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a311e9f5bd88080f880ed0dcf7f4922b0" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::max_disparity</definition>
+        <argsstring></argsstring>
+        <name>max_disparity</name>
+        <qualifiedname>ADCensusOption::max_disparity</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="47" column="7" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="47" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+        <referencedby refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="com_2project_2_d_b_m_2main_8cpp" startline="66" endline="146">main</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a48827be3a0b5c810737b52ece234e1c4" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::lambda_ad</definition>
+        <argsstring></argsstring>
+        <name>lambda_ad</name>
+        <qualifiedname>ADCensusOption::lambda_ad</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="49" column="7" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="49" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1acdcc9ee178e484593d25bd9f85c82b8a" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::lambda_census</definition>
+        <argsstring></argsstring>
+        <name>lambda_census</name>
+        <qualifiedname>ADCensusOption::lambda_census</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="50" column="7" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="50" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a534ef2f4deb072d14da4f3084037931c" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::cross_L1</definition>
+        <argsstring></argsstring>
+        <name>cross_L1</name>
+        <qualifiedname>ADCensusOption::cross_L1</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="51" column="7" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="51" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1afec132cea3105988a21612ab673e74a6" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::cross_L2</definition>
+        <argsstring></argsstring>
+        <name>cross_L2</name>
+        <qualifiedname>ADCensusOption::cross_L2</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="52" column="9" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="52" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a7e25d3655c978b61afc27934176640ec" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::cross_t1</definition>
+        <argsstring></argsstring>
+        <name>cross_t1</name>
+        <qualifiedname>ADCensusOption::cross_t1</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="53" column="7" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="53" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a7e1f1192fe1eae2fe0faf7c3befbf9d3" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::cross_t2</definition>
+        <argsstring></argsstring>
+        <name>cross_t2</name>
+        <qualifiedname>ADCensusOption::cross_t2</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="54" column="9" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="54" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1af71838022171dab9f345aff28bea993d" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref></type>
+        <definition>float32 ADCensusOption::so_p1</definition>
+        <argsstring></argsstring>
+        <name>so_p1</name>
+        <qualifiedname>ADCensusOption::so_p1</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="55" column="8" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="55" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1ad747892e970db5f07de81d953ac45438" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref></type>
+        <definition>float32 ADCensusOption::so_p2</definition>
+        <argsstring></argsstring>
+        <name>so_p2</name>
+        <qualifiedname>ADCensusOption::so_p2</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="56" column="8" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="56" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a0d7e991099ddf2784a981c09e8227779" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::so_tso</definition>
+        <argsstring></argsstring>
+        <name>so_tso</name>
+        <qualifiedname>ADCensusOption::so_tso</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="57" column="7" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="57" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a7a971c993d751b35e5d6cdb82468349e" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusOption::irv_ts</definition>
+        <argsstring></argsstring>
+        <name>irv_ts</name>
+        <qualifiedname>ADCensusOption::irv_ts</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="58" column="7" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="58" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1ad3614d7aa5570d39c2da8c1fde59364a" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref></type>
+        <definition>float32 ADCensusOption::irv_th</definition>
+        <argsstring></argsstring>
+        <name>irv_th</name>
+        <qualifiedname>ADCensusOption::irv_th</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="59" column="9" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="59" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1ae40e8d189dc246cd830ea1a0bd4f12f8" prot="public" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref></type>
+        <definition>float32 ADCensusOption::lrcheck_thres</definition>
+        <argsstring></argsstring>
+        <name>lrcheck_thres</name>
+        <qualifiedname>ADCensusOption::lrcheck_thres</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="61" column="8" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="61" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+        <referencedby refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="com_2project_2_d_b_m_2main_8cpp" startline="66" endline="146">main</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a0c68b647347900a5cf0799eb0c7f7942" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ADCensusOption::do_lr_check</definition>
+        <argsstring></argsstring>
+        <name>do_lr_check</name>
+        <qualifiedname>ADCensusOption::do_lr_check</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="63" column="5" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="63" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+        <referencedby refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="com_2project_2_d_b_m_2main_8cpp" startline="66" endline="146">main</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1acd5a4342674da2548d50ae6fa821c015" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ADCensusOption::do_filling</definition>
+        <argsstring></argsstring>
+        <name>do_filling</name>
+        <qualifiedname>ADCensusOption::do_filling</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="64" column="5" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="64" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+        <referencedby refid="com_2project_2_d_b_m_2main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="com_2project_2_d_b_m_2main_8cpp" startline="66" endline="146">main</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="struct_a_d_census_option_1a8c9fd3e64787a78b154a3dc5960b0de3" prot="public" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ADCensusOption::do_discontinuity_adjustment</definition>
+        <argsstring></argsstring>
+        <name>do_discontinuity_adjustment</name>
+        <qualifiedname>ADCensusOption::do_discontinuity_adjustment</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="65" column="5" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="65" bodyend="-1"/>
+        <referencedby refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" compoundref="adcensus__types_8h" startline="67" endline="74">ADCensusOption</referencedby>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="public-func">
+      <memberdef kind="function" id="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>ADCensusOption::ADCensusOption</definition>
+        <argsstring>()</argsstring>
+        <name>ADCensusOption</name>
+        <qualifiedname>ADCensusOption::ADCensusOption</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_types.h" line="67" column="1" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="67" bodyend="74"/>
+        <references refid="struct_a_d_census_option_1a534ef2f4deb072d14da4f3084037931c" compoundref="adcensus__types_8h" startline="51">cross_L1</references>
+        <references refid="struct_a_d_census_option_1afec132cea3105988a21612ab673e74a6" compoundref="adcensus__types_8h" startline="52">cross_L2</references>
+        <references refid="struct_a_d_census_option_1a7e25d3655c978b61afc27934176640ec" compoundref="adcensus__types_8h" startline="53">cross_t1</references>
+        <references refid="struct_a_d_census_option_1a7e1f1192fe1eae2fe0faf7c3befbf9d3" compoundref="adcensus__types_8h" startline="54">cross_t2</references>
+        <references refid="struct_a_d_census_option_1a8c9fd3e64787a78b154a3dc5960b0de3" compoundref="adcensus__types_8h" startline="65">do_discontinuity_adjustment</references>
+        <references refid="struct_a_d_census_option_1acd5a4342674da2548d50ae6fa821c015" compoundref="adcensus__types_8h" startline="64">do_filling</references>
+        <references refid="struct_a_d_census_option_1a0c68b647347900a5cf0799eb0c7f7942" compoundref="adcensus__types_8h" startline="63">do_lr_check</references>
+        <references refid="struct_a_d_census_option_1ad3614d7aa5570d39c2da8c1fde59364a" compoundref="adcensus__types_8h" startline="59">irv_th</references>
+        <references refid="struct_a_d_census_option_1a7a971c993d751b35e5d6cdb82468349e" compoundref="adcensus__types_8h" startline="58">irv_ts</references>
+        <references refid="struct_a_d_census_option_1a48827be3a0b5c810737b52ece234e1c4" compoundref="adcensus__types_8h" startline="49">lambda_ad</references>
+        <references refid="struct_a_d_census_option_1acdcc9ee178e484593d25bd9f85c82b8a" compoundref="adcensus__types_8h" startline="50">lambda_census</references>
+        <references refid="struct_a_d_census_option_1ae40e8d189dc246cd830ea1a0bd4f12f8" compoundref="adcensus__types_8h" startline="61">lrcheck_thres</references>
+        <references refid="struct_a_d_census_option_1a311e9f5bd88080f880ed0dcf7f4922b0" compoundref="adcensus__types_8h" startline="47">max_disparity</references>
+        <references refid="struct_a_d_census_option_1a2fa14a3fdc1e3f0391fa53366ff20ee5" compoundref="adcensus__types_8h" startline="46">min_disparity</references>
+        <references refid="struct_a_d_census_option_1af71838022171dab9f345aff28bea993d" compoundref="adcensus__types_8h" startline="55">so_p1</references>
+        <references refid="struct_a_d_census_option_1ad747892e970db5f07de81d953ac45438" compoundref="adcensus__types_8h" startline="56">so_p2</references>
+        <references refid="struct_a_d_census_option_1a0d7e991099ddf2784a981c09e8227779" compoundref="adcensus__types_8h" startline="57">so_tso</references>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+<para>ADCensus参数结构体 </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/adcensus/adcensus_types.h" line="45" column="1" bodyfile="com/project/DBM/adcensus/adcensus_types.h" bodystart="45" bodyend="75"/>
+    <listofallmembers>
+      <member refid="struct_a_d_census_option_1a11d4b94a7afab9957a1e2bac479b8509" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>ADCensusOption</name></member>
+      <member refid="struct_a_d_census_option_1a534ef2f4deb072d14da4f3084037931c" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>cross_L1</name></member>
+      <member refid="struct_a_d_census_option_1afec132cea3105988a21612ab673e74a6" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>cross_L2</name></member>
+      <member refid="struct_a_d_census_option_1a7e25d3655c978b61afc27934176640ec" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>cross_t1</name></member>
+      <member refid="struct_a_d_census_option_1a7e1f1192fe1eae2fe0faf7c3befbf9d3" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>cross_t2</name></member>
+      <member refid="struct_a_d_census_option_1a8c9fd3e64787a78b154a3dc5960b0de3" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>do_discontinuity_adjustment</name></member>
+      <member refid="struct_a_d_census_option_1acd5a4342674da2548d50ae6fa821c015" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>do_filling</name></member>
+      <member refid="struct_a_d_census_option_1a0c68b647347900a5cf0799eb0c7f7942" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>do_lr_check</name></member>
+      <member refid="struct_a_d_census_option_1ad3614d7aa5570d39c2da8c1fde59364a" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>irv_th</name></member>
+      <member refid="struct_a_d_census_option_1a7a971c993d751b35e5d6cdb82468349e" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>irv_ts</name></member>
+      <member refid="struct_a_d_census_option_1a48827be3a0b5c810737b52ece234e1c4" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>lambda_ad</name></member>
+      <member refid="struct_a_d_census_option_1acdcc9ee178e484593d25bd9f85c82b8a" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>lambda_census</name></member>
+      <member refid="struct_a_d_census_option_1ae40e8d189dc246cd830ea1a0bd4f12f8" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>lrcheck_thres</name></member>
+      <member refid="struct_a_d_census_option_1a311e9f5bd88080f880ed0dcf7f4922b0" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>max_disparity</name></member>
+      <member refid="struct_a_d_census_option_1a2fa14a3fdc1e3f0391fa53366ff20ee5" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>min_disparity</name></member>
+      <member refid="struct_a_d_census_option_1af71838022171dab9f345aff28bea993d" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>so_p1</name></member>
+      <member refid="struct_a_d_census_option_1ad747892e970db5f07de81d953ac45438" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>so_p2</name></member>
+      <member refid="struct_a_d_census_option_1a0d7e991099ddf2784a981c09e8227779" prot="public" virt="non-virtual"><scope>ADCensusOption</scope><name>so_tso</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

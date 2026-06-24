@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="cost__computor_8cpp" kind="file" language="C++">
+    <compoundname>cost_computor.cpp</compoundname>
+    <includes refid="cost__computor_8h" local="yes">cost_computor.h</includes>
+    <includes local="no">cmath</includes>
+    <includes refid="adcensus__util_8h" local="yes">adcensus_util.h</includes>
+    <incdepgraph>
+      <node id="9">
+        <label>algorithm</label>
+      </node>
+      <node id="7">
+        <label>cmath</label>
+      </node>
+      <node id="4">
+        <label>cstdint</label>
+      </node>
+      <node id="3">
+        <label>adcensus_types.h</label>
+        <link refid="adcensus__types_8h"/>
+        <childnode refid="4" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="6" relation="include">
+        </childnode>
+      </node>
+      <node id="8">
+        <label>adcensus_util.h</label>
+        <link refid="adcensus__util_8h"/>
+        <childnode refid="9" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>com/project/DBM/adcensus/cost_computor.cpp</label>
+        <link refid="cost__computor_8cpp"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="7" relation="include">
+        </childnode>
+        <childnode refid="8" relation="include">
+        </childnode>
+      </node>
+      <node id="2">
+        <label>cost_computor.h</label>
+        <link refid="cost__computor_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>limits</label>
+      </node>
+      <node id="6">
+        <label>vector</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/adcensus/cost_computor.cpp"/>
+  </compounddef>
+</doxygen>

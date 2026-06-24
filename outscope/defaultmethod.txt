@@ -1,0 +1,31 @@
+# Default / boilerplate methods to treat as a break point (Break rule 3).
+# One name per line. Matched against the callee's short name AND qualified name.
+# Lines starting with '#' and blank lines are ignored.
+#
+# --- C++ special member functions (compiler-default methods) ---
+# Constructors/destructors are matched specially by the tracer (a method whose
+# short name equals its class name, or starts with '~'); you may still list
+# explicit names here.
+operator=
+operator==
+operator!=
+operator<
+operator>
+operator<=
+operator>=
+operator[]
+operator()
+operator->
+operator*
+operator new
+operator delete
+swap
+begin
+end
+size
+empty
+clear
+data
+c_str
+#
+# --- Add your own functions to treat as leaves below ---

@@ -1,0 +1,53 @@
+# Doxyfile — tuned for C++ call-graph extraction (XML output only).
+# See implement-Doxyfile.md section 5.2. Run with:  doxygen Doxyfile
+# -----------------------------------------------------------------------------
+
+PROJECT_NAME           = "DBM Call Graph"
+
+# --- Input -------------------------------------------------------------------
+# Index BOTH the test tool (entry points / command functions) and the DBM tree
+# (the call targets). RECURSIVE picks up all subfolders.
+INPUT                  = testtool com/project
+RECURSIVE              = YES
+FILE_PATTERNS          = *.c *.cc *.cpp *.cxx *.h *.hh *.hpp *.hxx
+
+# Skip build artifacts and vendored / third-party trees that we never trace into.
+EXCLUDE_PATTERNS       = */build/* */third_party/* */captures/* */.git/*
+
+# --- What to extract ---------------------------------------------------------
+# Make sure no functions are skipped.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_METHODS  = YES
+EXTRACT_ANON_NSPACES   = YES
+
+# --- Cross-reference info (the caller -> callee data the trace script needs) --
+SOURCE_BROWSER         = YES
+REFERENCES_RELATION    = YES
+REFERENCED_BY_RELATION = YES
+REFERENCES_LINK_SOURCE = YES
+INLINE_SOURCES         = NO
+
+# --- Output ------------------------------------------------------------------
+# XML is the input format for the trace script. Disable everything else.
+GENERATE_XML           = YES
+XML_PROGRAMLISTING     = NO
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_RTF           = NO
+GENERATE_MAN           = NO
+GENERATE_DOCBOOK       = NO
+
+OUTPUT_DIRECTORY       = doxygen_out
+XML_OUTPUT             = xml
+
+# --- Misc --------------------------------------------------------------------
+# We don't need Doxygen's own graphviz graphs; the trace script builds DOT.
+HAVE_DOT               = NO
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+# Resolve typedefs / macros enough to keep call references intact.
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO
