@@ -13,6 +13,54 @@ Notes: `command.txt` left empty (no commands supplied yet). doxygen / graphviz /
 working python are NOT installed on this machine, so the pipeline was authored but
 not executed. C: drive is full — shell/PowerShell output capture failing.
 
+## 2026-06-24 — Deep DBM tracing + Shift-JIS robustness (outscope/)
+
+Root cause found: tracer anchored entries in `testtool` and only allowed one hop
+into DBM, but the test-tool functions (DBMDownLoadTest.cpp::Refine/OutlierDetection)
+are standalone *copies* that only call MedianFilter — so the walk dead-ended and
+never reached the real DBM call graph. Fixes:
+- `tools/callgraph_trace.py`: replaced `in_testtool` anchor with `defined_in_project`
+  (DBM-defined entries preferred over identically-named test-tool copies); raised
+  default `MAX_NODES` 8→50; added `--max-nodes` CLI flag.
+- `tools/command.txt`: switched to qualified DBM entries (ADCensusStereo::Match,
+  MultiStepRefiner::Refine/OutlierDetection).
+- Shift-JIS risk (real source has CP932 Japanese files like DBMuim/*): added
+  `tools/gen_encoding_map.py` to auto-detect non-UTF-8 sources and emit a
+  `doxygen_out/encoding.inc` (`INPUT_FILE_ENCODING = *path=CP932`) @INCLUDE'd by
+  `Doxyfile`; set `INPUT_ENCODING = UTF-8`. Wired Step 0 (encoding map) into
+  `run_callgraph.sh`/`.bat` before Doxygen.
+Verified on local XML: Match → ComputeCost/CostAggregation/ScanlineOptimize/
+MultiStepRefine/ComputeDisparity(+Right); Refine → OutlierDetection/IterativeRegionVoting/
+ProperInterpolation/DepthDiscontinuityAdjustment/EdgeDetect/MedianFilter. Local repo
+has no Shift-JIS files (encoding map empty as expected); map will populate on the
+real DBMuim source.
+
+## 2026-06-24 (revised) — Comment stripping + anchor correction (outscope/)
+
+User clarified the real design: a command is the name of a function IN
+testtool/DBMDownLoadTest.cpp; the tool enters that function and descends into its
+DBM callees by level. Also: real DBM sources carry heavy Japanese `/** */` and
+`//` comments in Shift-JIS that must be IGNORED when deriving call relationships
+(they were breaking Doxygen — e.g. DeleteNonSpatialRecord vanished from the XML
+because a mis-terminated doc block swallowed its signature; a `//` comment ending
+in a 0x5C-trailing kanji swallowed the next line).
+
+Revisions to the prior entry:
+- Reverted the entry anchor: `defined_in_project` → `in_testtool` (commands now
+  resolve to the test-tool harness function, not a same-named DBM method).
+- Replaced the encoding-map approach with a single Doxygen `INPUT_FILTER`:
+  added `tools/strip_comments.py` (detect UTF-8/CP932 → decode → strip // and
+  /* */ comments, string/char-literal aware, newline-preserving → emit UTF-8).
+  Doxyfile: `INPUT_FILTER = "python tools/strip_comments.py"` +
+  `FILTER_SOURCE_FILES = YES`; `INPUT_ENCODING = UTF-8`.
+- Deleted now-superseded `tools/gen_encoding_map.py` and `doxygen_out/encoding.inc`;
+  removed Step 0 from run_callgraph.sh/.bat.
+- command.txt reverted to test-tool function names (OutlierDetection, Refine).
+Verified: strip_comments correctly preserves `int LostIfContinuation();` after a
+`// 表` line, keeps DeleteNonSpatialRecord's signature, leaves `//` inside string
+literals intact; full Doxygen+tracer pipeline runs with the filter (Refine →
+adcensus_util::MedianFilter via the test-tool entry).
+
 ## 2026-06-24 — Install tools + node cap + default-method break rule (outscope/)
 
 Per user request: installed Doxygen 1.17.0 and Graphviz 15.1.0 via winget; added

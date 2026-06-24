@@ -1,0 +1,7 @@
+ManualInstrumentationApiTest [ManualInstrumentationApiTest]
+|-- ThreadPool-Schedule([this]()  [external]
+|-- OrbitTestImpl-OutputOrbitApiState()
+|-- -SleepFor2Ms()
+|   `-- -SleepFor1Ms()
+|-- ThreadPool-Schedule([id]()  [external]
+`-- -ExecuteTask(uint32_t)

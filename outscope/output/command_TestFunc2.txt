@@ -1,0 +1,9 @@
+TestFunc2 [TestFunc2]
+|-- OrbitTestImpl-TestFunc(uint32_t)
+|   |-- ConnectToLocalWidget-CheckAndSignalConnection()
+|   |   |-- -GetState()  [external]
+|   |   |-- ConnectToLocalWidget-Connected()
+|   |   `-- ConnectToLocalWidget-Disconnected()
+|   `-- OrbitTestImpl-TestFunc(uint32_t)  [recursive]
+`-- OrbitTestImpl-BusyWork(uint64_t)
+    `-- -count()  [external]
