@@ -1,0 +1,606 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="class_a_d_census_stereo" kind="class" language="C++" prot="public">
+    <compoundname>ADCensusStereo</compoundname>
+    <includes refid="_a_d_census_stereo_8h" local="no">ADCensusStereo.h</includes>
+    <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" prot="private" static="no" mutable="no">
+        <type><ref refid="struct_a_d_census_option" kindref="compound">ADCensusOption</ref></type>
+        <definition>ADCensusOption ADCensusStereo::option_</definition>
+        <argsstring></argsstring>
+        <name>option_</name>
+        <qualifiedname>ADCensusStereo::option_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="67" column="16" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="67" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" compoundref="_a_d_census_stereo_8cpp" startline="149" endline="157">ComputeCost</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ComputeDisparity</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" compoundref="_a_d_census_stereo_8cpp" startline="247" endline="312">ComputeDisparityRight</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" compoundref="_a_d_census_stereo_8cpp" startline="159" endline="167">CostAggregation</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusStereo::width_</definition>
+        <argsstring></argsstring>
+        <name>width_</name>
+        <qualifiedname>ADCensusStereo::width_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="70" column="8" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="70" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" compoundref="_a_d_census_stereo_8cpp" startline="13" endline="15">ADCensusStereo</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ComputeDisparity</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" compoundref="_a_d_census_stereo_8cpp" startline="247" endline="312">ComputeDisparityRight</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+        <definition>sint32 ADCensusStereo::height_</definition>
+        <argsstring></argsstring>
+        <name>height_</name>
+        <qualifiedname>ADCensusStereo::height_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="72" column="8" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="72" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" compoundref="_a_d_census_stereo_8cpp" startline="13" endline="15">ADCensusStereo</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ComputeDisparity</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" compoundref="_a_d_census_stereo_8cpp" startline="247" endline="312">ComputeDisparityRight</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" prot="private" static="no" mutable="no">
+        <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+        <definition>const uint8* ADCensusStereo::img_left_</definition>
+        <argsstring></argsstring>
+        <name>img_left_</name>
+        <qualifiedname>ADCensusStereo::img_left_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="75" column="13" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="75" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" compoundref="_a_d_census_stereo_8cpp" startline="13" endline="15">ADCensusStereo</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" compoundref="_a_d_census_stereo_8cpp" startline="149" endline="157">ComputeCost</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" compoundref="_a_d_census_stereo_8cpp" startline="159" endline="167">CostAggregation</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" prot="private" static="no" mutable="no">
+        <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+        <definition>const uint8* ADCensusStereo::img_right_</definition>
+        <argsstring></argsstring>
+        <name>img_right_</name>
+        <qualifiedname>ADCensusStereo::img_right_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="77" column="13" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="77" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" compoundref="_a_d_census_stereo_8cpp" startline="13" endline="15">ADCensusStereo</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" compoundref="_a_d_census_stereo_8cpp" startline="149" endline="157">ComputeCost</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" compoundref="_a_d_census_stereo_8cpp" startline="159" endline="167">CostAggregation</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1a619a7908e562cd0c0645bac6c4ea1d8d" prot="private" static="no" mutable="no">
+        <type><ref refid="class_cost_computor" kindref="compound">CostComputor</ref></type>
+        <definition>CostComputor ADCensusStereo::cost_computer_</definition>
+        <argsstring></argsstring>
+        <name>cost_computer_</name>
+        <qualifiedname>ADCensusStereo::cost_computer_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="80" column="14" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="80" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" compoundref="_a_d_census_stereo_8cpp" startline="149" endline="157">ComputeCost</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" compoundref="_a_d_census_stereo_8cpp" startline="159" endline="167">CostAggregation</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" prot="private" static="no" mutable="no">
+        <type><ref refid="class_cross_aggregator" kindref="compound">CrossAggregator</ref></type>
+        <definition>CrossAggregator ADCensusStereo::aggregator_</definition>
+        <argsstring></argsstring>
+        <name>aggregator_</name>
+        <qualifiedname>ADCensusStereo::aggregator_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="82" column="17" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="82" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ComputeDisparity</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" compoundref="_a_d_census_stereo_8cpp" startline="247" endline="312">ComputeDisparityRight</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" compoundref="_a_d_census_stereo_8cpp" startline="159" endline="167">CostAggregation</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1ac41d0042e39b4f1e6bfa37542c78de9c" prot="private" static="no" mutable="no">
+        <type><ref refid="class_scanline_optimizer" kindref="compound">ScanlineOptimizer</ref></type>
+        <definition>ScanlineOptimizer ADCensusStereo::scan_line_</definition>
+        <argsstring></argsstring>
+        <name>scan_line_</name>
+        <qualifiedname>ADCensusStereo::scan_line_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="84" column="19" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="84" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1aa68f87333a51e11a5c8ee4ea785b9eb7" prot="private" static="no" mutable="no">
+        <type><ref refid="class_multi_step_refiner" kindref="compound">MultiStepRefiner</ref></type>
+        <definition>MultiStepRefiner ADCensusStereo::refiner_</definition>
+        <argsstring></argsstring>
+        <name>refiner_</name>
+        <qualifiedname>ADCensusStereo::refiner_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="86" column="18" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="86" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref> *</type>
+        <definition>float32* ADCensusStereo::disp_left_</definition>
+        <argsstring></argsstring>
+        <name>disp_left_</name>
+        <qualifiedname>ADCensusStereo::disp_left_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="89" column="9" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="89" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" compoundref="_a_d_census_stereo_8cpp" startline="13" endline="15">ADCensusStereo</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ComputeDisparity</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" compoundref="_a_d_census_stereo_8cpp" startline="314" endline="318">Release</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" prot="private" static="no" mutable="no">
+        <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref> *</type>
+        <definition>float32* ADCensusStereo::disp_right_</definition>
+        <argsstring></argsstring>
+        <name>disp_right_</name>
+        <qualifiedname>ADCensusStereo::disp_right_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="91" column="9" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="91" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" compoundref="_a_d_census_stereo_8cpp" startline="13" endline="15">ADCensusStereo</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" compoundref="_a_d_census_stereo_8cpp" startline="247" endline="312">ComputeDisparityRight</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" compoundref="_a_d_census_stereo_8cpp" startline="314" endline="318">Release</referencedby>
+      </memberdef>
+      <memberdef kind="variable" id="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" prot="private" static="no" mutable="no">
+        <type>bool</type>
+        <definition>bool ADCensusStereo::is_initialized_</definition>
+        <argsstring></argsstring>
+        <name>is_initialized_</name>
+        <qualifiedname>ADCensusStereo::is_initialized_</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="94" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="94" bodyend="-1"/>
+        <referencedby refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" compoundref="_a_d_census_stereo_8cpp" startline="13" endline="15">ADCensusStereo</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" compoundref="_a_d_census_stereo_8cpp" startline="136" endline="146">Reset</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a3e36430e1e0dc89fd7df5087b6e126c5" compoundref="_a_d_census_stereo_8cpp" startline="17" endline="21">~ADCensusStereo</referencedby>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="public-func">
+      <memberdef kind="function" id="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ADCensusStereo::ADCensusStereo</definition>
+        <argsstring>()</argsstring>
+        <name>ADCensusStereo</name>
+        <qualifiedname>ADCensusStereo::ADCensusStereo</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="16" column="1" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="13" bodyend="15"/>
+        <references refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" compoundref="_a_d_census_stereo_8h" startline="89">disp_left_</references>
+        <references refid="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" compoundref="_a_d_census_stereo_8h" startline="91">disp_right_</references>
+        <references refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" compoundref="_a_d_census_stereo_8h" startline="72">height_</references>
+        <references refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" compoundref="_a_d_census_stereo_8h" startline="75">img_left_</references>
+        <references refid="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" compoundref="_a_d_census_stereo_8h" startline="77">img_right_</references>
+        <references refid="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" compoundref="_a_d_census_stereo_8h" startline="94">is_initialized_</references>
+        <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a3e36430e1e0dc89fd7df5087b6e126c5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>ADCensusStereo::~ADCensusStereo</definition>
+        <argsstring>()</argsstring>
+        <name>~ADCensusStereo</name>
+        <qualifiedname>ADCensusStereo::~ADCensusStereo</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="17" column="1" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="17" bodyend="21"/>
+        <references refid="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" compoundref="_a_d_census_stereo_8h" startline="94">is_initialized_</references>
+        <references refid="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" compoundref="_a_d_census_stereo_8cpp" startline="314" endline="318">Release</references>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ADCensusStereo::Initialize</definition>
+        <argsstring>(const sint32 &amp;width, const sint32 &amp;height, const ADCensusOption &amp;option)</argsstring>
+        <name>Initialize</name>
+        <qualifiedname>ADCensusStereo::Initialize</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>width</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>height</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_a_d_census_option" kindref="compound">ADCensusOption</ref> &amp;</type>
+          <declname>option</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="25" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="23" bodyend="69"/>
+        <references refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" compoundref="_a_d_census_stereo_8h" startline="82">aggregator_</references>
+        <references refid="class_a_d_census_stereo_1a619a7908e562cd0c0645bac6c4ea1d8d" compoundref="_a_d_census_stereo_8h" startline="80">cost_computer_</references>
+        <references refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" compoundref="_a_d_census_stereo_8h" startline="89">disp_left_</references>
+        <references refid="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" compoundref="_a_d_census_stereo_8h" startline="91">disp_right_</references>
+        <references refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" compoundref="_a_d_census_stereo_8h" startline="72">height_</references>
+        <references refid="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" compoundref="_a_d_census_stereo_8h" startline="94">is_initialized_</references>
+        <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
+        <references refid="class_a_d_census_stereo_1aa68f87333a51e11a5c8ee4ea785b9eb7" compoundref="_a_d_census_stereo_8h" startline="86">refiner_</references>
+        <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
+        <referencedby refid="main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="main_8cpp" startline="66" endline="146">main</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" compoundref="_a_d_census_stereo_8cpp" startline="136" endline="146">Reset</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ADCensusStereo::Match</definition>
+        <argsstring>(const uint8 *img_left, const uint8 *img_right, float32 *disp_left)</argsstring>
+        <name>Match</name>
+        <qualifiedname>ADCensusStereo::Match</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+          <declname>img_left</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+          <declname>img_right</declname>
+        </param>
+        <param>
+          <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref> *</type>
+          <declname>disp_left</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="33" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="71" bodyend="134"/>
+        <references refid="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" compoundref="_a_d_census_stereo_8cpp" startline="149" endline="157">ComputeCost</references>
+        <references refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" compoundref="_a_d_census_stereo_8cpp" startline="190" endline="245">ComputeDisparity</references>
+        <references refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" compoundref="_a_d_census_stereo_8cpp" startline="247" endline="312">ComputeDisparityRight</references>
+        <references refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" compoundref="_a_d_census_stereo_8cpp" startline="159" endline="167">CostAggregation</references>
+        <references refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" compoundref="_a_d_census_stereo_8h" startline="89">disp_left_</references>
+        <references refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" compoundref="_a_d_census_stereo_8h" startline="72">height_</references>
+        <references refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" compoundref="_a_d_census_stereo_8h" startline="75">img_left_</references>
+        <references refid="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" compoundref="_a_d_census_stereo_8h" startline="77">img_right_</references>
+        <references refid="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" compoundref="_a_d_census_stereo_8h" startline="94">is_initialized_</references>
+        <references refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" compoundref="_a_d_census_stereo_8cpp" startline="179" endline="188">MultiStepRefine</references>
+        <references refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" compoundref="_a_d_census_stereo_8cpp" startline="169" endline="177">ScanlineOptimize</references>
+        <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
+        <referencedby refid="main_8cpp_1a3c04138a5bfe5d72780bb7e82a18e627" compoundref="main_8cpp" startline="66" endline="146">main</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>bool</type>
+        <definition>bool ADCensusStereo::Reset</definition>
+        <argsstring>(const uint32 &amp;width, const uint32 &amp;height, const ADCensusOption &amp;option)</argsstring>
+        <name>Reset</name>
+        <qualifiedname>ADCensusStereo::Reset</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1acbd4acd0d29e2d6c43104827f77d9cd2" kindref="member">uint32</ref> &amp;</type>
+          <declname>width</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1acbd4acd0d29e2d6c43104827f77d9cd2" kindref="member">uint32</ref> &amp;</type>
+          <declname>height</declname>
+        </param>
+        <param>
+          <type>const <ref refid="struct_a_d_census_option" kindref="compound">ADCensusOption</ref> &amp;</type>
+          <declname>option</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="41" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="136" bodyend="146"/>
+        <references refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" compoundref="_a_d_census_stereo_8cpp" startline="23" endline="69">Initialize</references>
+        <references refid="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" compoundref="_a_d_census_stereo_8h" startline="94">is_initialized_</references>
+        <references refid="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" compoundref="_a_d_census_stereo_8cpp" startline="314" endline="318">Release</references>
+      </memberdef>
+    </sectiondef>
+    <sectiondef kind="private-func">
+      <memberdef kind="function" id="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ADCensusStereo::ComputeCost</definition>
+        <argsstring>()</argsstring>
+        <name>ComputeCost</name>
+        <qualifiedname>ADCensusStereo::ComputeCost</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="45" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="149" bodyend="157"/>
+        <references refid="class_a_d_census_stereo_1a619a7908e562cd0c0645bac6c4ea1d8d" compoundref="_a_d_census_stereo_8h" startline="80">cost_computer_</references>
+        <references refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" compoundref="_a_d_census_stereo_8h" startline="75">img_left_</references>
+        <references refid="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" compoundref="_a_d_census_stereo_8h" startline="77">img_right_</references>
+        <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ADCensusStereo::CostAggregation</definition>
+        <argsstring>()</argsstring>
+        <name>CostAggregation</name>
+        <qualifiedname>ADCensusStereo::CostAggregation</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="48" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="159" bodyend="167"/>
+        <references refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" compoundref="_a_d_census_stereo_8h" startline="82">aggregator_</references>
+        <references refid="class_a_d_census_stereo_1a619a7908e562cd0c0645bac6c4ea1d8d" compoundref="_a_d_census_stereo_8h" startline="80">cost_computer_</references>
+        <references refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" compoundref="_a_d_census_stereo_8h" startline="75">img_left_</references>
+        <references refid="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" compoundref="_a_d_census_stereo_8h" startline="77">img_right_</references>
+        <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ADCensusStereo::ScanlineOptimize</definition>
+        <argsstring>()</argsstring>
+        <name>ScanlineOptimize</name>
+        <qualifiedname>ADCensusStereo::ScanlineOptimize</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="51" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="169" bodyend="177"/>
+        <references refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" compoundref="_a_d_census_stereo_8h" startline="82">aggregator_</references>
+        <references refid="class_a_d_census_stereo_1a619a7908e562cd0c0645bac6c4ea1d8d" compoundref="_a_d_census_stereo_8h" startline="80">cost_computer_</references>
+        <references refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" compoundref="_a_d_census_stereo_8h" startline="72">height_</references>
+        <references refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" compoundref="_a_d_census_stereo_8h" startline="75">img_left_</references>
+        <references refid="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" compoundref="_a_d_census_stereo_8h" startline="77">img_right_</references>
+        <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
+        <references refid="class_a_d_census_stereo_1ac41d0042e39b4f1e6bfa37542c78de9c" compoundref="_a_d_census_stereo_8h" startline="84">scan_line_</references>
+        <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ADCensusStereo::MultiStepRefine</definition>
+        <argsstring>()</argsstring>
+        <name>MultiStepRefine</name>
+        <qualifiedname>ADCensusStereo::MultiStepRefine</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="54" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="179" bodyend="188"/>
+        <references refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" compoundref="_a_d_census_stereo_8h" startline="82">aggregator_</references>
+        <references refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" compoundref="_a_d_census_stereo_8h" startline="89">disp_left_</references>
+        <references refid="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" compoundref="_a_d_census_stereo_8h" startline="91">disp_right_</references>
+        <references refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" compoundref="_a_d_census_stereo_8h" startline="75">img_left_</references>
+        <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
+        <references refid="class_a_d_census_stereo_1aa68f87333a51e11a5c8ee4ea785b9eb7" compoundref="_a_d_census_stereo_8h" startline="86">refiner_</references>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ADCensusStereo::ComputeDisparity</definition>
+        <argsstring>()</argsstring>
+        <name>ComputeDisparity</name>
+        <qualifiedname>ADCensusStereo::ComputeDisparity</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="57" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="190" bodyend="245"/>
+        <references refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" compoundref="_a_d_census_stereo_8h" startline="82">aggregator_</references>
+        <references refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" compoundref="_a_d_census_stereo_8h" startline="89">disp_left_</references>
+        <references refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" compoundref="_a_d_census_stereo_8h" startline="72">height_</references>
+        <references refid="adcensus__types_8h_1a118c72a78435968038ba96390aa41576" compoundref="adcensus__types_8h" startline="33">Invalid_Float</references>
+        <references refid="adcensus__types_8h_1a0fdd98eecb058201560ee2ff1fea3dcf" compoundref="adcensus__types_8h" startline="35">Large_Float</references>
+        <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
+        <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ADCensusStereo::ComputeDisparityRight</definition>
+        <argsstring>()</argsstring>
+        <name>ComputeDisparityRight</name>
+        <qualifiedname>ADCensusStereo::ComputeDisparityRight</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="60" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="247" bodyend="312"/>
+        <references refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" compoundref="_a_d_census_stereo_8h" startline="82">aggregator_</references>
+        <references refid="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" compoundref="_a_d_census_stereo_8h" startline="91">disp_right_</references>
+        <references refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" compoundref="_a_d_census_stereo_8h" startline="72">height_</references>
+        <references refid="adcensus__types_8h_1a0fdd98eecb058201560ee2ff1fea3dcf" compoundref="adcensus__types_8h" startline="35">Large_Float</references>
+        <references refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" compoundref="_a_d_census_stereo_8h" startline="67">option_</references>
+        <references refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" compoundref="_a_d_census_stereo_8h" startline="70">width_</references>
+        <referencedby refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" compoundref="_a_d_census_stereo_8cpp" startline="71" endline="134">Match</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void ADCensusStereo::Release</definition>
+        <argsstring>()</argsstring>
+        <name>Release</name>
+        <qualifiedname>ADCensusStereo::Release</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="63" column="6" bodyfile="com/project/DBM/adcensus/ADCensusStereo.cpp" bodystart="314" bodyend="318"/>
+        <references refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" compoundref="_a_d_census_stereo_8h" startline="89">disp_left_</references>
+        <references refid="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" compoundref="_a_d_census_stereo_8h" startline="91">disp_right_</references>
+        <references refid="adcensus__types_8h_1abdf73516460d2bbbfdea4a92bcecc080" compoundref="adcensus__types_8h" startline="17">SAFE_DELETE</references>
+        <referencedby refid="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" compoundref="_a_d_census_stereo_8cpp" startline="136" endline="146">Reset</referencedby>
+        <referencedby refid="class_a_d_census_stereo_1a3e36430e1e0dc89fd7df5087b6e126c5" compoundref="_a_d_census_stereo_8cpp" startline="17" endline="21">~ADCensusStereo</referencedby>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="2">
+        <label>ADCensusOption</label>
+        <link refid="struct_a_d_census_option"/>
+      </node>
+      <node id="1">
+        <label>ADCensusStereo</label>
+        <link refid="class_a_d_census_stereo"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>option_</edgelabel>
+        </childnode>
+        <childnode refid="3" relation="usage">
+          <edgelabel>cost_computer_</edgelabel>
+        </childnode>
+        <childnode refid="4" relation="usage">
+          <edgelabel>aggregator_</edgelabel>
+        </childnode>
+        <childnode refid="5" relation="usage">
+          <edgelabel>scan_line_</edgelabel>
+        </childnode>
+        <childnode refid="6" relation="usage">
+          <edgelabel>refiner_</edgelabel>
+        </childnode>
+      </node>
+      <node id="3">
+        <label>CostComputor</label>
+        <link refid="class_cost_computor"/>
+      </node>
+      <node id="4">
+        <label>CrossAggregator</label>
+        <link refid="class_cross_aggregator"/>
+      </node>
+      <node id="7">
+        <label>CrossArm</label>
+        <link refid="struct_cross_arm"/>
+      </node>
+      <node id="6">
+        <label>MultiStepRefiner</label>
+        <link refid="class_multi_step_refiner"/>
+        <childnode refid="7" relation="usage">
+          <edgelabel>cross_arms_</edgelabel>
+        </childnode>
+      </node>
+      <node id="5">
+        <label>ScanlineOptimizer</label>
+        <link refid="class_scanline_optimizer"/>
+      </node>
+    </collaborationgraph>
+    <location file="com/project/DBM/adcensus/ADCensusStereo.h" line="14" column="1" bodyfile="com/project/DBM/adcensus/ADCensusStereo.h" bodystart="14" bodyend="95"/>
+    <listofallmembers>
+      <member refid="class_a_d_census_stereo_1ae4f5fa67f272ac1312e85635ee521404" prot="public" virt="non-virtual"><scope>ADCensusStereo</scope><name>ADCensusStereo</name></member>
+      <member refid="class_a_d_census_stereo_1a6f7751dd401d7fc222f925fd5352052e" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>aggregator_</name></member>
+      <member refid="class_a_d_census_stereo_1af1630090242dca4e6c40831246c7cd85" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>ComputeCost</name></member>
+      <member refid="class_a_d_census_stereo_1a02219f9bd206b2a7eb6fb411327c7488" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>ComputeDisparity</name></member>
+      <member refid="class_a_d_census_stereo_1a55f487a1507fdc1a2763c7b58d533b8c" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>ComputeDisparityRight</name></member>
+      <member refid="class_a_d_census_stereo_1a619a7908e562cd0c0645bac6c4ea1d8d" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>cost_computer_</name></member>
+      <member refid="class_a_d_census_stereo_1a0ff05a72861ed2c9902aac62ea936ec2" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>CostAggregation</name></member>
+      <member refid="class_a_d_census_stereo_1a5c17408f3479918789aaab5f756b6387" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>disp_left_</name></member>
+      <member refid="class_a_d_census_stereo_1aa72434cf6bef421c6cdd97224635cfba" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>disp_right_</name></member>
+      <member refid="class_a_d_census_stereo_1a862b20346bc393bcfbd246e2c674aad2" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>height_</name></member>
+      <member refid="class_a_d_census_stereo_1a0f4a1bb30a0b690e2d1dce5fef61a5a2" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>img_left_</name></member>
+      <member refid="class_a_d_census_stereo_1acf082955e9e23fa34580d7be52cb93ef" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>img_right_</name></member>
+      <member refid="class_a_d_census_stereo_1a49658503240bfdc3de3960dc9f145974" prot="public" virt="non-virtual"><scope>ADCensusStereo</scope><name>Initialize</name></member>
+      <member refid="class_a_d_census_stereo_1abcbbbe99cf8c7c0f7b99694dae23f1a1" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>is_initialized_</name></member>
+      <member refid="class_a_d_census_stereo_1a89fc34b6addf5a74972e876a44939e12" prot="public" virt="non-virtual"><scope>ADCensusStereo</scope><name>Match</name></member>
+      <member refid="class_a_d_census_stereo_1a162924faace957ccb1baa3cbdcb839e5" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>MultiStepRefine</name></member>
+      <member refid="class_a_d_census_stereo_1a41ffdf8e70d7d297350646e23b3e4bf5" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>option_</name></member>
+      <member refid="class_a_d_census_stereo_1aa68f87333a51e11a5c8ee4ea785b9eb7" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>refiner_</name></member>
+      <member refid="class_a_d_census_stereo_1a209804f949211c4a4ee17a45ff02f93d" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>Release</name></member>
+      <member refid="class_a_d_census_stereo_1aec2c121e84eef647f7bcf46e22d23b8e" prot="public" virt="non-virtual"><scope>ADCensusStereo</scope><name>Reset</name></member>
+      <member refid="class_a_d_census_stereo_1ac41d0042e39b4f1e6bfa37542c78de9c" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>scan_line_</name></member>
+      <member refid="class_a_d_census_stereo_1a5c9562886259a415f551d2ed72b5a7ed" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>ScanlineOptimize</name></member>
+      <member refid="class_a_d_census_stereo_1a627abeb03e2a8e062ea4a3b5ecf93fe4" prot="private" virt="non-virtual"><scope>ADCensusStereo</scope><name>width_</name></member>
+      <member refid="class_a_d_census_stereo_1a3e36430e1e0dc89fd7df5087b6e126c5" prot="public" virt="non-virtual"><scope>ADCensusStereo</scope><name>~ADCensusStereo</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

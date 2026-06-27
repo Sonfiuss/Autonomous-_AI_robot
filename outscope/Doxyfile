@@ -1,0 +1,64 @@
+# Doxyfile — tuned for C++ call-graph extraction (XML output only).
+# See implement-Doxyfile.md section 5.2. Run with:  doxygen Doxyfile
+# -----------------------------------------------------------------------------
+
+PROJECT_NAME           = "DBM Call Graph"
+
+# --- Input -------------------------------------------------------------------
+# Index BOTH the test tool (entry points / command functions) and the DBM tree
+# (the call targets). RECURSIVE picks up all subfolders.
+INPUT                  = testtool com/project
+RECURSIVE              = YES
+FILE_PATTERNS          = *.c *.cc *.cpp *.cxx *.h *.hh *.hpp *.hxx
+
+# --- Source encoding + comment stripping -------------------------------------
+# Every source is piped through strip_comments.py, which detects its encoding
+# (UTF-8 or CP932/Shift-JIS), decodes it, removes all // and /* */ comments, and
+# emits UTF-8. This is what makes extraction reliable on the Japanese DBM tree:
+# a Shift-JIS byte 0x5C inside a comment (表/ソ/十/・) would otherwise be read as
+# a line-continuation / mis-terminate a doc block and swallow the following
+# function declaration, dropping it from the XML. Originals are never modified.
+INPUT_ENCODING         = UTF-8
+INPUT_FILTER           = "python tools/strip_comments.py"
+FILTER_SOURCE_FILES    = YES
+
+# Skip build artifacts and vendored / third-party trees that we never trace into.
+EXCLUDE_PATTERNS       = */build/* */third_party/* */captures/* */.git/*
+
+# --- What to extract ---------------------------------------------------------
+# Make sure no functions are skipped.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_METHODS  = YES
+EXTRACT_ANON_NSPACES   = YES
+
+# --- Cross-reference info (the caller -> callee data the trace script needs) --
+SOURCE_BROWSER         = YES
+REFERENCES_RELATION    = YES
+REFERENCED_BY_RELATION = YES
+REFERENCES_LINK_SOURCE = YES
+INLINE_SOURCES         = NO
+
+# --- Output ------------------------------------------------------------------
+# XML is the input format for the trace script. Disable everything else.
+GENERATE_XML           = YES
+XML_PROGRAMLISTING     = NO
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_RTF           = NO
+GENERATE_MAN           = NO
+GENERATE_DOCBOOK       = NO
+
+OUTPUT_DIRECTORY       = doxygen_out
+XML_OUTPUT             = xml
+
+# --- Misc --------------------------------------------------------------------
+# We don't need Doxygen's own graphviz graphs; the trace script builds DOT.
+HAVE_DOT               = NO
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+# Resolve typedefs / macros enough to keep call references intact.
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO

@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.17.0" xml:lang="en-US">
+  <compounddef id="namespaceadcensus__util" kind="namespace" language="C++">
+    <compoundname>adcensus_util</compoundname>
+    <sectiondef kind="func">
+      <memberdef kind="function" id="namespaceadcensus__util_1a7703fe07829da918a6068e859809b08d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void adcensus_util::census_transform_9x7</definition>
+        <argsstring>(const uint8 *source, vector&lt; uint64 &gt; &amp;census, const sint32 &amp;width, const sint32 &amp;height)</argsstring>
+        <name>census_transform_9x7</name>
+        <qualifiedname>adcensus_util::census_transform_9x7</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref> *</type>
+          <declname>source</declname>
+        </param>
+        <param>
+          <type>vector&lt; <ref refid="adcensus__types_8h_1abc0f5bc07737e498f287334775dff2b6" kindref="member">uint64</ref> &gt; &amp;</type>
+          <declname>census</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>width</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>height</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_util.h" line="21" column="6" bodyfile="com/project/DBM/adcensus/adcensus_util.cpp" bodystart="10" bodyend="39" declfile="com/project/DBM/adcensus/adcensus_util.h" declline="21" declcolumn="6"/>
+        <referencedby refid="class_cost_computor_1a84a84830de13aca150b0169543cfca5a" compoundref="cost__computor_8cpp" startline="76" endline="81">CostComputor::CensusTransform</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="namespaceadcensus__util_1a99a690c8f0152aeeb3f51cae3a900816" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="adcensus__types_8h_1a33a5e996e7a90acefb8b1c0bea47e365" kindref="member">uint8</ref></type>
+        <definition>uint8 adcensus_util::Hamming64</definition>
+        <argsstring>(const uint64 &amp;x, const uint64 &amp;y)</argsstring>
+        <name>Hamming64</name>
+        <qualifiedname>adcensus_util::Hamming64</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1abc0f5bc07737e498f287334775dff2b6" kindref="member">uint64</ref> &amp;</type>
+          <declname>x</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1abc0f5bc07737e498f287334775dff2b6" kindref="member">uint64</ref> &amp;</type>
+          <declname>y</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_util.h" line="23" column="7" bodyfile="com/project/DBM/adcensus/adcensus_util.cpp" bodystart="42" bodyend="53" declfile="com/project/DBM/adcensus/adcensus_util.h" declline="23" declcolumn="7"/>
+        <referencedby refid="class_cost_computor_1ae982647a69522230e6518358395144c0" compoundref="cost__computor_8cpp" startline="83" endline="122">CostComputor::ComputeCost</referencedby>
+      </memberdef>
+      <memberdef kind="function" id="namespaceadcensus__util_1aaaebd40b291ee87e94d4d9e107d760ee" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void adcensus_util::MedianFilter</definition>
+        <argsstring>(const float32 *in, float32 *out, const sint32 &amp;width, const sint32 &amp;height, const sint32 wnd_size)</argsstring>
+        <name>MedianFilter</name>
+        <qualifiedname>adcensus_util::MedianFilter</qualifiedname>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref> *</type>
+          <declname>in</declname>
+        </param>
+        <param>
+          <type><ref refid="adcensus__types_8h_1aacdc525d6f7bddb3ae95d5c311bd06a1" kindref="member">float32</ref> *</type>
+          <declname>out</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>width</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref> &amp;</type>
+          <declname>height</declname>
+        </param>
+        <param>
+          <type>const <ref refid="adcensus__types_8h_1a5d039451549422729e7e13cc53be7528" kindref="member">sint32</ref></type>
+          <declname>wnd_size</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="com/project/DBM/adcensus/adcensus_util.h" line="33" column="6" bodyfile="com/project/DBM/adcensus/adcensus_util.cpp" bodystart="55" bodyend="81" declfile="com/project/DBM/adcensus/adcensus_util.h" declline="33" declcolumn="6"/>
+        <referencedby refid="class_multi_step_refiner_1affc4f672351e08763fba23e42b5940b9" compoundref="multistep__refiner_8cpp" startline="62" endline="89">MultiStepRefiner::Refine</referencedby>
+        <referencedby refid="_d_b_m_down_load_test_8cpp_1ad45b094d532baccee95649c24192f87a" compoundref="_d_b_m_down_load_test_8cpp" startline="65" endline="91">Refine</referencedby>
+      </memberdef>
+    </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="com/project/DBM/adcensus/adcensus_util.h" line="12" column="1"/>
+  </compounddef>
+</doxygen>

@@ -78,4 +78,5 @@ void adcensus_util::MedianFilter(const float32* in, float32* out, const sint32& 
 			}
 		}
 	}
+	Hamming64(10,11);
 }
