@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # OpenCV is used ONLY for image I/O (imread/imwrite) and the JET colormap.
 # The AD-Census algorithm itself is library-independent.
-find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 
 # Vendored AD-Census algorithm (unmodified upstream sources).
 add_library(adcensus STATIC

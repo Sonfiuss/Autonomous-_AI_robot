@@ -20,15 +20,6 @@ SRCS="main.cpp adcensus/ADCensusStereo.cpp adcensus/adcensus_util.cpp \
       adcensus/scanline_optimizer.cpp adcensus/multistep_refiner.cpp"
 CXXFLAGS="-std=c++14 -O2 -I. -w"
 
-# --- default run arguments (the 640x480 capture pair in ./captures) ---------
-CAP="captures"
-LEFT="${1:-$CAP/left_20260610_001156.jpg}"
-RIGHT="${2:-$CAP/right_20260610_001156.jpg}"
-# default output prefix writes the PNGs into ./captures next to the inputs
-PREFIX="${3:-$CAP/adcensus_out}"
-MIND="${4:-0}"
-MAXD="${5:-128}"
-
 # --- sanity: compiler ------------------------------------------------------
 if ! command -v "$CXX" >/dev/null 2>&1; then
     echo "ERROR: '$CXX' not found on PATH." >&2
@@ -49,14 +40,6 @@ else
     exit 1
 fi
 
-# --- sanity: input images exist --------------------------------------------
-if [ ! -f "$LEFT" ] || [ ! -f "$RIGHT" ]; then
-    echo "ERROR: input image(s) not found:" >&2
-    [ -f "$LEFT" ]  || echo "  missing left:  $LEFT"  >&2
-    [ -f "$RIGHT" ] || echo "  missing right: $RIGHT" >&2
-    exit 1
-fi
-
 # --- build -----------------------------------------------------------------
 echo "==> [1/2] building $OUT_BIN"
 echo "    $CXX $CXXFLAGS $OCV"
@@ -66,11 +49,36 @@ echo "    OK"
 # --- run -------------------------------------------------------------------
 echo
 echo "==> [2/2] running"
-echo "    left : $LEFT"
-echo "    right: $RIGHT"
-echo "    disp : [$MIND, $MAXD]"
-echo
-./"$OUT_BIN" "$LEFT" "$RIGHT" "$PREFIX" "$MIND" "$MAXD"
+
+if [ "$1" = "--camera" ]; then
+    # Camera mode: pass all remaining args directly to the binary.
+    # Example: ./run_ad-census.sh --camera --left 0 --right 1 --save
+    echo "    mode : camera (live capture)"
+    echo
+    ./"$OUT_BIN" --camera "${@:2}"
+    PREFIX="captures/adcensus_live"
+else
+    # File mode: use default test pair or caller-supplied paths.
+    CAP="captures"
+    LEFT="${1:-$CAP/left_20260610_001156.jpg}"
+    RIGHT="${2:-$CAP/right_20260610_001156.jpg}"
+    PREFIX="${3:-$CAP/adcensus_out}"
+    MIND="${4:-0}"
+    MAXD="${5:-128}"
+
+    if [ ! -f "$LEFT" ] || [ ! -f "$RIGHT" ]; then
+        echo "ERROR: input image(s) not found:" >&2
+        [ -f "$LEFT" ]  || echo "  missing left:  $LEFT"  >&2
+        [ -f "$RIGHT" ] || echo "  missing right: $RIGHT" >&2
+        exit 1
+    fi
+
+    echo "    left : $LEFT"
+    echo "    right: $RIGHT"
+    echo "    disp : [$MIND, $MAXD]"
+    echo
+    ./"$OUT_BIN" "$LEFT" "$RIGHT" "$PREFIX" "$MIND" "$MAXD"
+fi
 
 echo
 echo "==> output:"
