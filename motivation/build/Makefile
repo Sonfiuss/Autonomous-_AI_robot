@@ -157,6 +157,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named stepper_ctrl
+
+# Build rule for target.
+stepper_ctrl: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 stepper_ctrl
+.PHONY : stepper_ctrl
+
+# fast build rule for target.
+stepper_ctrl/fast:
+	$(MAKE) -f CMakeFiles/stepper_ctrl.dir/build.make CMakeFiles/stepper_ctrl.dir/build
+.PHONY : stepper_ctrl/fast
+
+#=============================================================================
 # Target rules for targets named motivation
 
 # Build rule for target.
@@ -196,6 +209,87 @@ MotionClient.cpp.s:
 	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/MotionClient.cpp.s
 .PHONY : MotionClient.cpp.s
 
+SimBridge.o: SimBridge.cpp.o
+
+.PHONY : SimBridge.o
+
+# target to build an object file
+SimBridge.cpp.o:
+	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/SimBridge.cpp.o
+.PHONY : SimBridge.cpp.o
+
+SimBridge.i: SimBridge.cpp.i
+
+.PHONY : SimBridge.i
+
+# target to preprocess a source file
+SimBridge.cpp.i:
+	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/SimBridge.cpp.i
+.PHONY : SimBridge.cpp.i
+
+SimBridge.s: SimBridge.cpp.s
+
+.PHONY : SimBridge.s
+
+# target to generate assembly for a file
+SimBridge.cpp.s:
+	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/SimBridge.cpp.s
+.PHONY : SimBridge.cpp.s
+
+StepperClient.o: StepperClient.cpp.o
+
+.PHONY : StepperClient.o
+
+# target to build an object file
+StepperClient.cpp.o:
+	$(MAKE) -f CMakeFiles/stepper_ctrl.dir/build.make CMakeFiles/stepper_ctrl.dir/StepperClient.cpp.o
+.PHONY : StepperClient.cpp.o
+
+StepperClient.i: StepperClient.cpp.i
+
+.PHONY : StepperClient.i
+
+# target to preprocess a source file
+StepperClient.cpp.i:
+	$(MAKE) -f CMakeFiles/stepper_ctrl.dir/build.make CMakeFiles/stepper_ctrl.dir/StepperClient.cpp.i
+.PHONY : StepperClient.cpp.i
+
+StepperClient.s: StepperClient.cpp.s
+
+.PHONY : StepperClient.s
+
+# target to generate assembly for a file
+StepperClient.cpp.s:
+	$(MAKE) -f CMakeFiles/stepper_ctrl.dir/build.make CMakeFiles/stepper_ctrl.dir/StepperClient.cpp.s
+.PHONY : StepperClient.cpp.s
+
+Teleop.o: Teleop.cpp.o
+
+.PHONY : Teleop.o
+
+# target to build an object file
+Teleop.cpp.o:
+	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/Teleop.cpp.o
+.PHONY : Teleop.cpp.o
+
+Teleop.i: Teleop.cpp.i
+
+.PHONY : Teleop.i
+
+# target to preprocess a source file
+Teleop.cpp.i:
+	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/Teleop.cpp.i
+.PHONY : Teleop.cpp.i
+
+Teleop.s: Teleop.cpp.s
+
+.PHONY : Teleop.s
+
+# target to generate assembly for a file
+Teleop.cpp.s:
+	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/Teleop.cpp.s
+.PHONY : Teleop.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -223,6 +317,33 @@ main.cpp.s:
 	$(MAKE) -f CMakeFiles/motivation.dir/build.make CMakeFiles/motivation.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+stepper_main.o: stepper_main.cpp.o
+
+.PHONY : stepper_main.o
+
+# target to build an object file
+stepper_main.cpp.o:
+	$(MAKE) -f CMakeFiles/stepper_ctrl.dir/build.make CMakeFiles/stepper_ctrl.dir/stepper_main.cpp.o
+.PHONY : stepper_main.cpp.o
+
+stepper_main.i: stepper_main.cpp.i
+
+.PHONY : stepper_main.i
+
+# target to preprocess a source file
+stepper_main.cpp.i:
+	$(MAKE) -f CMakeFiles/stepper_ctrl.dir/build.make CMakeFiles/stepper_ctrl.dir/stepper_main.cpp.i
+.PHONY : stepper_main.cpp.i
+
+stepper_main.s: stepper_main.cpp.s
+
+.PHONY : stepper_main.s
+
+# target to generate assembly for a file
+stepper_main.cpp.s:
+	$(MAKE) -f CMakeFiles/stepper_ctrl.dir/build.make CMakeFiles/stepper_ctrl.dir/stepper_main.cpp.s
+.PHONY : stepper_main.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -235,13 +356,26 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... stepper_ctrl"
 	@echo "... motivation"
 	@echo "... MotionClient.o"
 	@echo "... MotionClient.i"
 	@echo "... MotionClient.s"
+	@echo "... SimBridge.o"
+	@echo "... SimBridge.i"
+	@echo "... SimBridge.s"
+	@echo "... StepperClient.o"
+	@echo "... StepperClient.i"
+	@echo "... StepperClient.s"
+	@echo "... Teleop.o"
+	@echo "... Teleop.i"
+	@echo "... Teleop.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... stepper_main.o"
+	@echo "... stepper_main.i"
+	@echo "... stepper_main.s"
 .PHONY : help
 
 

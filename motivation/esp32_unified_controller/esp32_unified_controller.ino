@@ -6,6 +6,7 @@
  *   - ServoTask (Core 0): điều khiển PCA9685 (camera pan-tilt + arm)
  *
  * Protocol Jetson → ESP32 (115200 baud):
+ *   C <idx> <hz>\n               – spin motor idx continuously (neg=reverse, 0=stop)
  *   M <vx> <vy> <omega>\n       – velocity liên tục (m/s, m/s, rad/s)
  *   F <dist_m> <spd_ms>\n       – di chuyển thẳng dist_m mét tốc độ spd_ms
  *   T <angle_deg> <rads>\n      – xoay angle_deg độ với vận tốc góc rads rad/s
@@ -50,7 +51,7 @@
 #define SERVO_SETTLE_MS  500    // settle time after absolute move
 
 // ─── Command types ────────────────────────────────────────────────────────────
-enum CmdType { CMD_VELOCITY, CMD_FORWARD, CMD_TURN, CMD_SERVO, CMD_STOP, CMD_RESET, CMD_WHEEL };
+enum CmdType { CMD_VELOCITY, CMD_FORWARD, CMD_TURN, CMD_SERVO, CMD_STOP, CMD_RESET, CMD_WHEEL, CMD_SPIN };
 
 struct Command {
     CmdType type;
@@ -160,8 +161,14 @@ static void CommTask(void* pv) {
                         cmd.type = CMD_SERVO;
                         xQueueSend(g_cmd_queue, &cmd, 0);
 
-                    } else if (t == 'W' && sscanf(line.c_str()+2,"%f %f",&cmd.a,&cmd.b)==2) {
-                        // W <idx> <steps>  — test individual wheel
+                    } else if (t == 'C' && sscanf(line.c_str()+2,"%f %f",&cmd.a,&cmd.b)==2) {
+                        // C <idx> <hz>  — continuous spin (neg hz = reverse, 0 = stop)
+                        cmd.type = CMD_SPIN;
+                        xQueueSend(g_cmd_queue, &cmd, 0);
+
+                    } else if (t == 'W' && sscanf(line.c_str()+2,"%f %f %f",&cmd.a,&cmd.b,&cmd.c)>=2) {
+                        // W <idx> <steps> [<hz>]  — direct wheel move by steps
+                        if (cmd.c < 1.f) cmd.c = 2000.f;   // default speed
                         cmd.type = CMD_WHEEL;
                         xQueueSend(g_cmd_queue, &cmd, 0);
 
@@ -271,11 +278,29 @@ static void MotionTask(void* pv) {
                     xSemaphoreGive(g_odom_mutex);
                     for (int i=0;i<3;i++) g_motor[i]->setCurrentPosition(0);
                     break;
+                case CMD_SPIN: {
+                    int   idx = (int)cmd.a;
+                    float hz  = cmd.b;
+                    if (idx < 0 || idx > 2) break;
+                    if (fabsf(hz) < 1.f) {
+                        g_motor[idx]->stopMove();
+                    } else {
+                        uint32_t ahz = (uint32_t)fabsf(hz);
+                        ahz = ahz > MAX_STEP_FREQ ? MAX_STEP_FREQ : ahz;
+                        g_motor[idx]->setSpeedInHz(ahz);
+                        g_motor[idx]->setAcceleration(MAX_ACCEL_STEPS);
+                        if (hz > 0.f) g_motor[idx]->runForward();
+                        else          g_motor[idx]->runBackward();
+                    }
+                    break;
+                }
                 case CMD_WHEEL: {
-                    int idx   = (int)cmd.a;
-                    int steps = (int)cmd.b;
+                    int      idx   = (int)cmd.a;
+                    int      steps = (int)cmd.b;
+                    uint32_t hz    = (cmd.c >= 1.f) ? (uint32_t)cmd.c : 2000;
                     if (idx < 0 || idx > 2 || steps == 0) break;
-                    g_motor[idx]->setSpeedInHz(2000);
+                    hz = hz > MAX_STEP_FREQ ? MAX_STEP_FREQ : hz;
+                    g_motor[idx]->setSpeedInHz(hz);
                     g_motor[idx]->setAcceleration(MAX_ACCEL_STEPS);
                     g_motor[idx]->move(steps);
                     break;

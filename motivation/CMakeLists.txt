@@ -12,6 +12,7 @@ add_executable(motivation
     main.cpp
     MotionClient.cpp
     SimBridge.cpp
+    Teleop.cpp
 )
 
 target_include_directories(motivation PRIVATE
@@ -28,4 +29,16 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
     target_compile_options(motivation PRIVATE -O3 -march=native)
 endif()
 
-install(TARGETS motivation RUNTIME DESTINATION bin)
+add_executable(stepper_ctrl
+    stepper_main.cpp
+    StepperClient.cpp
+)
+
+target_include_directories(stepper_ctrl PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(stepper_ctrl PRIVATE Threads::Threads)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    target_compile_options(stepper_ctrl PRIVATE -O3 -march=native)
+endif()
+
+install(TARGETS motivation stepper_ctrl RUNTIME DESTINATION bin)

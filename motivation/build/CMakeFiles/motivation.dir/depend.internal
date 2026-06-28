@@ -4,6 +4,16 @@
 CMakeFiles/motivation.dir/MotionClient.cpp.o
  /home/nvidia/Documents/motivation/MotionClient.cpp
  /home/nvidia/Documents/motivation/MotionClient.hpp
+CMakeFiles/motivation.dir/SimBridge.cpp.o
+ /home/nvidia/Documents/motivation/SimBridge.cpp
+ /home/nvidia/Documents/motivation/SimBridge.hpp
+CMakeFiles/motivation.dir/Teleop.cpp.o
+ /home/nvidia/Documents/motivation/MotionClient.hpp
+ /home/nvidia/Documents/motivation/Teleop.cpp
+ /home/nvidia/Documents/motivation/Teleop.hpp
 CMakeFiles/motivation.dir/main.cpp.o
  /home/nvidia/Documents/motivation/MotionClient.hpp
+ /home/nvidia/Documents/motivation/PoseController.hpp
+ /home/nvidia/Documents/motivation/SimBridge.hpp
+ /home/nvidia/Documents/motivation/Teleop.hpp
  /home/nvidia/Documents/motivation/main.cpp

@@ -23,7 +23,8 @@ public:
         float ang_tol   = 0.05f;  // ngưỡng góc (rad)
     };
 
-    explicit PoseController(const Params& p = {}) : m_p(p) {}
+    PoseController() : m_p() {}
+    explicit PoseController(const Params& p) : m_p(p) {}
 
     void setParams(const Params& p) { m_p = p; }
 
