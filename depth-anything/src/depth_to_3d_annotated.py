@@ -11,7 +11,7 @@ Vi du:
   python depth_to_3d_annotated.py --img ../assets/right_1.jpg
   python depth_to_3d_annotated.py --img ../assets --stride 2 --show
 """
-import os, sys, glob, argparse
+import os, sys, glob, argparse, time
 import cv2, numpy as np, torch
 
 from depth_anything_v2.dpt import DepthAnythingV2
@@ -38,6 +38,8 @@ def parse_args():
                    help='file anh hoac thu muc')
     p.add_argument('--encoder',    default='vits', choices=['vits', 'vitb'])
     p.add_argument('--input-size', type=int,   default=518)
+    p.add_argument('--infer-scale', type=float, default=1.0,
+                   help='scale anh truoc inference (0.5 = giam 1/2, nhanh hon ~4x)')
     p.add_argument('--device',     default='auto', choices=['auto', 'cuda', 'cpu'])
     p.add_argument('--outdir',     default=os.path.join(ROOT, 'output', 'pointcloud_annotated'))
     p.add_argument('--fov',        type=float, default=60.0)
@@ -65,6 +67,12 @@ def parse_args():
     # misc
     p.add_argument('--show', action='store_true', help='mo cua so 3D (can open3d)')
     return p.parse_args()
+
+
+def _tick(label, t0):
+    elapsed = time.time() - t0
+    print(f'    {label:<26s} {elapsed*1000:7.1f} ms')
+    return elapsed
 
 
 def pick_device(choice):
@@ -313,12 +321,24 @@ def main():
     args = parse_args()
     os.makedirs(args.outdir, exist_ok=True)
     device = pick_device(args.device)
-    print(f'device={device}  encoder={args.encoder}')
 
+    # infer_scale nhân với input_size rồi làm tròn xuống bội của 14 (patch size ViT)
+    infer_size = max(14, int(args.input_size * args.infer_scale) // 14 * 14)
+    print(f'device={device}  encoder={args.encoder}  infer_size={infer_size}px')
+
+    t_load = time.time()
     model = DepthAnythingV2(**CFGS[args.encoder])
     ckpt  = os.path.join(ROOT, 'model', f'depth_anything_v2_{args.encoder}.pth')
     model.load_state_dict(torch.load(ckpt, map_location='cpu', weights_only=True))
     model = model.to(device).eval()
+    _tick('model load', t_load)
+
+    if device == 'cuda':
+        t = time.time()
+        dummy = np.zeros((infer_size, infer_size, 3), dtype=np.uint8)
+        model.infer_image(dummy, infer_size)
+        torch.cuda.synchronize()
+        _tick('cuda warmup', t)
 
     if os.path.isfile(args.img):
         files = [args.img]
@@ -330,21 +350,29 @@ def main():
         sys.exit(1)
 
     last_ply = None
+    t_global = time.time()
+    times_per_img = []
+
     for k, f in enumerate(files):
         img = cv2.imread(f)
         if img is None:
             print(f'[WARN] Khong doc duoc: {f}')
             continue
         H, W = img.shape[:2]
+        t_img = time.time()
+        print(f'[{k+1}/{len(files)}] {os.path.basename(f)}  ({W}x{H})')
 
-        print(f'[{k+1}/{len(files)}] {os.path.basename(f)}')
-
-        # ----- 1. Depth inference (1 lan duy nhat) -----
-        depth_raw = model.infer_image(img, args.input_size)
+        # ----- 1. Depth inference -----
+        t = time.time()
+        depth_raw = model.infer_image(img, infer_size)
+        if device == 'cuda':
+            torch.cuda.synchronize()
         depth_raw = cv2.resize(depth_raw.astype(np.float32), (W, H),
                                interpolation=cv2.INTER_LINEAR)
+        _tick('1. depth inference', t)
 
         # ----- 2. Obstacle mask -----
+        t = time.time()
         depth_obs = preprocess_depth(depth_raw, args.blur)
         floor_profile = build_floor_profile(depth_obs, args.floor_rows)
         arm_mask = None
@@ -361,9 +389,10 @@ def main():
             arm_mask=arm_mask, arm_near=args.arm_near,
         )
         n_obs = int((obstacle_mask > 0).sum())
-        print(f'  obstacle pixels: {n_obs}')
+        _tick(f'2. obstacle mask ({n_obs}px)', t)
 
         # ----- 3. Drive area mask -----
+        t = time.time()
         depth_drive = preprocess_depth(depth_raw, args.drive_blur)
         drive_mask = compute_drive_mask(
             depth_drive,
@@ -371,14 +400,17 @@ def main():
             min_lin=args.min_lin, r2_min=args.r2_min,
         )
         n_free = int((drive_mask > 0).sum())
-        print(f'  drive area pixels: {n_free}')
+        _tick(f'3. drive area ({n_free}px)', t)
 
         # ----- 4. 3D projection -----
+        t = time.time()
         pts, cols, ys_flat, xs_flat = depth_to_points(
             depth_raw, img, args.fov, args.stride, args.camera_height, args.tilt
         )
+        _tick('4. 3D projection', t)
 
         # ----- 5. Floor flatten -----
+        t = time.time()
         if not args.no_flatten:
             H_s = depth_raw.shape[0] // args.stride
             W_s = depth_raw.shape[1] // args.stride
@@ -386,17 +418,30 @@ def main():
             row_idx = np.arange(H_s * W_s) // W_s
             floor_mask_flat = row_idx >= (H_s - n_floor_rows)
             pts = fit_and_flatten(pts, floor_mask_flat)
+        _tick('5. floor flatten', t)
 
         # ----- 6. Semantic color override -----
+        t = time.time()
         cols = apply_semantic_colors(cols, ys_flat, xs_flat, obstacle_mask, drive_mask)
+        _tick('6. semantic colors', t)
 
         # ----- 7. Ghi PLY -----
+        t = time.time()
         name = os.path.splitext(os.path.basename(f))[0] + '_annotated.ply'
         out  = os.path.join(args.outdir, name)
         write_ply(out, pts, cols)
-        last_ply = out
-        print(f'  -> {out}  ({len(pts)} diem)')
+        _tick(f'7. write PLY ({len(pts)} pts)', t)
 
+        t_total = time.time() - t_img
+        times_per_img.append(t_total)
+        last_ply = out
+        print(f'  -> {out}')
+        print(f'  TOTAL image: {t_total*1000:.1f} ms')
+
+    if times_per_img:
+        avg = sum(times_per_img) / len(times_per_img)
+        print(f'\n--- SUMMARY ---')
+        print(f'  {len(times_per_img)} anh | avg {avg*1000:.1f} ms/anh | total {(time.time()-t_global)*1000:.1f} ms')
     print('\nXong. Mo file .ply bang MeshLab / CloudCompare.')
     print('  Do = obstacle | Xanh = drive area | Goc = khong xac dinh')
 

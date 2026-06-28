@@ -6,18 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/nvidia/Documents/motivation/MotionClient.cpp
-MotionClient.hpp
-/home/nvidia/Documents/motivation/MotionClient.hpp
-cstdio
--
-cstring
--
-cerrno
--
-chrono
--
-
 /home/nvidia/Documents/motivation/MotionClient.hpp
 string
 -
@@ -36,6 +24,30 @@ fcntl.h
 termios.h
 -
 unistd.h
+-
+
+/home/nvidia/Documents/motivation/PoseController.hpp
+cmath
+-
+
+/home/nvidia/Documents/motivation/SimBridge.hpp
+string
+-
+thread
+-
+mutex
+-
+atomic
+-
+functional
+-
+zmq.h
+-
+
+/home/nvidia/Documents/motivation/Teleop.hpp
+MotionClient.hpp
+/home/nvidia/Documents/motivation/MotionClient.hpp
+atomic
 -
 
 /home/nvidia/Documents/motivation/main.cpp
@@ -59,4 +71,10 @@ condition_variable
 -
 MotionClient.hpp
 /home/nvidia/Documents/motivation/MotionClient.hpp
+SimBridge.hpp
+/home/nvidia/Documents/motivation/SimBridge.hpp
+PoseController.hpp
+/home/nvidia/Documents/motivation/PoseController.hpp
+Teleop.hpp
+/home/nvidia/Documents/motivation/Teleop.hpp
 

@@ -1,1 +1,1 @@
-/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/motivation.dir/main.cpp.o CMakeFiles/motivation.dir/MotionClient.cpp.o  -o motivation  -lpthread 
+/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/motivation.dir/main.cpp.o CMakeFiles/motivation.dir/MotionClient.cpp.o CMakeFiles/motivation.dir/SimBridge.cpp.o CMakeFiles/motivation.dir/Teleop.cpp.o  -o motivation  -lzmq -lpthread 

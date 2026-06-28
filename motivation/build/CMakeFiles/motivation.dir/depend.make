@@ -4,6 +4,16 @@
 CMakeFiles/motivation.dir/MotionClient.cpp.o: ../MotionClient.cpp
 CMakeFiles/motivation.dir/MotionClient.cpp.o: ../MotionClient.hpp
 
+CMakeFiles/motivation.dir/SimBridge.cpp.o: ../SimBridge.cpp
+CMakeFiles/motivation.dir/SimBridge.cpp.o: ../SimBridge.hpp
+
+CMakeFiles/motivation.dir/Teleop.cpp.o: ../MotionClient.hpp
+CMakeFiles/motivation.dir/Teleop.cpp.o: ../Teleop.cpp
+CMakeFiles/motivation.dir/Teleop.cpp.o: ../Teleop.hpp
+
 CMakeFiles/motivation.dir/main.cpp.o: ../MotionClient.hpp
+CMakeFiles/motivation.dir/main.cpp.o: ../PoseController.hpp
+CMakeFiles/motivation.dir/main.cpp.o: ../SimBridge.hpp
+CMakeFiles/motivation.dir/main.cpp.o: ../Teleop.hpp
 CMakeFiles/motivation.dir/main.cpp.o: ../main.cpp
 

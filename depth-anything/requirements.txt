@@ -1,0 +1,23 @@
+# Depth-Anything V2 — Jetson (JetPack 5.x, Python 3.8, aarch64)
+#
+# INSTALL ORDER:
+#   1. pip3 install -r requirements.txt
+#   2. Run ./install_jetson.sh  to install PyTorch + torchvision (NVIDIA wheels)
+#
+# NOTE: opencv-python is pre-installed as a system package (cv2 4.2.0).
+#       Do NOT install opencv-python via pip — it conflicts with the system build
+#       that includes CUDA/GStreamer support.
+
+# ── core deps (pip-installable) ───────────────────────────────────────────────
+numpy>=1.23.5,<2.0          # torch 2.1 requires >=1.23; <2.0 for JetPack compat
+matplotlib>=3.5.0            # colormaps.get_cmap() API requires >=3.5
+Pillow>=9.0.0                # modern Pillow for torchvision transforms
+
+# ── optional: memory-efficient attention (DINOv2) ─────────────────────────────
+# xformers falls back gracefully if not installed (just logs a warning).
+# Building xformers on Jetson is non-trivial; skip unless you need it.
+# xformers
+
+# ── NOT pip-installable on Jetson — handled by install_jetson.sh ──────────────
+# torch==2.1.0      (NVIDIA JetPack 5 wheel, CUDA 11.4, aarch64)
+# torchvision       (NVIDIA JetPack 5 wheel, compatible with torch 2.1.0)

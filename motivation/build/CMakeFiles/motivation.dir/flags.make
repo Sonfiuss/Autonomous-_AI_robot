@@ -6,5 +6,5 @@ CXX_FLAGS = -O3 -DNDEBUG   -O3 -march=native -std=gnu++17
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/nvidia/Documents/motivation 
+CXX_INCLUDES = -I/home/nvidia/Documents/motivation -I/usr/include/pgm-5.2 
 

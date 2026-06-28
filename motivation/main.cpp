@@ -6,6 +6,7 @@
  *
  * Options:
  *   --port     /dev/ttyUSB0
+ *   --teleop   real-time keyboard control (WASD + QE + IJKL for camera)
  *   --demo     chạy demo sequence (move 5m, turn 90°, v=3m/s)
  *   --nav      navigation mode: nhận goal từ simulation qua ZMQ
  *   --hz       tần số vòng lặp điều khiển (default: 20)
@@ -24,6 +25,7 @@
 #include "MotionClient.hpp"
 #include "SimBridge.hpp"
 #include "PoseController.hpp"
+#include "Teleop.hpp"
 
 static std::atomic<bool> g_running{true};
 static void onSig(int) { g_running = false; }
@@ -202,17 +204,19 @@ int main(int argc, char* argv[]) {
     std::signal(SIGTERM, onSig);
 
     std::string port = "/dev/ttyUSB0";
-    bool   demo = false;
-    bool   nav  = false;
-    bool   test = false;
-    double hz   = 20.0;
+    bool   demo   = false;
+    bool   nav    = false;
+    bool   test   = false;
+    bool   teleop = false;
+    double hz     = 20.0;
 
     for (int i = 1; i < argc; ++i) {
-        if (!strcmp(argv[i],"--port") && i+1<argc) port = argv[++i];
-        if (!strcmp(argv[i],"--demo"))              demo = true;
-        if (!strcmp(argv[i],"--nav"))               nav  = true;
-        if (!strcmp(argv[i],"--test"))              test = true;
-        if (!strcmp(argv[i],"--hz") && i+1<argc)    hz   = atof(argv[++i]);
+        if (!strcmp(argv[i],"--port") && i+1<argc) port   = argv[++i];
+        if (!strcmp(argv[i],"--demo"))              demo   = true;
+        if (!strcmp(argv[i],"--nav"))               nav    = true;
+        if (!strcmp(argv[i],"--test"))              test   = true;
+        if (!strcmp(argv[i],"--teleop"))            teleop = true;
+        if (!strcmp(argv[i],"--hz") && i+1<argc)    hz     = atof(argv[++i]);
     }
 
     printf("=== motivation ===\nPort: %s\n", port.c_str());
@@ -222,7 +226,9 @@ int main(int argc, char* argv[]) {
 
     mc.setDoneCallback([]{ printf("\n  [DONE] Motion complete.\n"); });
 
-    if (nav)
+    if (teleop)
+        runTeleop(mc, g_running);
+    else if (nav)
         runNavigation(mc, hz);
     else if (demo)
         runDemo(mc);

@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/motivation.dir/MotionClient.cpp.o"
+  "CMakeFiles/motivation.dir/SimBridge.cpp.o"
+  "CMakeFiles/motivation.dir/Teleop.cpp.o"
   "CMakeFiles/motivation.dir/main.cpp.o"
   "motivation"
   "motivation.pdb"

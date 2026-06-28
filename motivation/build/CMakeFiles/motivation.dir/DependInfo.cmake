@@ -5,6 +5,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/nvidia/Documents/motivation/MotionClient.cpp" "/home/nvidia/Documents/motivation/build/CMakeFiles/motivation.dir/MotionClient.cpp.o"
+  "/home/nvidia/Documents/motivation/SimBridge.cpp" "/home/nvidia/Documents/motivation/build/CMakeFiles/motivation.dir/SimBridge.cpp.o"
+  "/home/nvidia/Documents/motivation/Teleop.cpp" "/home/nvidia/Documents/motivation/build/CMakeFiles/motivation.dir/Teleop.cpp.o"
   "/home/nvidia/Documents/motivation/main.cpp" "/home/nvidia/Documents/motivation/build/CMakeFiles/motivation.dir/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
@@ -12,6 +14,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../"
+  "/usr/include/pgm-5.2"
   )
 
 # Targets to which this target links.
