@@ -61,6 +61,9 @@ public:
     void stop();
     void resetOdometry();
 
+    // ── Test individual wheel (0=W1 60°, 1=W2 180°, 2=W3 300°) ─────────────
+    void testWheel(int idx, int revolutions = 1);
+
     // ── Servo commands ────────────────────────────────────────────────────────
     void setServoVelocity(float pan_vel, float tilt_vel);
 

@@ -50,7 +50,7 @@
 #define SERVO_SETTLE_MS  500    // settle time after absolute move
 
 // ─── Command types ────────────────────────────────────────────────────────────
-enum CmdType { CMD_VELOCITY, CMD_FORWARD, CMD_TURN, CMD_SERVO, CMD_STOP, CMD_RESET };
+enum CmdType { CMD_VELOCITY, CMD_FORWARD, CMD_TURN, CMD_SERVO, CMD_STOP, CMD_RESET, CMD_WHEEL };
 
 struct Command {
     CmdType type;
@@ -160,6 +160,11 @@ static void CommTask(void* pv) {
                         cmd.type = CMD_SERVO;
                         xQueueSend(g_cmd_queue, &cmd, 0);
 
+                    } else if (t == 'W' && sscanf(line.c_str()+2,"%f %f",&cmd.a,&cmd.b)==2) {
+                        // W <idx> <steps>  — test individual wheel
+                        cmd.type = CMD_WHEEL;
+                        xQueueSend(g_cmd_queue, &cmd, 0);
+
                     } else if (t == 'S') {
                         cmd.type = CMD_STOP;
                         xQueueSend(g_cmd_queue, &cmd, 0);
@@ -266,6 +271,15 @@ static void MotionTask(void* pv) {
                     xSemaphoreGive(g_odom_mutex);
                     for (int i=0;i<3;i++) g_motor[i]->setCurrentPosition(0);
                     break;
+                case CMD_WHEEL: {
+                    int idx   = (int)cmd.a;
+                    int steps = (int)cmd.b;
+                    if (idx < 0 || idx > 2 || steps == 0) break;
+                    g_motor[idx]->setSpeedInHz(2000);
+                    g_motor[idx]->setAcceleration(MAX_ACCEL_STEPS);
+                    g_motor[idx]->move(steps);
+                    break;
+                }
             }
         }
 
@@ -388,12 +402,9 @@ void setup() {
     g_engine.init();
     const int step_pins[3] = {M1_STEP_PIN, M2_STEP_PIN, M3_STEP_PIN};
     const int dir_pins[3]  = {M1_DIR_PIN,  M2_DIR_PIN,  M3_DIR_PIN};
-    const int en_pins[3]   = {M1_EN_PIN,   M2_EN_PIN,   M3_EN_PIN};
     for (int i = 0; i < 3; i++) {
         g_motor[i] = g_engine.stepperConnectToPin(step_pins[i]);
         g_motor[i]->setDirectionPin(dir_pins[i]);
-        g_motor[i]->setEnablePin(en_pins[i], true);
-        g_motor[i]->setAutoEnable(true);
         g_motor[i]->setSpeedInHz(1000);
         g_motor[i]->setAcceleration(MAX_ACCEL_STEPS);
     }

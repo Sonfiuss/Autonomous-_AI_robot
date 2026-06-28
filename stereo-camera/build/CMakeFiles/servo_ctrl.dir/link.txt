@@ -1,1 +1,0 @@
-/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/servo_ctrl.dir/tools/servo_ctrl.cpp.o CMakeFiles/servo_ctrl.dir/control/ServoController.cpp.o  -o servo_ctrl  -lpthread 

@@ -28,6 +28,38 @@
 static std::atomic<bool> g_running{true};
 static void onSig(int) { g_running = false; }
 
+// ── Wheel test sequence ───────────────────────────────────────────────────────
+static void runWheelTest(MotionClient& mc) {
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool done = false;
+
+    auto waitDone = [&](double timeout_s) {
+        done = false;
+        mc.setDoneCallback([&]{ std::lock_guard<std::mutex> lk(mtx); done=true; cv.notify_one(); });
+        std::unique_lock<std::mutex> lk(mtx);
+        cv.wait_for(lk, std::chrono::duration<double>(timeout_s), [&]{ return done; });
+        mc.setDoneCallback(nullptr);
+    };
+
+    const char* names[] = { "W1 (60°)", "W2 (180°)", "W3 (300°)" };
+
+    for (int i = 0; i < 3; i++) {
+        printf("\n[TEST] %s — quay 1 vòng thuận ...\n", names[i]);
+        mc.testWheel(i, 1);
+        waitDone(10.0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(800));
+
+        printf("[TEST] %s — quay 1 vòng nghịch ...\n", names[i]);
+        mc.testWheel(i, -1);
+        waitDone(10.0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    }
+
+    printf("\n[TEST] Hoàn tất. Kiểm tra chiều quay từng bánh.\n");
+    printf("       Nếu bánh quay ngược → đổi dây DIR+/DIR- trên driver.\n");
+}
+
 // ── Demo sequence ─────────────────────────────────────────────────────────────
 static void runDemo(MotionClient& mc) {
     std::mutex mtx;
@@ -172,12 +204,14 @@ int main(int argc, char* argv[]) {
     std::string port = "/dev/ttyUSB0";
     bool   demo = false;
     bool   nav  = false;
+    bool   test = false;
     double hz   = 20.0;
 
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i],"--port") && i+1<argc) port = argv[++i];
         if (!strcmp(argv[i],"--demo"))              demo = true;
         if (!strcmp(argv[i],"--nav"))               nav  = true;
+        if (!strcmp(argv[i],"--test"))              test = true;
         if (!strcmp(argv[i],"--hz") && i+1<argc)    hz   = atof(argv[++i]);
     }
 
@@ -192,6 +226,8 @@ int main(int argc, char* argv[]) {
         runNavigation(mc, hz);
     else if (demo)
         runDemo(mc);
+    else if (test)
+        runWheelTest(mc);
     else
         runInteractive(mc);
 
