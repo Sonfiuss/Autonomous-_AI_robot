@@ -65,13 +65,17 @@ desktop.ini
 *.log
 *.tmp
 *.temp
+*.ply
 
 # Calibration outputs (generated, not source)
 stereo-camera/calibration/*.xml
 stereo-camera/calibration/*.yaml
-stereo-camera/calibration/*.yml
 stereo-camera/calibration/*.json
 stereo-camera/captures/
 
 # Node modules (if any)
 node_modules/
+**/model
+**/outscope
+**/pointcloud
+**/output

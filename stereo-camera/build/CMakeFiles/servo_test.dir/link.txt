@@ -1,1 +1,0 @@
-/usr/bin/c++  -O3 -DNDEBUG   CMakeFiles/servo_test.dir/tools/servo_test.cpp.o CMakeFiles/servo_test.dir/control/ServoClient.cpp.o  -o servo_test  -lpthread 

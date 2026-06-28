@@ -94,6 +94,13 @@ void MotionClient::turn(float angle_deg, float omega_rads) {
 void MotionClient::stop()          { send("S\n"); }
 void MotionClient::resetOdometry() { send("R\n"); }
 
+void MotionClient::testWheel(int idx, int revolutions) {
+    char buf[48];
+    int steps = revolutions * 12800;
+    snprintf(buf, sizeof(buf), "W %d %d\n", idx, steps);
+    send(buf);
+}
+
 void MotionClient::setServoVelocity(float pan_vel, float tilt_vel) {
     char buf[48];
     snprintf(buf, sizeof(buf), "V %.3f %.3f\n", pan_vel, tilt_vel);

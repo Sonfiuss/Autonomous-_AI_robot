@@ -5,17 +5,24 @@
  * Omni 3-wheel inverse / forward kinematics
  *
  * Vị trí bánh (đối xứng 120°):
- *         W1 (90°)
- *          |
- *    W3 ---O--- W2
- *  (330°)     (210°)
  *
- * Inverse kinematics:  [vx, vy, ω] → [ω1, ω2, ω3]
+ *      W1 (60°)   W3 (300°)
+ *           \     /
+ *            \   /
+ *       W2 (180°)
  *
- *  ωi = ( -sin(αi)·vx + cos(αi)·vy + L·ωz ) / r
+ * α1=60°, α2=180°, α3=300°
  *
- *  α1=90°, α2=210°, α3=330°
- *  r = wheel radius,  L = robot radius
+ * Inverse:  ωi = (-sin(αi)·vx + cos(αi)·vy + L·ωz) / r
+ *
+ *   ω1 = (-S3H·vx + 0.5·vy  + L·ωz) / r
+ *   ω2 = (         -vy       + L·ωz) / r
+ *   ω3 = ( S3H·vx + 0.5·vy  + L·ωz) / r
+ *
+ * Forward (pseudoinverse):
+ *   vx    = r · INV_S3 · (-w1        + w3)
+ *   vy    = r · (1/3·w1  - 2/3·w2  + 1/3·w3)
+ *   omega = r / (3·L) · (w1 + w2 + w3)
  */
 
 struct WheelVel   { float w1, w2, w3; };   // rad/s mỗi bánh
@@ -28,17 +35,17 @@ public:
 
     WheelVel inverse(const RobotVel& v) const {
         return {
-            (-v.vx              + L * v.omega) / r,
-            ( 0.5f*v.vx - S3H*v.vy + L * v.omega) / r,
-            ( 0.5f*v.vx + S3H*v.vy + L * v.omega) / r
+            (-S3H * v.vx + 0.5f * v.vy + L * v.omega) / r,
+            (              -v.vy         + L * v.omega) / r,
+            ( S3H * v.vx + 0.5f * v.vy + L * v.omega) / r
         };
     }
 
     RobotVel forward(const WheelVel& w) const {
         return {
-            r * (-2.f/3.f*w.w1 + 1.f/3.f*w.w2 + 1.f/3.f*w.w3),
-            r * (              - INV_S3*w.w2    + INV_S3*w.w3  ),
-            r / (3.f*L) * (w.w1 + w.w2 + w.w3)
+            r * INV_S3 * (-w.w1          + w.w3),
+            r * (1.f/3.f*w.w1 - 2.f/3.f*w.w2 + 1.f/3.f*w.w3),
+            r / (3.f * L) * (w.w1 + w.w2 + w.w3)
         };
     }
 

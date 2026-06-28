@@ -2,6 +2,223 @@
 
 Actions taken beyond the literal request are recorded here for transparency.
 
+## 2026-06-27 — depth_to_3d_timed.py (per-step timing pipeline)
+- Created `depth-anything/src/depth_to_3d_timed.py`: full image→pointcloud pipeline with
+  per-step timers (load / read / prep / infer / project / ply) + average table.
+- Beyond literal request: split preprocess vs inference via `model.image2tensor()` +
+  `model.forward()` (user-approved); added `--warmup` flag; CUDA-synced `Timer` context mgr.
+- Env note: project venv `labelimg-hCqMEezW` is BROKEN (base interp `C:\Python\Python310`
+  missing). Working interpreter: `D:\University\Python\Python310\python.exe` (torch 2.1.2+cpu).
+- Verified on assets/: vits CPU infer ~5.5-7.8s/img, ply ~1-2.4s/img (230400 pts @ stride 2).
+
+## 2026-06-25 — strip template args from resolved class names
+
+Bug: `param.cardinality()` where param is `SYCstdIterator<SYCstdString>&` produced
+the label `SYCstdIterator<SYCstdString>-cardinality()`. The `<...>` broke
+parse_call_label (regex `^(\w*)-` stops at `<`) -> node forced to [external] -> trace
+stops; and functions.txt only ever uses bare class names, so lookup never matched.
+Fix: rewrote `_effective_class` to return the OUTER class for templated types
+(SYCstdIterator<X> -> SYCstdIterator) but the INNER for smart pointers
+(shared_ptr<T> -> T, via _SMART_PTRS). Routed param/local/member type resolution
+through it in analyze_function.py AND run_command.py (which had its own _clean_type
+keeping templates). Now -> SYCstdIterator-cardinality(); ThreadPool smart-ptr case
+still resolves. No regression on ManualInstrumentationApiTest / TestFunc2.
+
+Cross-file deep trace (user Q): already supported — analyze_function `_locate_function_body`
+os.walk()s the whole --dbm root, so a callee defined in any file/class under that root
+is recursed into (verified: top DownloadNonSpatialTable in testtool/ deep-traces
+DBMstdDataSet::DownloadNonSpatialTable in com/project/DBM/Test/Path.cpp). Constraint:
+a callee whose body lives OUTSIDE --dbm stays a leaf; widen --dbm (e.g. to `com`).
+
+## 2026-06-25 — analyze_function.py: class entry with brace on next line
+
+Bug: with the real Path.h, `class DBMSTD_CLASS DBMstdDataSet` has its `{` on a
+separate line, so `_build_member_typemap` (which required '{' on the class-decl line)
+never entered the body -> 0 members -> m_poDatabase unresolved -> OpenMaster /
+IsOpenedMaster had no class. Fix: pending-brace state machine (`_enter_on_brace`)
+that waits for the opening '{' across following lines and skips forward/friend decls
+(';' before '{'); uses literal-safe `_brace_delta`. Now DBMstdDataSet -> 60 members,
+m_poDatabase -> DBMstdDatabase, so m_poDatabase->OpenMaster() resolves to
+DBMstdDatabase-OpenMaster(). (DownloadTable hop-2 still bare: repo has no
+DBMstdDatabase/DBMstdDDAAccessManager definition yet.)
+
+## 2026-06-25 — extract_functions.py: recover owning class for free-looking defs
+
+Request: functions.txt should be in Class-Func form; determine each function's class
+from its header declaration even when the .cpp definition has no ClassName:: prefix.
+
+Change: `scan_folder` now runs two passes — parse all headers first to build
+declaration maps {(func,nparams)->class} and {func->class} (unambiguous only),
+then parse .cpp; `parse_cpp(filepath, decl_maps)` fills the class of a free-looking
+definition via `_resolve_class_from_decls`. Regenerated functions.txt from `com`:
+empty-class entries 1994 -> 1881 (401 method defs recovered, e.g.
+CaptureControlInterface-StartCapture()). Genuine free functions (SleepFor1Ms,
+orbit_api_*) correctly stay `-Func()` since no class declares them — and that bare
+form is exactly their functions.txt key, so grep still matches.
+
+## 2026-06-25 — analyze_function.py: resolve global-instance calls
+
+Request: cover calls through a global instance (g_pInst->function()) so the call is
+attributed to the class declared for that global.
+
+Change: `_build_global_typemap` now scans all header roots (src tree + include roots,
+e.g. com/include) instead of only src_root, and uses `_brace_delta` (literal-safe).
+The chain resolver already seeds its first hop from the global typemap, so
+g_pEngine->Start() -> DBMstdEngine-Start() and g_pEngine->m_oManager.Flush()
+-> DBMstdManager-Flush(). Verified with a scratch header+cpp; main pipeline OK.
+
+## 2026-06-25 — analyze_function.py: resolve instance class via header chain
+
+Request: attribute calls made through an instance (e.g. OpenMaster, DownloadTable)
+to the owning class by looking the variable up in headers under com/include/...,
+walking up multi-hop member chains. No real Path.h yet → create a dummy to test.
+
+Changes:
+- `_find_class_header` / `_build_member_typemap` now search extra header roots
+  (`_EXTRA_HEADER_ROOTS`, default com/include) and tolerate export macros in the
+  class decl (`class DBMSTD_CLASS DBMstdDatabase {`).
+- Pattern A rewritten to capture the full member-access chain and resolve it
+  hop-by-hop (`_resolve_chain`): first hop via type_map, each next hop via the
+  resolved class's member typemap. m_poDatabase->m_oDDAAccessManager.DownloadTable()
+  now -> DBMstdDDAAccessManager-DownloadTable(); m_poDatabase->IsOpenedMaster()
+  -> DBMstdDatabase-IsOpenedMaster().
+- `analyze_function(..., inc_roots=)` + main.py `--inc` (default com/include).
+- Created dummy header com/include/DBM/Path.h declaring DBMstdDataSet / DBMstdDatabase
+  / DBMstdDDAAccessManager with the member vars referenced in Path.cpp.
+
+Verified via output/command_DownloadNonSpatialTable.txt; TestFunc2 regression OK.
+
+## 2026-06-25 — analyze_function.py: capture member calls in DownloadNonSpatialTable
+
+Request: also extract `IsOpenedMaster()`, `OpenMaster()`, `DownloadTable(IsTimeSet(),..)`
+besides `RemoveAll` in the 6-param `DBMstdDataSet::DownloadNonSpatialTable`.
+
+Root-cause fixes made beyond the literal request (all required to make it work):
+1. **Brace counting inside literals** — Path.cpp is mojibake stored as valid utf-8;
+   multi-byte JP text inside `_T("...")` contains stray `}`/`{` bytes that truncated
+   body extraction at line 6. Added `_strip_literals()` / `_brace_delta()` and used
+   them in `_extract_body_from_file` body collection.
+2. **Statement-as-definition false match** — `RE_FUNC_DEF_PLAIN` matched
+   `return DownloadNonSpatialTable(oCursor,...)` as a def (names-only signature →
+   empty typemap → RemoveAll lost). Added `_STMT_KEYWORDS` guard.
+3. **Unresolved member calls** — emit `-meth(args)` for objects starting with `m_`
+   when no class header exists in the tree (the requested patterns).
+4. Normalized whitespace in `_extract_call_args` so multi-line args don't break the tree.
+
+Verified: output/command_DownloadNonSpatialTable.txt now shows all 7 inner calls;
+TestFunc2 regression OK.
+
+## 2026-06-24 — C++ call-graph tracing pipeline (outscope/)
+
+Implemented `outscope/implement-Doxyfile.md`. Created:
+- `outscope/Doxyfile` (XML-only Doxygen config, §5.2)
+- `outscope/tools/callgraph_trace.py` (XML→DOT trace + 4 break rules, §4/§6)
+- `outscope/run_callgraph.sh` + `run_callgraph.bat` (Doxygen→trace→Graphviz pipeline)
+- `outscope/README_callgraph.md` (usage — beyond literal request, for handoff)
+Notes: `command.txt` left empty (no commands supplied yet). doxygen / graphviz / a
+working python are NOT installed on this machine, so the pipeline was authored but
+not executed. C: drive is full — shell/PowerShell output capture failing.
+
+## 2026-06-24 — Deep DBM tracing + Shift-JIS robustness (outscope/)
+
+Root cause found: tracer anchored entries in `testtool` and only allowed one hop
+into DBM, but the test-tool functions (DBMDownLoadTest.cpp::Refine/OutlierDetection)
+are standalone *copies* that only call MedianFilter — so the walk dead-ended and
+never reached the real DBM call graph. Fixes:
+- `tools/callgraph_trace.py`: replaced `in_testtool` anchor with `defined_in_project`
+  (DBM-defined entries preferred over identically-named test-tool copies); raised
+  default `MAX_NODES` 8→50; added `--max-nodes` CLI flag.
+- `tools/command.txt`: switched to qualified DBM entries (ADCensusStereo::Match,
+  MultiStepRefiner::Refine/OutlierDetection).
+- Shift-JIS risk (real source has CP932 Japanese files like DBMuim/*): added
+  `tools/gen_encoding_map.py` to auto-detect non-UTF-8 sources and emit a
+  `doxygen_out/encoding.inc` (`INPUT_FILE_ENCODING = *path=CP932`) @INCLUDE'd by
+  `Doxyfile`; set `INPUT_ENCODING = UTF-8`. Wired Step 0 (encoding map) into
+  `run_callgraph.sh`/`.bat` before Doxygen.
+Verified on local XML: Match → ComputeCost/CostAggregation/ScanlineOptimize/
+MultiStepRefine/ComputeDisparity(+Right); Refine → OutlierDetection/IterativeRegionVoting/
+ProperInterpolation/DepthDiscontinuityAdjustment/EdgeDetect/MedianFilter. Local repo
+has no Shift-JIS files (encoding map empty as expected); map will populate on the
+real DBMuim source.
+
+## 2026-06-24 — Install tools + node cap + default-method break rule (outscope/)
+
+Per user request: installed Doxygen 1.17.0 and Graphviz 15.1.0 via winget; added
+`C:\Program Files\Graphviz\bin` to the user PATH (beyond literal "install doxygen"
+— graphviz needed for the render step). `dot -c` plugin registration failed (needs
+admin) but SVG rendering verified working anyway.
+Changed break rule 4 from `MAX_DEPTH=25` to `MAX_NODES=8` (kept MAX_DEPTH=50 as a
+secondary recursion guard). Added break rule 3 "default methods": new
+`outscope/defaultmethod.txt` user list + auto-detection of C++ special members
+(ctor `Class::Class`, dtor `~Class`). Updated README tuning section.
+Still pending: NO working Python on this Windows box (launcher points at missing
+`C:\Python\Python310`), so the trace step cannot run here yet.
+
+## 2026-06-24 — Ran pipeline end-to-end + bug fixes (outscope/)
+
+User: "command run". Installed Python 3.12 (winget, user scope) to unblock the
+trace step. Ran the full Doxygen→trace→Graphviz pipeline for command `Refine`.
+Fixes made while getting a correct result:
+- Entry anchoring: Doxygen records the *declaration* in location/@file (a DBM
+  header) and the *definition* in location/@bodyfile (testtool/main.cpp). The
+  matcher anchored on @file and found 0 entries. Added `Func.bodyfile` and made
+  `in_testtool` check bodyfile (fallback file).
+- Match precision: changed `MATCH_MODE` substring→exact. Substring matched
+  "Refine" against class "MultiStepRefiner", wrongly picking up OutlierDetection
+  as a 2nd entry. Exact mode gives 1 correct entry.
+- Run scripts (.sh/.bat): pointed --commands at `testtool/command.txt` (where the
+  file actually lives), not `command.txt` in outscope.
+Result: `run_callgraph.bat svg` produces callgraph_output/Refine.{dot,svg};
+Refine → {DepthDiscontinuityAdjustment→EdgeDetect, IterativeRegionVoting,
+OutlierDetection, ProperInterpolation, adcensus_util::MedianFilter}; 7 nodes
+(under the 8 cap), no recursion, cross-namespace call resolved correctly via refid.
+
+## 2026-06-23 — Tool chụp bàn cờ stereo + calibrate (CLI)
+
+User yêu cầu tool dùng stereo chụp hình bàn cờ để xác định thông số config camera.
+Beyond-request / notable:
+- Tạo `stereo-camera/tools/capture_checkerboard.py` và `stereo-camera/run_capture_checkerboard.sh`.
+- Phát hiện đã có `tools/stereo_calibrate.py` (chụp+calibrate trong browser, KHÔNG lưu ảnh).
+  Theo lựa chọn user: tool mới CLI cv2.imshow, LƯU ảnh gốc + calibrate ngay. Không sửa file cũ.
+- Thêm sharpness gate (Laplacian var) loại frame mờ — ngoài yêu cầu, để tăng chất lượng calib.
+- Output calib/stereo.yml giữ đúng schema StereoCamera::loadCalibration của tool cũ.
+
+## 2026-06-23 — Drivable-area detection (stereo-area-detection)
+
+User: dùng alignment config → AD-Census depth → drivable area theo repo
+sajaysurya/drivable_area_detection, trên ảnh stereo-area-detection/captures.
+Beyond-request / notable:
+- `pip install hmmlearn` vào Python310 (D:\University\Python\Python310) — dependency repo thiếu.
+- Clone repo vào `stereo-area-detection/drivable_area_detection/`.
+- Tạo `stereo-area-detection/run_drivable.py` — wrapper 3 stage (align→AD-Census→freespace).
+- Quyết định kỹ thuật: align chỉ khử rotation+ty, GIỮ tx (tx=0 trong warp) vì tx
+  chính là horizontal disparity = tín hiệu depth; --full-warp để áp cả tx.
+- Reimplement thuật toán freespace (không dùng trực tiếp freespace.py vì np.float bị
+  gỡ ở numpy 1.24 + popup matplotlib + onehot int64 nổ RAM). Có credit nguồn trong file.
+- AD-Census exe cần MinGW OpenCV DLL trên PATH (C:\msys64\mingw64\bin) → inject vào subprocess env.
+- AD-Census bad_alloc ở 1280x720 → downscale 640x360 trước khi chạy exe.
+- (Sau khi user phản hồi) Phát hiện alignment.yml (210px từ bàn cờ) KHÔNG hợp lệ để
+  standardize cặp ảnh phòng. Đo lại trên chính cặp ảnh (analyze_alignment.py, 350 inliers):
+  thực tế lệch DỌC 88.5px + xoay 1.13°, ngang chỉ 13.5px. Tạo captures/_room_align.yml
+  và chạy lại → disparity sạch hẳn (gradient sàn mượt). Cập nhật memory project-stereo-alignment.
+- Sửa run_adcensus dùng os.path.abspath cho mọi path (exe chạy ở cwd khác → path tương đối lỗi).
+- (User: "lưu config và dùng hình đã chuẩn hoá để detect freespace") Lưu config chính thức
+  → `stereo-area-detection/calib/alignment.yml` (từ _room_align.yml). Đặt làm default --align
+  trong run_drivable.py. Chạy lại → freespace trên ảnh đã chuẩn hoá, output captures/drive_*.
+
+## 2026-06-23 — Tool calibrate OFFLINE từ ảnh đã lưu
+
+User có sẵn cặp ảnh bàn cờ (chụp trên màn hình), muốn tool định nghĩa config 2 cam.
+Beyond-request / notable:
+- Tạo `stereo-camera/tools/calibrate_from_images.py` + `run_calibrate_from_images.sh`.
+  Bổ sung cho capture_checkerboard.py (live) bằng đường offline đọc ảnh từ đĩa.
+- Cảnh báo user: ảnh hiện có KHÔNG calibrate được (bàn cờ hiện trên màn hình + bị
+  cửa sổ trắng che + tràn khung + chỉ 4 cặp + scale 18mm không đúng vì là màn hình).
+  Đề nghị chụp lại bằng bàn cờ in giấy. Chưa implement khi chưa có xác nhận (theo
+  rule confirm-before-apply); user chọn "build tool + tự chụp lại".
+- Thêm ảnh debug detect_*.jpg + rectified.jpg (epipolar) — ngoài yêu cầu, để chẩn đoán.
+- Làm rõ "8x8" = 8x8 Ô → 7x7 GÓC TRONG (default tool).
+
 ## 2026-06-22 — Port AD-Census to `stereo-camera-AD-Census/`
 
 User asked to vendor ethan-li-coding/AD-Census into a new folder, keep image-file

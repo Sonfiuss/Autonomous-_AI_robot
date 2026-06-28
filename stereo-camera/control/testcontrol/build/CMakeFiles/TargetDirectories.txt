@@ -1,3 +1,0 @@
-/home/nvidia/Documents/stereo-camera/control/testcontrol/build/CMakeFiles/rebuild_cache.dir
-/home/nvidia/Documents/stereo-camera/control/testcontrol/build/CMakeFiles/edit_cache.dir
-/home/nvidia/Documents/stereo-camera/control/testcontrol/build/CMakeFiles/test_servo.dir
