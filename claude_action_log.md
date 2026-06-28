@@ -2,6 +2,41 @@
 
 Actions taken beyond the literal request are recorded here for transparency.
 
+## 2026-06-28 — deepmap Test_round360 harness (plan step A4 port)
+- Created `deepmap/scale_calib.py` (motion-parallax metric-scale step A4 ported from the
+  RTAB-Map plan to the non-ROS deepmap pipeline).
+- Added `--test-round360` to `deepmap/rotate_scan.py` (fixed `right_1.jpg` for all frames,
+  skips camera + UART) and `deepmap/build_map.py` (skips the 30 cm forward move, uses a
+  placeholder k, confirms metric-depth output TYPE float32 H×W, still builds a PLY).
+- Beyond literal request: added `--d-max`/`--test-image` flags; ASCII-safe prints in new
+  code (Windows cp1258 console can't encode the existing `→`); updated rtabmap-slam task log.
+- Verified offline (no model): rotate_scan test mode wrote 12 shots+manifest; scale_calib
+  type path PASS. Full build_map test needs the DA-V2 checkpoint on the Jetson.
+- Follow-up: added per-step timing log to `rotate_scan.py` real path (`write_timing_log` ->
+  `timing_log.csv`: step, file, expected_deg, odom_theta, theta_err, expected_steps_per_wheel,
+  capture_ms, move_ms, wall_ts) + `steps_for_turn()` using firmware constants. Requested by user.
+- FLAGGED (needs user decision): `agent/description/project_overview.md` wheel/robot radii
+  (r=4.1cm, L=14.4cm) DISAGREE with running firmware PinConfig.h (r=5.5cm, L=21cm). Firmware is
+  authoritative for commanded rotation (135.8 steps/deg). If overview values are the true
+  measured ones, commanded rotation is ~9% high. Odometry is open-loop (no encoder/IMU), so it
+  cannot detect real slip — physical measurement needed to calibrate estimated->actual.
+- RESOLVED by user: firmware values are authoritative -> rewrote `project_overview.md` kinematics
+  section (r=5.5cm, L=21cm, STEPS_PER_REV=12800, angles 60/180/300, open-loop rotation note).
+- Created `deepmap/TIMING_REFERENCE.md` (live-run latency stages reference table + pipeline).
+- Implemented live timing instrumentation (user request, stepmotor_delay intentionally skipped):
+  - `build_map.py`: per-frame Timer wraps -> `timing_map.csv` (prep/infer/project/merge/
+    movable_space_ms + points, AVG + load_model_ms + export_ms footer); `--no-drive-area`,
+    `--timing-csv`. Movable-space = `drive_area.preprocess_depth`+`compute_drive_polygon`.
+  - `scale_calib.py`: `recover_scale_motion_parallax(timing=dict)` fills scale_capture/move_30cm/
+    scale_compute; new `write_calib_log()` -> `calib_log.csv`.
+  - Verified offline: all compile; calib_log writer + movable_space step run (no model needed).
+    Full `build_map` timing run needs the DA-V2 checkpoint on the Jetson.
+- Movable-space now FEEDS the map across all frames: drive-area polygon labels each projected
+  point drivable(floor)/obstacle; map coloured green/red (`scale_calib.drivable_labels`,
+  `colorize_by_class`; `project_metric(return_keep=True)` keeps labels aligned). Flags
+  `--no-class-color` (raw RGB) / `--no-drive-area` (skip). Verified offline: labels align with
+  points, drivable->green, obstacle->red.
+
 ## 2026-06-27 — depth_to_3d_timed.py (per-step timing pipeline)
 - Created `depth-anything/src/depth_to_3d_timed.py`: full image→pointcloud pipeline with
   per-step timers (load / read / prep / infer / project / ply) + average table.

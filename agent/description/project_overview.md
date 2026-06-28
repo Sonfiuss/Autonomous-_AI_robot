@@ -17,9 +17,17 @@ Omni-directional robot (3-wheel) running on NVIDIA Jetson. Supports:
 | Laptop (WiFi) | Simulation UI + mission planning |
 
 ## Robot kinematics
-- Outer radius: 19 cm, wheel distance L: 14.4 cm, wheel radius r: 4.1 cm
-- Inverse kinematics: `V_i = Vx·cos(θ_i) + Vy·sin(θ_i) + ω·L`
-- Wheel angles: V1=150°, V2=270°, V3=30°
+Source of truth: ESP32 firmware (`motivation/esp32_unified_controller/PinConfig.h`
++ `OmniKinematics.h`). These values OVERRIDE any older chassis estimates.
+- Wheel radius r: **5.5 cm** (`WHEEL_RADIUS_M = 0.055`, ⌀11 cm wheel)
+- Robot radius L (center → wheel contact): **21 cm** (`ROBOT_RADIUS_M = 0.21`)
+- Steps per wheel revolution: **12800** (`STEPS_PER_REV`, 200 × 64 microstep)
+- Wheel angles α: W1=60°, W2=180°, W3=300°
+- Inverse kinematics: `ω_i = (-sin(α_i)·vx + cos(α_i)·vy + L·ω_z) / r`
+- Rotation is open-loop: `T <deg>` issues a fixed step count
+  `steps/wheel = (L/r) · (deg/360) · STEPS_PER_REV ≈ 135.8 · deg`.
+  Odometry is integrated from these commanded steps (no encoder/IMU) → it
+  cannot detect physical slip; calibrate estimated→actual by measurement.
 
 ## ESP32 Unified Controller (`motivation/esp32_unified_controller/`)
 Single firmware handles: motor PWM, encoder odometry, pan/tilt servo.

@@ -22,6 +22,18 @@ import serial
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
+# Firmware-authoritative physical constants (motivation/esp32_unified_controller/PinConfig.h).
+# Used only to log the EXPECTED commanded rotation alongside the measured odom theta,
+# so estimated->actual rotation can be fine-tuned later from timing_log.csv.
+ROBOT_RADIUS_M = 0.21
+WHEEL_RADIUS_M = 0.055
+STEPS_PER_REV  = 12800
+
+
+def steps_for_turn(deg):
+    """Per-wheel step count the ESP32 'T' command issues for a body rotation."""
+    return (ROBOT_RADIUS_M / WHEEL_RADIUS_M) * (abs(deg) / 360.0) * STEPS_PER_REV
+
 
 def parse_args():
     p = argparse.ArgumentParser(description='Rotate robot 360° and capture depth-map frames')
@@ -39,7 +51,47 @@ def parse_args():
                    help='Seconds to wait for K ack per step')
     p.add_argument('--dry-run', action='store_true',
                    help='Capture images only, skip UART (for testing without robot)')
+    p.add_argument('--test-round360', action='store_true',
+                   help='Test mode: skip camera AND UART; use a fixed image '
+                        '(--test-image) for every rotation frame')
+    p.add_argument('--test-image',
+                   default=os.path.join(ROOT, '..', 'depth-anything', 'assets', 'right_1.jpg'),
+                   help='Image substituted for every frame in --test-round360')
     return p.parse_args()
+
+
+# ── Test_round360: fixed-image rotation (no camera, no robot) ─────────────────
+
+def run_test_round360(args):
+    """Replace every 360° frame with a fixed image; write shots + manifest."""
+    src = os.path.abspath(args.test_image)
+    if not os.path.isfile(src):
+        print(f'ERROR: test image not found: {src}')
+        return
+    img = cv2.imread(src)
+    if img is None:
+        print(f'ERROR: cannot read test image: {src}')
+        return
+
+    n_steps = round(360.0 / args.step_deg)
+    print(f'TEST_ROUND360: {n_steps} frames all = {os.path.basename(src)} '
+          f'(no camera, no UART)')
+
+    manifest = []
+    for i in range(n_steps):
+        fname = f'shot_{i:03d}.jpg'
+        cv2.imwrite(os.path.join(args.out_dir, fname), img)
+        angle = (args.step_deg * i) % 360.0
+        manifest.append((fname, f'{angle:.2f}'))
+        print(f'  [{i+1}/{n_steps}] {fname} @ {angle:.1f}°  (fixed image)')
+
+    csv_path = os.path.join(args.out_dir, 'angles.csv')
+    with open(csv_path, 'w', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(['# filename', 'angle_deg'])
+        w.writerows(manifest)
+    print(f'\nDone (test). {len(manifest)} shots -> {args.out_dir}')
+    print(f'Next: python build_map.py --shots {args.out_dir} --test-round360')
 
 
 # ── Serial helpers ──────────────────────────────────────────────────────────────
@@ -98,11 +150,30 @@ def send(ser, msg: str):
     ser.write(msg.encode())
 
 
+def write_timing_log(out_dir, timing):
+    """Write per-step stats to timing_log.csv. Returns path or None if empty."""
+    if not timing:
+        return None
+    path = os.path.join(out_dir, 'timing_log.csv')
+    cols = ['step', 'file', 'cmd_step_deg', 'expected_deg', 'odom_theta_deg',
+            'theta_err_deg', 'expected_steps_per_wheel', 'capture_ms', 'move_ms',
+            'wall_ts']
+    with open(path, 'w', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=cols)
+        w.writeheader()
+        w.writerows(timing)
+    return path
+
+
 # ── Main ────────────────────────────────────────────────────────────────────────
 
 def main():
     args = parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
+
+    if args.test_round360:
+        run_test_round360(args)
+        return
 
     n_steps = round(360.0 / args.step_deg)
     print(f'Plan: {n_steps} steps × {args.step_deg}° = 360°, ω={args.omega} rad/s')
@@ -132,30 +203,55 @@ def main():
         print('DRY RUN: UART disabled, capturing images only')
 
     manifest = []
+    timing = []                 # secondary log: per-step stats for fine-tuning
     cumulative_deg = 0.0
 
     try:
         for i in range(n_steps):
-            # Capture frame at current position
+            # Capture frame at current position (timed)
+            t_cap0 = time.perf_counter()
             ret, frame = cap.read()
+            fname = ''
             if not ret:
                 print(f'  WARNING: Camera read failed at step {i}, skipping')
+                cap_ms = (time.perf_counter() - t_cap0) * 1000.0
             else:
                 fname = f'shot_{i:03d}.jpg'
                 fpath = os.path.join(args.out_dir, fname)
                 cv2.imwrite(fpath, frame)
+                cap_ms = (time.perf_counter() - t_cap0) * 1000.0
                 angle = cumulative_deg % 360.0
                 manifest.append((fname, f'{angle:.2f}'))
                 print(f'  [{i+1}/{n_steps}] {fname} @ {angle:.1f}°  saved')
 
-            # Rotate to next position
+            # Rotate to next position (timed: command -> K ack)
+            move_ms = 0.0
+            theta = None
+            expected_deg = (cumulative_deg + args.step_deg) % 360.0
             if ser is not None:
+                t_mv0 = time.perf_counter()
                 send(ser, f'T {args.step_deg:.4f} {args.omega:.4f}\n')
                 ok, theta = wait_ack(ser, args.move_timeout)
+                move_ms = (time.perf_counter() - t_mv0) * 1000.0
                 if not ok:
                     print(f'  WARNING: Timeout waiting for ack at step {i}')
                 elif theta is not None:
-                    print(f'    ESP32 odometry theta = {theta:.1f}°')
+                    err = theta - expected_deg
+                    print(f'    odom theta={theta:.1f}° (expected {expected_deg:.1f}°, '
+                          f'err {err:+.1f}°)  move {move_ms:.0f} ms')
+
+            timing.append({
+                'step': i,
+                'file': fname,
+                'cmd_step_deg': args.step_deg,
+                'expected_deg': round(expected_deg, 2),
+                'odom_theta_deg': '' if theta is None else round(theta, 2),
+                'theta_err_deg': '' if theta is None else round(theta - expected_deg, 2),
+                'expected_steps_per_wheel': round(steps_for_turn(args.step_deg), 1),
+                'capture_ms': round(cap_ms, 1),
+                'move_ms': round(move_ms, 1),
+                'wall_ts': round(time.time(), 3),
+            })
 
             cumulative_deg += args.step_deg
 
@@ -172,8 +268,18 @@ def main():
         w.writerow(['# filename', 'angle_deg'])
         w.writerows(manifest)
 
+    # Write timing log (secondary stats for fine-tuning estimated->actual rotation)
+    timing_path = write_timing_log(args.out_dir, timing)
+
     print(f'\nDone. {len(manifest)} shots → {args.out_dir}')
     print(f'Manifest: {csv_path}')
+    if timing_path:
+        print(f'Timing log: {timing_path}')
+        caps = [t['capture_ms'] for t in timing]
+        moves = [t['move_ms'] for t in timing if t['move_ms'] > 0]
+        if caps:
+            print(f'  avg capture {sum(caps)/len(caps):.0f} ms'
+                  + (f' | avg move {sum(moves)/len(moves):.0f} ms' if moves else ''))
     print(f'\nNext step:')
     print(f'  python build_map.py --shots {args.out_dir}')
 
