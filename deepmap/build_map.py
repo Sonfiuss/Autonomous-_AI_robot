@@ -21,6 +21,7 @@ import sys
 import cv2
 import numpy as np
 import torch
+import yaml
 
 # Reuse the depth-anything pipeline without copying any code
 _DEPTH_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -46,7 +47,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 _MODEL_DIR = os.path.join(_DEPTH_SRC, '..', 'model')
 
 
-def parse_args():
+def parse_args(argv=None):
     p = argparse.ArgumentParser(description='Build 360° depth map from rotate_scan output')
     p.add_argument('--shots', default=os.path.join(ROOT, 'shots'),
                    help='Directory produced by rotate_scan.py (contains images + angles.csv)')
@@ -59,8 +60,15 @@ def parse_args():
     p.add_argument('--input-size', type=int, default=518)
     p.add_argument('--device', default='auto', choices=['auto', 'cuda', 'cpu'])
     # Projection
-    p.add_argument('--fov', type=float, default=60.0,
-                   help='Camera horizontal FOV in degrees')
+    p.add_argument('--fov', type=float, default=72.0,
+                   help='Camera horizontal FOV in degrees (real lens ≈ 72)')
+    p.add_argument('--keep-deg', type=float, default=None,
+                   help='Central horizontal wedge kept per frame (deg) to remove '
+                        'inter-frame overlap. None = auto (= scan step from angles). '
+                        '0 or >=fov = keep full frame (no crop).')
+    p.add_argument('--cam-yaw-deg', type=float, default=0.0,
+                   help='Constant yaw offset (deg) added to every frame to compensate '
+                        'a camera mounted/pointing left(+)/right(-) of robot forward.')
     p.add_argument('--stride', type=int, default=2,
                    help='Pixel stride for point cloud density (1=full, 2=half)')
     # Output
@@ -78,6 +86,29 @@ def parse_args():
                    help='Test mode: SKIP the 30 cm forward scale-recovery move; '
                         'use a placeholder k, confirm metric-depth output TYPE, '
                         'and still build a small PLY from the fixed-image frames')
+    # Movable-space classification method
+    p.add_argument('--classify', choices=['drive-area', 'height'], default='drive-area',
+                   help="How to label floor vs obstacle. 'drive-area' = old ray-linearity "
+                        "polygon (drive_area.py). 'height' = height-above-ground: metric "
+                        "back-project + per-frame floor-plane fit + physical-height threshold.")
+    p.add_argument('--scale-yaml', default=os.path.join(
+                       ROOT, '..', 'slam', 'config', 'scale.yaml'),
+                   help='YAML with calibrated metric scale k (from scale_calib). Used by '
+                        "--classify height so the height thresholds are in real metres.")
+    p.add_argument('--h-floor', type=float, default=0.05,
+                   help='|height above floor plane| <= this = floor/drivable (m). Default 0.05')
+    p.add_argument('--h-obs', type=float, default=0.10,
+                   help='height above floor plane > this = obstacle (m). Lower to catch '
+                        'shorter objects. Default 0.10')
+    p.add_argument('--bottom-frac', type=float, default=0.30,
+                   help='bottom fraction of each frame used as the floor seed for the '
+                        'plane fit (--classify height). Default 0.30')
+    p.add_argument('--bev-cell', type=float, default=0.05,
+                   help='top-down BEV map cell size in metres. Default 0.05 (5 cm)')
+    p.add_argument('--bev-range', type=float, default=3.0,
+                   help='top-down BEV half-extent in metres around the robot. Default 3.0')
+    p.add_argument('--bev-out', default=None,
+                   help='BEV map PNG path (default: <out dir>/map_360_bev.png)')
     # Timing instrumentation
     p.add_argument('--no-drive-area', action='store_true',
                    help='Skip the movable-space step (and its timing + class colours)')
@@ -86,7 +117,7 @@ def parse_args():
                         '(green=movable floor, red=obstacle)')
     p.add_argument('--timing-csv', default=None,
                    help='Per-frame timing output (default: <out dir>/timing_map.csv)')
-    return p.parse_args()
+    return p.parse_args(argv)
 
 
 def load_model(encoder, device):
@@ -100,8 +131,131 @@ def load_model(encoder, device):
     return model.to(device).eval()
 
 
-def main():
-    args = parse_args()
+def auto_step_deg(angles, files):
+    """Median angular spacing between consecutive frames (deg) — the natural
+    central-wedge width so frames tile without overlap."""
+    degs = sorted(float(np.rad2deg(angles[f])) % 360.0 for f in files)
+    diffs = np.diff(degs)
+    diffs = diffs[diffs > 1e-3]
+    return float(np.median(diffs)) if len(diffs) else 360.0
+
+
+def crop_central_wedge(pts, cols, keep_deg, cls=None):
+    """Keep only points whose horizontal bearing is within ±keep_deg/2 of the
+    optical axis. With a 72° lens and 30° steps, adjacent frames overlap ~58%;
+    cropping to the central `keep_deg` makes them tile edge-to-edge (no double
+    geometry to merge). Bearing = atan2(X, -Z) (X=right, -Z=forward).
+
+    `cls` (per-point class array) is cropped with the same mask when given."""
+    if keep_deg is None or keep_deg <= 0 or keep_deg >= 180:
+        return pts, cols, cls
+    bearing = np.degrees(np.arctan2(pts[:, 0], -pts[:, 2]))
+    m = np.abs(bearing) <= keep_deg / 2.0
+    return pts[m], cols[m], (cls[m] if cls is not None else None)
+
+
+# ── Height-above-ground classification (--classify height) ────────────────────
+
+def load_scale_k(path, d_max_default):
+    """Read calibrated metric scale k (and d_max) from scale_calib's YAML.
+    Returns (k, d_max). Falls back to (1.0, d_max_default) with a warning if the
+    file is missing — geometry is then correct only up to a global scale, so the
+    height thresholds are in relative units rather than true metres."""
+    if path and os.path.isfile(path):
+        with open(path) as fh:
+            y = yaml.safe_load(fh) or {}
+        k = float(y.get('k', 1.0))
+        d_max = float(y.get('d_max', d_max_default))
+        print(f'  [height] metric scale k={k:.4f} d_max={d_max} (from {path})')
+        return k, d_max
+    print(f'  [height] WARNING: {path} not found -> k=1.0 (RELATIVE units; '
+          'height thresholds are NOT real metres). Run scale_calib to fix.')
+    return 1.0, d_max_default
+
+
+def fit_floor_plane_svd(floor_pts, max_samples=2000):
+    """SVD plane fit. Returns (normal pointing +Y, centroid) or (None, None)."""
+    if len(floor_pts) < 50:
+        return None, None
+    if len(floor_pts) > max_samples:
+        floor_pts = floor_pts[np.random.choice(len(floor_pts), max_samples, replace=False)]
+    centroid = floor_pts.mean(axis=0)
+    _, _, Vt = np.linalg.svd(floor_pts - centroid, full_matrices=False)
+    normal = Vt[-1]
+    if normal[1] < 0:           # force +Y (up in camera frame) so height>0 = above floor
+        normal = -normal
+    return normal, centroid
+
+
+def classify_height(pts, keep, depth_shape, stride, bottom_frac, h_floor, h_obs):
+    """Label each KEPT point by height above the floor plane.
+
+    Floor seed = bottom `bottom_frac` rows of the frame (robust to camera pitch:
+    we fit whatever plane those points lie on, then measure signed distance to it,
+    re-fitting once on inliers to shed any obstacle that crept into the seed band).
+    Returns uint8 array (len = #kept points): 0=unknown, 1=floor, 2=obstacle."""
+    H, W = depth_shape
+    ys = np.arange(0, H, stride)
+    xs = np.arange(0, W, stride)
+    H_s, W_s = len(ys), len(xs)
+    row_idx = (np.arange(H_s * W_s) // W_s)
+    floor_seed_full = row_idx >= (H_s - max(1, int(H_s * bottom_frac)))
+    floor_seed = floor_seed_full[keep] if keep is not None else floor_seed_full
+
+    normal, centroid = fit_floor_plane_svd(pts[floor_seed])
+    if normal is None:
+        return np.zeros(len(pts), dtype=np.uint8)
+    height = (pts - centroid) @ normal
+    inlier = floor_seed & (np.abs(height) < h_floor)
+    if inlier.sum() >= 50:
+        n2, c2 = fit_floor_plane_svd(pts[inlier])
+        if n2 is not None:
+            normal, centroid = n2, c2
+            height = (pts - centroid) @ normal
+
+    cls = np.zeros(len(pts), dtype=np.uint8)
+    cls[np.abs(height) <= h_floor] = 1
+    cls[height > h_obs] = 2
+    return cls
+
+
+CLS_COLOR = {1: (60, 200, 60), 2: (210, 50, 50)}   # RGB: floor green, obstacle red
+
+
+def color_by_cls(cols, cls, alpha=0.55):
+    """Blend point colours toward green (floor) / red (obstacle); leave unknown raw."""
+    out = cols.astype(np.float32)
+    for v, c in CLS_COLOR.items():
+        m = cls == v
+        out[m] = out[m] * (1.0 - alpha) + np.asarray(c, np.float32) * alpha
+    return out.astype(np.uint8)
+
+
+def render_bev_map(all_pts, all_cls, cell, rng, robot_px=4):
+    """Top-down occupancy image from the merged world cloud (X right, Z forward).
+    Obstacle cells override floor cells. Robot at centre. Returns BGR image."""
+    pts = np.concatenate(all_pts, axis=0)
+    cls = np.concatenate(all_cls, axis=0)
+    n = max(1, int(round(2 * rng / cell)))
+    gx = np.floor((pts[:, 0] + rng) / cell).astype(int)
+    gz = np.floor((pts[:, 2] + rng) / cell).astype(int)
+    m = (gx >= 0) & (gx < n) & (gz >= 0) & (gz < n)
+    gx, gz, c = gx[m], gz[m], cls[m]
+
+    grid = np.zeros((n, n), dtype=np.uint8)            # 0 unknown
+    grid[gz[c == 1], gx[c == 1]] = 1                   # floor
+    grid[gz[c == 2], gx[c == 2]] = 2                   # obstacle (overrides)
+
+    img = np.full((n, n, 3), 60, dtype=np.uint8)       # unknown = grey
+    img[grid == 1] = (60, 200, 60)                     # floor green (BGR-ish; ok)
+    img[grid == 2] = (50, 50, 210)                     # obstacle red
+    img = np.ascontiguousarray(np.flipud(img))         # forward (+Z) at top
+    cv2.circle(img, (n // 2, n // 2), robot_px, (0, 255, 255), -1)  # robot
+    return img
+
+
+def main(argv=None):
+    args = parse_args(argv)
     manifest = args.manifest or os.path.join(args.shots, 'angles.csv')
 
     # Discover images and their angles
@@ -116,7 +270,14 @@ def main():
         print('No images matched manifest angles — check angles.csv')
         return
 
+    # Overlap-merge + camera-yaw compensation (plan: deepmap improvements)
+    keep_deg = args.keep_deg if args.keep_deg is not None else auto_step_deg(angles, files)
+    cam_yaw = np.deg2rad(args.cam_yaw_deg)
+    wedge_on = bool(keep_deg) and 0 < keep_deg < args.fov
+
     print(f'360° map: {len(files)} frames, encoder={args.encoder}, device={args.device}')
+    print(f'  fov={args.fov}°  wedge-crop={"%.1f°" % keep_deg if wedge_on else "off"}'
+          f'  cam-yaw={args.cam_yaw_deg:+.1f}°')
 
     device = pick_device(args.device)
 
@@ -130,9 +291,15 @@ def main():
         print('WARNING: open3d not installed — --icp/--voxel disabled. pip install open3d')
 
     all_pts, all_cols = [], []
+    all_cls = []     # per-point class (height mode) for the top-down BEV map
     o3d_clouds = []
     k_scale = None   # metric scale; recovered/confirmed once in test mode
+    d_max = args.d_max
     timing = []      # per-frame stage latencies (ms)
+
+    height_mode = args.classify == 'height'
+    if height_mode:
+        k_scale, d_max = load_scale_k(args.scale_yaml, args.d_max)
 
     for k, f in enumerate(files):
         img = cv2.imread(f)
@@ -144,25 +311,33 @@ def main():
         with Timer(device) as ti: depth      = step_infer(model, tensor, hw)
 
         with Timer(device) as tpr:
-            if args.test_round360:
-                # Step A4 with the 30 cm move SKIPPED. First frame: run the scale
-                # step (placeholder k) and confirm the metric-depth output TYPE.
-                # Later frames: reuse k. Project with metric depth.
-                if k_scale is None:
+            if height_mode or args.test_round360:
+                # Metric back-project (Z = k/disp) so the floor reconstructs flat —
+                # required for height-above-ground. height mode uses the calibrated k
+                # (loaded above); test mode confirms output type once with placeholder k.
+                if args.test_round360 and not height_mode and k_scale is None:
                     k_scale, metric = scale_calib.calibrate(
-                        depth, args.d_max, test_round360=True)
+                        depth, d_max, test_round360=True)
                 else:
-                    metric = scale_calib.apply_scale(depth, k_scale, args.d_max)
+                    metric = scale_calib.apply_scale(depth, k_scale, d_max)
                 pts, cols, keep = scale_calib.project_metric(
                     metric, img, args.fov, args.stride, return_keep=True)
             else:
                 pts, cols = step_project(depth, img, args.fov, args.stride)
                 keep = None
 
-        # Movable-space determination (ray-linearity drive area) + per-point class.
-        # Labels each projected point drivable(floor)/obstacle and colours the map.
+        # Per-point floor/obstacle classification + map colours.
         ms_ms = 0.0
-        if not args.no_drive_area:
+        cls = None
+        if height_mode:
+            with Timer(device) as tms:
+                cls = classify_height(pts, keep, depth.shape, args.stride,
+                                      args.bottom_frac, args.h_floor, args.h_obs)
+            ms_ms = tms.ms
+            if not args.no_class_color:
+                cols = color_by_cls(cols, cls)
+        elif not args.no_drive_area:
+            # Old ray-linearity drive area -> per-point drivable(floor)/obstacle.
             with Timer(device) as tms:
                 dnorm = preprocess_depth(depth)
                 polygon, _ = compute_drive_polygon(dnorm)
@@ -172,13 +347,20 @@ def main():
             if not args.no_class_color:
                 cols = scale_calib.colorize_by_class(cols, drivable)
 
+        # Crop to the central wedge so overlapping frames tile instead of doubling up.
+        if wedge_on:
+            pts, cols, cls = crop_central_wedge(pts, cols, keep_deg, cls)
+
         with Timer(device) as tm:
-            wpts = transform_to_world(pts, angles[f], args.cam_offset)
+            # cam_yaw compensates a camera not aligned with robot forward.
+            wpts = transform_to_world(pts, angles[f] + cam_yaw, args.cam_offset)
             if o3d is not None:
                 o3d_clouds.append(to_o3d(o3d, wpts, cols))
             else:
                 all_pts.append(wpts)
                 all_cols.append(cols)
+                if cls is not None:
+                    all_cls.append(cls)
 
         timing.append({
             'step': k, 'file': os.path.basename(f),
@@ -217,6 +399,20 @@ def main():
         write_ply(args.out, mpts, mcols)
     print(f'\n360° map: {len(mpts):,} points → {args.out}')
 
+    # Top-down BEV occupancy map (height mode only — needs per-point classes).
+    if height_mode and all_cls:
+        bev = render_bev_map(all_pts, all_cls, args.bev_cell, args.bev_range)
+        bev_out = args.bev_out or os.path.join(os.path.dirname(args.out), 'map_360_bev.png')
+        os.makedirs(os.path.dirname(bev_out), exist_ok=True)
+        # upscale for visibility
+        scale = max(1, int(round(600 / bev.shape[0])))
+        cv2.imwrite(bev_out, cv2.resize(bev, (0, 0), fx=scale, fy=scale,
+                                        interpolation=cv2.INTER_NEAREST))
+        cat = np.concatenate(all_cls)
+        print(f'BEV map ({args.bev_cell*100:.0f} cm cells, ±{args.bev_range} m): '
+              f'{int((cat==1).sum())} floor / {int((cat==2).sum())} obstacle pts '
+              f'→ {bev_out}')
+
     # ── Timing report + CSV ───────────────────────────────────────────────────
     if timing:
         keys = ['prep_ms', 'infer_ms', 'project_ms', 'merge_ms', 'movable_space_ms']
@@ -251,6 +447,8 @@ def main():
                 window_name='360° Depth Map')
         else:
             print('open3d not installed — skipping --show')
+
+    return args.out
 
 
 if __name__ == '__main__':

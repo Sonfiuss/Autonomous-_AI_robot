@@ -47,7 +47,7 @@ def project_metric(metric_depth, color_bgr, fov_deg, stride, near_clip=0.26,
                    return_keep=False):
     """Back-project METRIC depth to 3D (camera at origin, looking -Z).
 
-    Unlike depth_to_3d_timed.step_project (which fakes a 0.5..5.5 m range from
+    Unlike depth_to_3d_timed.step_project (which fakes a 0.5..4.03 m range from
     relative depth), this uses the true metric Z directly. Near-clip removes the
     floor-contact band (plan Filter 1). Returns (pts float32 N×3, cols uint8 N×3).
 
@@ -122,15 +122,18 @@ def _capture_relative_depth(cap, model, infer, prep, input_size):
 
 def recover_scale_motion_parallax(cap, ser, model, prep, infer, input_size,
                                   a_cm=30.0, spd_ms=0.1, move_timeout=30.0,
-                                  timing=None):
+                                  timing=None, drive_fn=None):
     """Drive forward `a_cm`, match ORB features across the two frames, return k.
 
-    `ser` must already be connected (serial bridge / ESP32). `prep`/`infer` are
-    depth_to_3d_timed.step_prep / step_infer. Returns float k.
+    Driving: if `drive_fn` is given it is called as `drive_fn(a_cm)` (e.g.
+    slam/robot_drive.drive_forward, which uses core_control + stepper_ctrl). This
+    is the supported path — the ESP32 'F' command does not move the steppers.
+    Otherwise it falls back to the legacy `ser.write('F ...')` + wait-for-K (kept
+    only for old setups); `ser` must then be a connected pyserial handle.
 
-    If `timing` is a dict, it is filled with the phase latencies (ms):
-    `scale_capture_ms` (D1+D2 capture+infer), `move_30cm_ms` (F command -> K ack),
-    `scale_compute_ms` (ORB detect+match + k median).
+    `prep`/`infer` are depth_to_3d_timed.step_prep / step_infer. Returns float k.
+    If `timing` is a dict it is filled with phase latencies (ms): `scale_capture_ms`,
+    `move_30cm_ms`, `scale_compute_ms`.
     """
     a_m = a_cm / 100.0
 
@@ -139,17 +142,21 @@ def recover_scale_motion_parallax(cap, ser, model, prep, infer, input_size,
     d1, img1 = _capture_relative_depth(cap, model, infer, prep, input_size)
     cap_ms = (time.perf_counter() - t) * 1000.0
 
-    # Drive forward a known distance and wait for the motion-complete ack (K).
+    # Drive forward a known distance.
     t = time.perf_counter()
-    ser.write(f'F {a_m:.4f} {spd_ms:.4f}\n'.encode())
-    deadline = time.time() + move_timeout
-    buf = b''
-    while time.time() < deadline:
-        chunk = ser.read(256)
-        if chunk:
-            buf += chunk
-            if b'K' in buf:
-                break
+    if drive_fn is not None:
+        drive_fn(a_cm)                    # blocks until the move completes
+    else:
+        # Legacy fallback: 'F' command + wait for the K ack on the serial handle.
+        ser.write(f'F {a_m:.4f} {spd_ms:.4f}\n'.encode())
+        deadline = time.time() + move_timeout
+        buf = b''
+        while time.time() < deadline:
+            chunk = ser.read(256)
+            if chunk:
+                buf += chunk
+                if b'K' in buf:
+                    break
     move_ms = (time.perf_counter() - t) * 1000.0
 
     # P2

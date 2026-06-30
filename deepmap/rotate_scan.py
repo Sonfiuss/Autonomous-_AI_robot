@@ -8,19 +8,27 @@ Output: shots/ directory with images + angles.csv manifest for build_map.py.
 
 Usage:
   python rotate_scan.py                          # 12 shots × 30° with defaults
-  python rotate_scan.py --step-deg 45 --omega 0.8
+  python rotate_scan.py --step-deg 45 --hz 8000
   python rotate_scan.py --cam 1 --out-dir /tmp/scan
+
+Importable: call main(argv) with an explicit arg list (the scan360 orchestrator
+does this); main() returns (out_dir, n_captured).
 """
 
 import argparse
 import csv
 import os
+import sys
 import time
 
 import cv2
-import serial
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# Rotate through the project's own motion modules (core_control + stepper_ctrl),
+# same path as slam/robot_drive — the ESP32 'T' command does NOT move the steppers.
+sys.path.insert(0, os.path.join(ROOT, '..', 'slam'))
+import robot_drive  # noqa: E402
 
 # Firmware-authoritative physical constants (motivation/esp32_unified_controller/PinConfig.h).
 # Used only to log the EXPECTED commanded rotation alongside the measured odom theta,
@@ -35,15 +43,29 @@ def steps_for_turn(deg):
     return (ROBOT_RADIUS_M / WHEEL_RADIUS_M) * (abs(deg) / 360.0) * STEPS_PER_REV
 
 
-def parse_args():
+def parse_args(argv=None):
     p = argparse.ArgumentParser(description='Rotate robot 360° and capture depth-map frames')
     p.add_argument('--port',    default='/dev/ttyUSB0', help='ESP32 serial port')
     p.add_argument('--baud',    type=int, default=115200)
     p.add_argument('--step-deg', type=float, default=30.0,
                    help='Degrees per step (default 30 → 12 shots per full rotation)')
-    p.add_argument('--omega',   type=float, default=0.5,
-                   help='Turn speed in rad/s (default 0.5)')
+    p.add_argument('--spin-dir', choices=['left', 'right'], default='left',
+                   help='Rotation direction (left = CCW = +yaw)')
+    p.add_argument('--hz',      type=int, default=6000,
+                   help='Stepper step frequency (steps/s) = spin speed. Default 6000 '
+                        '(2× the old 3000) so the robot completes each step faster')
     p.add_argument('--cam',     type=int, default=0, help='Camera device index')
+    p.add_argument('--width',   type=int, default=1280, help='Capture width (camera max 1280)')
+    p.add_argument('--height',  type=int, default=720, help='Capture height (camera max 720)')
+    p.add_argument('--settle',  type=float, default=0.15,
+                   help='Seconds to wait after a rotation before capturing, so '
+                        'chassis vibration dies down (anti motion-blur). Default 0.15 '
+                        '(was 0.4) to shorten the dwell between steps; raise it if '
+                        'frames come out motion-blurred')
+    p.add_argument('--flush',   type=int, default=6,
+                   help='Frames to grab-and-discard before each capture, to drain '
+                        'the V4L2 ring buffer (else stale frames duplicate the view)')
+    p.add_argument('--jpeg-quality', type=int, default=95, help='JPEG save quality 1-100')
     p.add_argument('--out-dir', default=os.path.join(ROOT, 'shots'))
     p.add_argument('--connect-timeout', type=float, default=10.0,
                    help='Seconds to wait for READY from ESP32')
@@ -57,7 +79,7 @@ def parse_args():
     p.add_argument('--test-image',
                    default=os.path.join(ROOT, '..', 'depth-anything', 'assets', 'right_1.jpg'),
                    help='Image substituted for every frame in --test-round360')
-    return p.parse_args()
+    return p.parse_args(argv)
 
 
 # ── Test_round360: fixed-image rotation (no camera, no robot) ─────────────────
@@ -150,6 +172,33 @@ def send(ser, msg: str):
     ser.write(msg.encode())
 
 
+def configure_camera(cap, args):
+    """Force MJPG + full resolution + shallow buffer for sharp, high-res frames."""
+    # MJPG is the only format the camera offers at 1280x720 (YUYV tops out lower/slower).
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH,  args.width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
+    # Ask the driver for the shallowest buffer; V4L2 may ignore it, so we also
+    # grab-flush before every real read (see capture_fresh).
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print(f'Camera configured: {w}x{h} MJPG (requested {args.width}x{args.height})')
+    if (w, h) != (args.width, args.height):
+        print(f'  WARNING: driver gave {w}x{h}, not the requested resolution')
+
+
+def capture_fresh(cap, flush_n):
+    """Drain the V4L2 ring buffer, then read the genuinely-current frame.
+
+    Without this, frames buffered during the ~7s rotation are returned oldest-first,
+    so the first several shots all duplicate the start position (stale-buffer bug).
+    """
+    for _ in range(max(0, flush_n)):
+        cap.grab()
+    return cap.read()
+
+
 def write_timing_log(out_dir, timing):
     """Write per-step stats to timing_log.csv. Returns path or None if empty."""
     if not timing:
@@ -167,40 +216,39 @@ def write_timing_log(out_dir, timing):
 
 # ── Main ────────────────────────────────────────────────────────────────────────
 
-def main():
-    args = parse_args()
+def main(argv=None):
+    """Spin + capture. Returns (out_dir, n_captured); n_captured is None if the run
+    aborted before any capture (e.g. camera failed to open)."""
+    args = parse_args(argv)
     os.makedirs(args.out_dir, exist_ok=True)
 
     if args.test_round360:
         run_test_round360(args)
-        return
+        return args.out_dir, round(360.0 / args.step_deg)
 
     n_steps = round(360.0 / args.step_deg)
-    print(f'Plan: {n_steps} steps × {args.step_deg}° = 360°, ω={args.omega} rad/s')
+    print(f'Plan: {n_steps} steps × {args.step_deg}° = 360° '
+          f'(spin {args.spin_dir}, {args.hz} Hz)')
 
-    # Open camera
+    # Open camera (V4L2 backend — the default GStreamer path is slow on this Jetson)
     print(f'Opening camera {args.cam}...')
-    cap = cv2.VideoCapture(args.cam)
+    cap = cv2.VideoCapture(args.cam, cv2.CAP_V4L2)
     if not cap.isOpened():
         print(f'ERROR: Cannot open camera {args.cam}')
-        return
+        return args.out_dir, None
 
-    # Warm up camera (first frames are often dark/blurry)
+    configure_camera(cap, args)
+
+    # Warm up camera (first frames are often dark/blurry; lets auto-exposure settle)
     for _ in range(5):
         cap.read()
 
-    ser = None
-    if not args.dry_run:
-        print(f'Connecting to ESP32 on {args.port} @ {args.baud}...')
-        ser = serial.Serial(args.port, args.baud, timeout=0.1)
-        if wait_ready(ser, args.connect_timeout):
-            print('ESP32: READY')
-        else:
-            print('WARNING: READY not received — ESP32 may already be running, continuing')
-        send(ser, 'R\n')   # reset odometry
-        time.sleep(0.2)
+    if args.dry_run:
+        print('DRY RUN: motion disabled, capturing images only')
     else:
-        print('DRY RUN: UART disabled, capturing images only')
+        print(f'Rotation via core_control + stepper_ctrl on {args.port} '
+              f'(spin {args.spin_dir} {args.step_deg}°/step). '
+              f'NOTE: stepper_ctrl owns the port per step — nothing else may hold it.')
 
     manifest = []
     timing = []                 # secondary log: per-step stats for fine-tuning
@@ -208,9 +256,15 @@ def main():
 
     try:
         for i in range(n_steps):
-            # Capture frame at current position (timed)
+            # Let the chassis stop vibrating after the previous rotation before we
+            # shoot, otherwise the frame is motion-blurred (i==0 is already at rest).
+            if i > 0 and args.settle > 0:
+                time.sleep(args.settle)
+
+            # Capture frame at current position (timed). capture_fresh() flushes the
+            # stale ring buffer so the saved frame reflects the CURRENT heading.
             t_cap0 = time.perf_counter()
-            ret, frame = cap.read()
+            ret, frame = capture_fresh(cap, args.flush)
             fname = ''
             if not ret:
                 print(f'  WARNING: Camera read failed at step {i}, skipping')
@@ -218,27 +272,27 @@ def main():
             else:
                 fname = f'shot_{i:03d}.jpg'
                 fpath = os.path.join(args.out_dir, fname)
-                cv2.imwrite(fpath, frame)
+                cv2.imwrite(fpath, frame,
+                            [cv2.IMWRITE_JPEG_QUALITY, args.jpeg_quality])
                 cap_ms = (time.perf_counter() - t_cap0) * 1000.0
                 angle = cumulative_deg % 360.0
                 manifest.append((fname, f'{angle:.2f}'))
                 print(f'  [{i+1}/{n_steps}] {fname} @ {angle:.1f}°  saved')
 
-            # Rotate to next position (timed: command -> K ack)
+            # Rotate to next position via core_control + stepper_ctrl (blocks until done)
             move_ms = 0.0
             theta = None
             expected_deg = (cumulative_deg + args.step_deg) % 360.0
-            if ser is not None:
+            if not args.dry_run:
                 t_mv0 = time.perf_counter()
-                send(ser, f'T {args.step_deg:.4f} {args.omega:.4f}\n')
-                ok, theta = wait_ack(ser, args.move_timeout)
+                ok = robot_drive.drive(f'spin {args.spin_dir} {args.step_deg}',
+                                       port=args.port, hz=args.hz, verbose=False)
                 move_ms = (time.perf_counter() - t_mv0) * 1000.0
                 if not ok:
-                    print(f'  WARNING: Timeout waiting for ack at step {i}')
-                elif theta is not None:
-                    err = theta - expected_deg
-                    print(f'    odom theta={theta:.1f}° (expected {expected_deg:.1f}°, '
-                          f'err {err:+.1f}°)  move {move_ms:.0f} ms')
+                    print(f'  WARNING: rotation step {i} failed (core_control/stepper_ctrl)')
+                else:
+                    print(f'    rotated {args.step_deg:.1f}° ({args.spin_dir}) in '
+                          f'{move_ms:.0f} ms')
 
             timing.append({
                 'step': i,
@@ -256,9 +310,6 @@ def main():
             cumulative_deg += args.step_deg
 
     finally:
-        if ser is not None:
-            send(ser, 'S\n')
-            ser.close()
         cap.release()
 
     # Write manifest
@@ -282,6 +333,7 @@ def main():
                   + (f' | avg move {sum(moves)/len(moves):.0f} ms' if moves else ''))
     print(f'\nNext step:')
     print(f'  python build_map.py --shots {args.out_dir}')
+    return args.out_dir, len(manifest)
 
 
 if __name__ == '__main__':
