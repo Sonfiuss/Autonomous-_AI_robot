@@ -1,0 +1,28 @@
+# Camera extrinsics + frustum geometry (plan step A6).
+#
+# CONVENTION: ROS REP-103 body frame  ->  X = forward, Y = LEFT, Z = up.
+# The deepmap plan text quoted Y = RIGHT (+0.12). In ROS that becomes Y = -0.12.
+# The static_tf_publisher node reads these fields verbatim and publishes
+#   base_link -> camera_link  (then -> camera_optical_frame via the standard
+#   optical rotation). Flip cam_y sign here if the map mirrors left/right.
+
+base_link_to_camera:
+  cam_x: 0.10        # m forward of rotation center
+  cam_y: -0.12       # m LEFT of center  (plan: 12 cm to the RIGHT -> -0.12 in REP-103)
+  cam_z: 0.32        # m above center
+  roll_deg: 0.0
+  pitch_deg: -15.0   # nose-down (negative pitch about Y)
+  yaw_deg: 0.0
+
+frustum:
+  vertical_fov_deg: 72.0     # half-FOV = 36 deg
+  # Derived (do not edit; recompute if geometry changes):
+  #   top-center ray    : 15 - 36 = 21 deg ABOVE horizontal (sees walls/ceiling)
+  #   bottom-center ray : 15 + 36 = 51 deg BELOW horizontal
+  #   ground contact x  : 0.10 + 0.32*tan(39) ~= 0.359 m from center
+  #   near-clip (cam)   : 0.359 - 0.10       ~= 0.259 m  (26 cm)
+
+# Eccentric rotation radius during a 360 sweep:
+#   r = sqrt(0.10^2 + 0.12^2) ~= 0.156 m (15.6 cm).
+# If static objects render as arcs (not points) after a sweep, the TF above is wrong.
+eccentric_radius_m: 0.156

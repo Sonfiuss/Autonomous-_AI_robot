@@ -96,7 +96,7 @@ def step_project(depth, color_bgr, fov_deg, stride):
     # Depth Anything tra ve "do gan" (lon = gan). Dao thanh khoang cach.
     d = depth.astype(np.float32)
     d = d.max() - d
-    d = d / (d.max() + 1e-8) * 5.0 + 0.5   # ~0.5..5.5 (don vi tuong doi)
+    d = d / (d.max() + 1e-8) * 5.0 + 0.5   # ~0.5..4.03 (don vi tuong doi)
 
     ys, xs = np.mgrid[0:H:stride, 0:W:stride]
     z = d[ys, xs]

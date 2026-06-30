@@ -1,0 +1,33 @@
+# RTAB-Map parameters (plan steps A8 + Part B). Start minimal; change one at a time.
+# Loaded by slam/launch/rtabmap.launch.py.
+/rtabmap:
+  ros__parameters:
+    frame_id: base_link
+    odom_frame_id: odom
+    subscribe_depth: true
+    subscribe_rgb: true
+    subscribe_scan: false
+    approx_sync: true
+    queue_size: 20
+
+    # Detection / memory (keep small — 7.3 GB Jetson, rely on on-disk db)
+    Rtabmap/DetectionRate: "1.0"     # Hz; offset from DA-V2 to avoid GPU contention
+    Mem/IncrementalMemory: "true"
+    Mem/STMSize: "30"
+
+    # Cloud / depth (matches decisions D6 + D_max)
+    cloud_voxel_size: 0.05           # 5 cm voxels (nearest-wins grid)
+    Proj/MaxDepth: "5.0"             # D_max
+    Grid/RangeMax: "5.0"
+    Grid/3D: "true"
+
+    # Loop closure (Part B — tune in B5)
+    Kp/MaxFeatures: "400"
+    Vis/MinInliers: "15"
+    RGBD/ProximityBySpace: "true"
+    RGBD/OptimizeMaxError: "3.0"
+    Rtabmap/LoopThr: "0.11"
+
+    # 2D occupancy grid export for simulation/ (B6)
+    Grid/FromDepth: "true"
+    Grid/CellSize: "0.05"

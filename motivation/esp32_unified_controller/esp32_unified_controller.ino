@@ -50,6 +50,14 @@
 #define TILT_MAX         30.0f
 #define SERVO_SETTLE_MS  500    // settle time after absolute move
 
+// Tilt trim: mechanical 0° (PULSE_CENTER) does NOT put the camera at the intended
+// home on this robot — it sits off. This trim is added to the TILT angle ONLY at
+// the PWM output, so logical tilt=0 (boot / RESET / MOVE x 0) physically reaches
+// the correct home. Baked into firmware -> survives re-flashing (reported angle
+// stays 0). Set to the measured offset in degrees; find it by sending
+// `MOVE 0 <deg>` until the camera is level/home.
+#define TILT_TRIM_DEG    -30.0f
+
 // ─── Command types ────────────────────────────────────────────────────────────
 enum CmdType { CMD_VELOCITY, CMD_FORWARD, CMD_TURN, CMD_SERVO, CMD_STOP, CMD_RESET, CMD_WHEEL, CMD_SPIN };
 
@@ -102,6 +110,11 @@ static int angleToPulse(float deg) {
     if (p < PULSE_MIN) p = PULSE_MIN;
     if (p > PULSE_MAX) p = PULSE_MAX;
     return (int)p;
+}
+
+// Tilt output with the home trim applied (logical 0 -> physical home).
+static int tiltAngleToPulse(float deg) {
+    return angleToPulse(deg + TILT_TRIM_DEG);
 }
 
 static void setMotorVelocity(int idx, float omega_rads) {
@@ -374,7 +387,7 @@ static void ServoTask(void* pv) {
             g_pan_angle  = sc.pan  < PAN_MIN  ? PAN_MIN  : (sc.pan  > PAN_MAX  ? PAN_MAX  : sc.pan);
             g_tilt_angle = sc.tilt < TILT_MIN ? TILT_MIN : (sc.tilt > TILT_MAX ? TILT_MAX : sc.tilt);
             g_pwm.setPWM(PAN_CHANNEL,  0, angleToPulse(g_pan_angle));
-            g_pwm.setPWM(TILT_CHANNEL, 0, angleToPulse(g_tilt_angle));
+            g_pwm.setPWM(TILT_CHANNEL, 0, tiltAngleToPulse(g_tilt_angle));
 
             // Settle: hold for SERVO_SETTLE_MS without returning to velocity loop
             vTaskDelay(pdMS_TO_TICKS(SERVO_SETTLE_MS));
@@ -398,7 +411,7 @@ static void ServoTask(void* pv) {
         if (g_tilt_angle <  ANGLE_MIN) { g_tilt_angle =  ANGLE_MIN; g_tilt_vel =  fabsf(g_tilt_vel); }
 
         g_pwm.setPWM(PAN_CHANNEL,  0, angleToPulse(g_pan_angle));
-        g_pwm.setPWM(TILT_CHANNEL, 0, angleToPulse(g_tilt_angle));
+        g_pwm.setPWM(TILT_CHANNEL, 0, tiltAngleToPulse(g_tilt_angle));
 
         // Report at 50 Hz
         char buf[40];
@@ -418,7 +431,7 @@ void setup() {
     g_pwm.setPWMFreq(SERVO_FREQ_HZ);
     delay(10);
     g_pwm.setPWM(PAN_CHANNEL,  0, PULSE_CENTER);
-    g_pwm.setPWM(TILT_CHANNEL, 0, PULSE_CENTER);
+    g_pwm.setPWM(TILT_CHANNEL, 0, tiltAngleToPulse(0.f));  // home (trim applied)
 
     // Kinematics
     g_kin = new OmniKinematics(WHEEL_RADIUS_M, ROBOT_RADIUS_M);

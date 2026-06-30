@@ -62,7 +62,7 @@ def parse_args():
     p.add_argument('--n-rays',     type=int,   default=40)
     p.add_argument('--ray-step',   type=int,   default=4)
     p.add_argument('--min-lin',    type=int,   default=10)
-    p.add_argument('--r2-min',     type=float, default=0.999)
+    p.add_argument('--r2-min',     type=float, default=0.993)
     p.add_argument('--drive-blur', type=int,   default=15)
     # misc
     p.add_argument('--show', action='store_true', help='mo cua so 3D (can open3d)')
@@ -174,7 +174,7 @@ def cast_ray(depth_norm, bx, ray_step=4):
     return samples
 
 
-def find_boundary(samples, min_lin=10, r2_min=0.999):
+def find_boundary(samples, min_lin=10, r2_min=0.993):
     n = len(samples)
     if n < min_lin:
         return n - 1
@@ -193,7 +193,7 @@ def find_boundary(samples, min_lin=10, r2_min=0.999):
     return max(0, boundary)
 
 
-def compute_drive_mask(depth_norm, n_rays=40, ray_step=4, min_lin=10, r2_min=0.999):
+def compute_drive_mask(depth_norm, n_rays=40, ray_step=4, min_lin=10, r2_min=0.993):
     H, W = depth_norm.shape
     origins_x = np.linspace(0, W - 1, n_rays, dtype=int)
     boundary_pts = []

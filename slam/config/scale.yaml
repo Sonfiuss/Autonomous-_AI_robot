@@ -1,0 +1,7 @@
+k: 3.003386960047666
+d_max: 5.0
+near_clip_m: 0.26
+ground_margin_m: 0.02
+ceiling_height_m: 0.0
+calib_median_depth: 2.4388270378112793
+calib_forward_m: 0.3

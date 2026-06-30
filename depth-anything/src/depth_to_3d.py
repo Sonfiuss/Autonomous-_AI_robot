@@ -64,7 +64,7 @@ def depth_to_points(depth, color_bgr, fov_deg, stride, camera_height=0.0, tilt_d
       3. Dich chuyen Y += camera_height: dat goc toa do tai mat san
 
     tilt_deg: goc camera cui xuong so voi duong ngang (15 do = nhin xuong 15 do).
-    camera_height: don vi tuong doi (cung scale voi depth ~0.5..5.5).
+    camera_height: don vi tuong doi (cung scale voi depth ~0.5..4.03).
     """
     H, W = depth.shape
     fx = fy = (W / 2.0) / np.tan(np.deg2rad(fov_deg) / 2.0)
@@ -73,7 +73,7 @@ def depth_to_points(depth, color_bgr, fov_deg, stride, camera_height=0.0, tilt_d
     # Depth Anything tra ve "do gan" (gia tri lon = gan). Dao lai thanh khoang cach.
     d = depth.astype(np.float32)
     d = d.max() - d
-    d = d / (d.max() + 1e-8) * 5.0 + 0.5  # scale tho ~0.5..5.5
+    d = d / (d.max() + 1e-8) * 5.0 + 0.5  # scale tho ~0.5..4.03
 
     ys, xs = np.mgrid[0:H:stride, 0:W:stride]
     z = d[ys, xs]

@@ -1,0 +1,26 @@
+from setuptools import setup
+
+package_name = 'serial_bridge'
+
+setup(
+    name=package_name,
+    version='0.1.0',
+    packages=[package_name],
+    data_files=[
+        ('share/ament_index/resource_index/packages',
+         ['resource/' + package_name]),
+        ('share/' + package_name, ['package.xml']),
+    ],
+    install_requires=['setuptools'],
+    zip_safe=True,
+    maintainer='Sonfiuss',
+    maintainer_email='hthaison17@gmail.com',
+    description='ESP32 serial bridge: odom IN (/odom) + teleop OUT (/cmd_teleop).',
+    license='MIT',
+    tests_require=['pytest'],
+    entry_points={
+        'console_scripts': [
+            'serial_bridge = serial_bridge.serial_bridge_node:main',
+        ],
+    },
+)

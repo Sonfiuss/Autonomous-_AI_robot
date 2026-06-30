@@ -1,0 +1,19 @@
+# Metric-scale config for the DA-V2 depth node (plan step A4).
+#
+# This is a TEMPLATE. The depth node behaves by presence:
+#   * slam/config/scale.yaml ABSENT  -> calibration mode: publishes RAW relative
+#     inverse depth and runs the motion-parallax drive to recover `k`, then
+#     writes a real scale.yaml here.
+#   * slam/config/scale.yaml PRESENT -> mapping mode: publishes metric depth
+#     Z = k / d_relative, clamped to [near_clip, d_max].
+#
+# Do NOT copy this to scale.yaml by hand — let the calibration produce it, so `k`
+# is measured for THIS scene. Copy only to hand-set d_max/clip for a dry run.
+
+k: 1.0                 # metric constant (PLACEHOLDER; real value from calibration)
+d_max: 5.0             # far-clip in metres (DA-V2 unreliable beyond ~5 m indoors)
+near_clip_m: 0.26      # near-clip (floor contact, derived in extrinsics.yaml)
+ground_margin_m: 0.02  # drop global points with z < ground_margin (floor)
+ceiling_height_m: 0.0  # 0 = disabled; set >0 indoors to clamp ceiling
+calib_median_depth: 0.0   # median relative depth at calibration (drift warning ref)
+calib_forward_m: 0.30     # forward distance used for the parallax drive (a)

@@ -4,7 +4,7 @@
 |-------|-------|
 | Date | 2026-06-28 |
 | Module | slam (new) — RTAB-Map graph SLAM |
-| Status | planning |
+| Status | testing |
 
 ## Task
 Replace the in-place 360° / naive odometry point-cloud merge with a real graph-SLAM
@@ -387,9 +387,157 @@ Tune iteratively:
 ## Execution log
 | Time | Step | Summary |
 |------|------|---------|
-<<<<<<< HEAD
 | (planning) | — | Plan drafted, awaiting approval |
-=======
 | (planning) | — | Plan split into Part A / Part B; D1 updated to motion-parallax scale; D6 nearest-wins merge added |
 | 2026-06-28 | A4 (deepmap port) | Ported step A4 (motion-parallax metric scale) into non-ROS deepmap pipeline as a Test_round360 harness. New `deepmap/scale_calib.py` (apply_scale, project_metric, recover_scale_motion_parallax, calibrate, confirm_output_type). `--test-round360` flag on rotate_scan.py (fixed `right_1.jpg` for all 12 frames, no camera/UART) + build_map.py (skips 30 cm move, placeholder k, confirms metric-depth TYPE float32 HxW, builds PLY). | info: type path verified offline (PASS); full build_map test needs DA-V2 checkpoint on Jetson |
->>>>>>> 48cc49e6c0d117616f3daf3bbadfd095866a76ba
+| 2026-06-28 | env probe | ROS apt source `ros2.list` present; internet OK; **ros-foxy-rtabmap-ros 0.21.1 has arm64 apt candidate** — source-build fallback NOT needed. 24 GB disk / 5.4 GB RAM free. video0+video1, ttyUSB0 present. | risk retired: Foxy-EOL no-deb |
+| 2026-06-28 | A1 | Scaffolded `slam/`: env.sh (Foxy source + ROS_DISTRO guard), README, config/ (extrinsics, camera placeholder, scale.yaml.template, rtabmap.yaml). | info: extrinsics use REP-103 (cam_y=-0.12, plan said Y=right) |
+| 2026-06-28 | A5 | `serial_bridge` pkg (rclpy): exclusive /dev/ttyUSB0, reader thread `O x y theta`->/odom + TF odom->base_link, /cmd_teleop->ESP32 M/F/T/V/S, lock-guarded writer, high yaw covariance. | risk: asserts sole port ownership, exits if busy |
+| 2026-06-28 | A4 (ROS) | `depth_anything_node` (rclpy): reuses deepmap CFGS/step_prep/step_infer + scale_calib.apply_scale; /rgb/image_raw->/depth/image_raw 32FC1, copies RGB header (A7), throttle 2Hz, near-clip filter. scale.yaml present=metric / absent=calib mode. New `slam/calibrate_scale.py` standalone parallax driver -> writes scale.yaml. | info: calibrate runs port-free BEFORE bringup |
+| 2026-06-28 | A3 | `camera.launch.py`: usb_cam on /dev/video0 -> /rgb/image_raw + /rgb/camera_info, loads camera.yaml (placeholder intrinsics until checkerboard calib). | risk: placeholder fx/fy warp map until real calibration |
+| 2026-06-28 | A6 | `static_extrinsics` node: base_link->camera_link (from extrinsics.yaml) ->camera_optical_frame (fixed -90,0,-90), local euler->quat (no tf_transformations dep). | risk: optical-frame convention = classic 90deg map-rotation source |
+| 2026-06-28 | A7/A8 | `bringup.launch.py`: camera + static_extrinsics + serial_bridge + depth_anything_node + rtabmap (RGB-D, rtabmap.yaml, approx_sync, voxel 5cm, MaxDepth 5). | — |
+| 2026-06-28 | verify | py_compile PASS for all 6 py files; all config YAML parse OK; setup.py x3 OK. **colcon build NOT run — colcon not installed (needs sudo).** | BLOCKER: A2 install (rtabmap + usb_cam + cv_bridge + colcon) needs sudo |
+
+---
+
+## TEST / HANDOFF (status: testing — 2026-06-28)
+
+Part A code is fully written + statically verified (py_compile + YAML). The
+remaining steps need **sudo** (install) and **hardware** (camera/robot), so they
+are yours to run. Do them in order:
+
+### 1 — Install (BLOCKER, needs sudo)
+```bash
+sudo apt-get install -y ros-foxy-rtabmap-ros ros-foxy-image-pipeline \
+     ros-foxy-camera-calibration ros-foxy-image-transport ros-foxy-usb-cam \
+     ros-foxy-cv-bridge python3-colcon-common-extensions
+```
+
+### 2 — Build the workspace
+```bash
+source slam/env.sh
+( cd slam/ros2_ws && colcon build --symlink-install )
+source slam/env.sh
+```
+Expect: 3 packages (serial_bridge, depth_anything_node, slam_bringup) built.
+
+### 3 — Intrinsic calibration (checkerboard) → edit config/camera.yaml
+```bash
+ros2 launch slam_bringup camera.launch.py
+ros2 run camera_calibration cameracalibrator --size 8x6 --square 0.025 \
+     image:=/rgb/image_raw camera:=/rgb
+```
+
+### 4 — Metric-scale calibration (robot drives 30 cm) → writes config/scale.yaml
+```bash
+python slam/calibrate_scale.py --cam 0 --port /dev/ttyUSB0 --a-cm 30
+```
+
+### 5 — Seed map + drive
+```bash
+ros2 launch slam_bringup bringup.launch.py rtabmap_args:=--delete_db_on_start
+# drive: ros2 topic pub --once /cmd_teleop std_msgs/String "{data: 'F 0.3 0.1'}"
+```
+
+### Success criteria (Part B / B7)
+- (a) loop closure fires + corrects a known 1–2 m drift
+- (b) wall/cabinet dims within ±10% of tape measure
+- (c) no duplicate wall surfaces after a revisit (nearest-wins, D6)
+
+### Smoke checks before driving
+- `ros2 topic echo /odom` moves when you push the robot.
+- `ros2 run tf2_tools view_frames` shows odom→base_link→camera_link→camera_optical_frame.
+- `ros2 topic hz /depth/image_raw` ≈ 2 Hz; `/rgb/image_raw` flowing.
+
+### Known gaps still open (not yet built)
+- **B3 nearest-wins `cloud_merger`** (D6) — currently relying on RTAB-Map's
+  `cloud_voxel_size=0.05` only; the per-point depth-priority replacement node is
+  not written yet.
+- **A6 extrinsics sign** — `cam_y` set to −0.12 (REP-103). Confirm map isn't
+  mirrored; flip in `config/extrinsics.yaml` if it is.
+- Real intrinsics + real `k` (steps 3–4) replace the placeholders.
+
+## Build verification (2026-06-28, status: testing)
+- A2 install DONE by user: rtabmap_ros, usb_cam, cv_bridge, camera_calibration,
+  image_transport, colcon all present.
+- **colcon build PASS** — 3 pkgs (serial_bridge, depth_anything_node, slam_bringup).
+  All executables registered; both launch files installed.
+- **cv_bridge ABI-broken** vs numpy 1.24 (`cv_bridge_boost` SystemError). FIX:
+  dropped cv_bridge dep entirely; depth_node now converts Image<->numpy by hand
+  (`imgmsg_to_bgr` rgb8/bgr8, `depth_to_imgmsg` 32FC1). Rebuilt clean.
+- depth_node import test PASS (torch + deepmap pipeline + scale_calib resolve;
+  torchvision/xFormers warnings benign). DA-V2 vits checkpoint present (95 MB).
+- REMAINING (hardware, user): A3 intrinsic calib -> camera.yaml; A4 scale drive
+  -> scale.yaml; A8 seed-map launch + drive. B3 cloud_merger still unbuilt.
+
+## A3 resolved without checkerboard (2026-06-28)
+- User: mono DA-V2, no stereo -> questioned the checkerboard. Clarified: intrinsics
+  (fx/fy/cx/cy) are needed to BACK-PROJECT depth into 3D, unrelated to stereo.
+- Camera = generic "PC camera" USB webcam (max 1280x720 MJPG, no FOV datasheet).
+- DECISION: derive intrinsics from FOV instead of a checkerboard (same approx as
+  deepmap/build_map.py). New `slam/make_intrinsics.py` writes camera.yaml from
+  --hfov. Generated 60 deg @ 640x480 -> fx=fy=554.26, cx=320, cy=240, distortion=0.
+- Tradeoff logged: no distortion term, fx=fy assumption. Refine via checkerboard
+  later only if the map bows/scales wrong.
+
+## A3 camera bring-up — usb_cam replaced (2026-06-29)
+- pyserial missing -> pip3 install --user pyserial (3.5). serial_bridge +
+  calibrate_scale.py now import serial.
+- "camera not comes": ros-foxy-usb-cam SIGABRTs on stream start ("terminate after
+  throwing 'char*'") for BOTH mjpeg2rgb and yuyv2rgb on this Jetson. Not QoS
+  (publisher reliable; 0 frames to any subscriber).
+- FIX: replaced usb_cam with OpenCV node slam_bringup/cam_publisher.py. Publishes
+  /rgb/image_raw (bgr8) + /rgb/camera_info (camera.yaml), shared stamp, manual
+  Image packing (no cv_bridge). camera.launch.py launches cam_publisher; usb_cam
+  dep dropped.
+- Bugs fixed: (1) device param arrives as str '0' -> cv2 saw a filename; cast int.
+  (2) orphan usb_cam_node_exe held /dev/video0 after crashed launch -> pkill hint
+  in fatal log. (3) GStreamer backend slow/noisy -> forced cv2.CAP_V4L2 + MJPG.
+- VERIFIED: /rgb/image_raw 640x480 bgr8 ~5 Hz, /rgb/camera_info fx=554.3. PASS.
+- Stuck camera recovery: pkill -9 -f cam_publisher  (frees /dev/video0).
+
+## A4 driving rewired to project's own modules (2026-06-29)
+- User: motor didn't run on the 'F' command. Firmware (esp32_unified_controller.ino
+  L148-181) accepts M/F/T/V/C/W/S/R, but only per-motor 'W <idx> <steps> <hz>'
+  (and 'C' spin) actually drive the steppers; 'F' (CMD_FORWARD) does not.
+- Project's working chain: core-control/build/core_control "move forward 30" ->
+  per-wheel angles (W1/W2/W3 deg) -> motivation/build/stepper_ctrl W1 W2 W3 ->
+  ESP32 'W'. core_control kinematics: r=4.1cm L=14.4cm wheels 150/270/30.
+- NEW `slam/robot_drive.py`: wraps both binaries (drive("move forward 30") /
+  drive_forward(cm)). Verified parse: forward30->[-363.07,0,363.07],
+  spin right45->[-158,-158,-158]. (parse-only; no motor moved.)
+- scale_calib.recover_scale_motion_parallax: added optional `drive_fn` (backward
+  compatible); when set, used instead of legacy 'F'+wait-K. calibrate_scale.py now
+  passes drive_fn=robot_drive.drive_forward, opens NO serial (stepper_ctrl owns
+  the port for the move), V4L2 camera backend.
+- serial_bridge teleop allow-set -> C/W/S/R/V (+M/F/T legacy). Odom 'O x y theta'
+  RX unchanged (firmware still emits at 10 Hz). Rebuilt OK.
+- NEXT TEST (needs robot powered): python slam/robot_drive.py "move forward 30"
+
+## Kinematics convention bug fixed (2026-06-29)
+- Symptom: commanded "forward" drove ~off-axis (user: shifted -120 deg left).
+- Cause: KinematicsCore.cpp used d_i = dx*cos(th)+dy*sin(th). Original angles
+  150/270/30 made that EQUIVALENT to the firmware IK (th=alpha+90). When THETA was
+  edited to 60/180/300 (to match stepper/firmware labels) but the formula kept
+  (cos,sin), it desynced -> "forward" produced the LEFT wheel pattern.
+- Authoritative IK (OmniKinematics.h): w_i=(-sin(a)*vx+cos(a)*vy+L*wz)/r, a=60/180/300.
+- FIX: KinematicsCore.cpp compute() -> linear = -dx*sin(th)+dy*cos(th) (match firmware),
+  angles kept 60/180/300. Rebuilt. Verified: forward->[-270,0,+270] (W1/W3 opposite,
+  W2~0), left->[+156,-312,+156], spin->all-equal. robot_drive parses OK.
+- Note: r=5.5,L=21 now (was 4.1/14.4) so magnitudes differ from old logs.
+- If hardware STILL veers after this, remaining error is firmware-convention vs
+  physical wheel wiring (test with firmware 'M 0.1 0 0'), not core-control.
+
+## Motor direction sign flipped (2026-06-29)
+- Hardware test: stepper positive-step rolls OPPOSITE the IK convention -> robot
+  moved backward on "forward". FIX: negate whole wheel command in KinematicsCore.cpp
+  compute(): *out[i] = -(linear_deg + rot_contribution). Rebuilt.
+- Verified: forward 30 -> [+270,0,-270], back 30 -> [-270,0,+270].
+
+## Wheel radius calibrated (2026-06-29)
+- WHEEL_RADIUS_CM was 5.5 (nominal ⌀11cm). Commanded 30cm -> measured 22cm.
+- D_actual/D_cmd = r_true/r_set -> r_true = 5.5*22/30 ≈ 4.03cm (effective rolling
+  radius; omni loses travel to rollers/slip). Set WHEEL_RADIUS_CM=4.03f, rebuilt.
+- forward 30 now commands ±369 deg/wheel (was 270). Re-measure to fine-tune:
+  r_new = r_cur * (measured/30).

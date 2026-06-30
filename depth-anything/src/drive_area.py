@@ -32,11 +32,15 @@ def parse_args():
     # ray params
     p.add_argument('--n-rays', type=int, default=40,
                    help='so ray doc theo canh duoi. Default=40')
+    p.add_argument('--no-side-rays', action='store_true',
+                   help='tat ray tu nua duoi 2 canh trai/phai (chi dung canh duoi)')
+    p.add_argument('--n-side', type=int, default=12,
+                   help='so ray moi canh ben (trai/phai). Default=12')
     p.add_argument('--ray-step', type=int, default=4,
                    help='buoc lay mau tren ray (pixel). Default=4')
     p.add_argument('--min-lin', type=int, default=10,
                    help='so diem toi thieu de xac lap mo hinh tuyen tinh. Default=10')
-    p.add_argument('--r2-min', type=float, default=0.999,
+    p.add_argument('--r2-min', type=float, default=0.993,
                    help='nguong R^2 de coi la tuyen tinh (0..1). Default=0.92')
     p.add_argument('--blur', type=int, default=15,
                    help='kernel blur depth truoc khi phan tich (le). Default=15')
@@ -64,26 +68,29 @@ def preprocess_depth(depth_raw, blur_k=15):
     return d
 
 
-def cast_ray_to_top(depth_norm, bx, ray_step=4, top_cx=None):
+def cast_ray_to_top(depth_norm, ox, oy, ray_step=4, top_cx=None):
     """
-    Ban ray tu (bx, H-1) tren canh duoi huong ve trung diem canh tren (top_cx, 0).
+    Ban ray tu goc (ox, oy) tren canh anh huong ve trung diem canh tren (top_cx, 0).
+    Origin co the nam tren canh duoi HOAC nua duoi canh trai/phai.
     Tra ve: list (y, x, depth, dist_pixel)
     """
     H, W = depth_norm.shape
     if top_cx is None:
         top_cx = W // 2
 
-    # Vector huong: tu (bx, H-1) -> (top_cx, 0)
-    vx = float(top_cx - bx)
-    vy = float(0 - (H - 1))          # am = len tren
+    # Vector huong: tu (ox, oy) -> (top_cx, 0)
+    vx = float(top_cx - ox)
+    vy = float(0 - oy)               # am = len tren
     length = np.hypot(vx, vy)
+    if length < 1e-6:
+        return []
     dx, dy = vx / length, vy / length
 
     samples = []
     t = ray_step
     while True:
-        x = int(round(bx + dx * t))
-        y = int(round((H - 1) + dy * t))
+        x = int(round(ox + dx * t))
+        y = int(round(oy + dy * t))
         if not (0 <= x < W and 0 <= y < H):
             break
         samples.append((y, x, float(depth_norm[y, x]), float(t)))
@@ -121,32 +128,52 @@ def find_floor_boundary(samples, min_lin=10, r2_min=0.92):
     return max(0, boundary)
 
 
-def compute_drive_polygon(depth_norm, ray_step=4, min_lin=10, r2_min=0.92, n_rays=40):
+def compute_drive_polygon(depth_norm, ray_step=4, min_lin=10, r2_min=0.92, n_rays=40,
+                          side_rays=True, n_side=12, side_frac=0.5):
     """
-    Chay n_rays ray tu canh duoi -> trung diem canh tren.
+    Chay ray tu canh duoi VA nua duoi 2 canh trai/phai -> trung diem canh tren.
+
+    Ray tu canh duoi xac dinh ranh gioi san phia truoc; ray tu nua duoi canh
+    trai/phai bat them vat can o ben hong robot ma ray tu duoi bo sot -> xac dinh
+    pham vi vat the chinh xac hon. Tat ca ray hoi tu ve (top_cx, 0).
+
+    side_frac: phan canh ben dung lam goc ray (0.5 = nua duoi).
     Tra ve polygon va debug_rays.
     """
     H, W = depth_norm.shape
     top_cx = W // 2
+    y_mid = int(round(H * (1.0 - side_frac)))   # dau dai phia tren cua nua duoi canh ben
 
-    # Cac diem xuat phat tren canh duoi, phan bo deu
-    origins_x = np.linspace(0, W - 1, n_rays, dtype=int)
+    # Goc xuat phat: canh duoi (deu) + nua duoi canh trai/phai
+    origins = [(int(x), H - 1) for x in np.linspace(0, W - 1, n_rays, dtype=int)]
+    if side_rays:
+        for oy in np.linspace(y_mid, H - 2, n_side, dtype=int):
+            origins.append((0,     int(oy)))     # canh trai, nua duoi
+            origins.append((W - 1, int(oy)))     # canh phai, nua duoi
 
-    boundary_pts = []
-    debug_rays   = []
-
-    for bx in origins_x:
-        samples = cast_ray_to_top(depth_norm, int(bx), ray_step, top_cx)
+    debug_rays = []
+    scored     = []   # (phi, (bx, by)) — phi = goc cua origin quanh diem hoi tu
+    for ox, oy in origins:
+        samples = cast_ray_to_top(depth_norm, ox, oy, ray_step, top_cx)
         if not samples:
             continue
         bi = find_floor_boundary(samples, min_lin, r2_min)
-        by, bx_b = samples[bi][0], samples[bi][1]
-        boundary_pts.append((bx_b, by))
-        debug_rays.append({'samples': samples, 'boundary_idx': bi, 'origin_x': int(bx)})
+        bx_b, by_b = samples[bi][1], samples[bi][0]
+        phi = float(np.arctan2(ox - top_cx, oy + 1e-6))   # sweep trai(-)->phai(+)
+        scored.append((phi, (bx_b, by_b)))
+        debug_rays.append({'samples': samples, 'boundary_idx': bi,
+                           'origin_x': ox, 'origin_y': oy})
 
-    # Polygon: canh duoi trai -> boundary (trai->phai) -> canh duoi phai
-    polygon = [(0, H - 1)] + boundary_pts + [(W - 1, H - 1)]
-    return np.array(polygon, dtype=np.int32), debug_rays
+    scored.sort(key=lambda s: s[0])
+    frontier = [pt for _, pt in scored]
+
+    # Dong polygon doc canh anh phia duoi: phai-xuong -> day -> trai-len
+    if side_rays:
+        border = [(W - 1, y_mid), (W - 1, H - 1), (0, H - 1), (0, y_mid)]
+    else:
+        border = [(W - 1, H - 1), (0, H - 1)]
+    polygon = np.array(frontier + border, dtype=np.int32)
+    return polygon, debug_rays
 
 
 def draw_result(img_bgr, polygon, debug_rays, depth_norm, alpha=0.50):
@@ -230,6 +257,7 @@ def main():
         depth_norm,
         ray_step=args.ray_step, min_lin=args.min_lin,
         r2_min=args.r2_min, n_rays=args.n_rays,
+        side_rays=not args.no_side_rays, n_side=args.n_side,
     )
 
     combined, _ = draw_result(img, polygon, debug_rays, depth_norm, args.alpha)

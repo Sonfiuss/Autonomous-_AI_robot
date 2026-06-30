@@ -17,8 +17,13 @@
  */
 namespace kinematics {
 
-constexpr float WHEEL_RADIUS_CM = 4.1f;
-constexpr float WHEEL_DIST_CM   = 14.4f;
+// EFFECTIVE rolling radius, calibrated from measurement — NOT the nominal
+// geometric radius (4.03 cm = ⌀11 cm wheel). Omni wheels lose travel to passive
+// rollers/slip, so the effective radius is smaller. Calibrate as:
+//   r_eff = r_old * (measured_distance / commanded_distance)
+// 2026-06-29: commanded 30 cm -> measured 22 cm at r=4.03 -> r_eff = 4.03*22/30 ≈ 4.03.
+constexpr float WHEEL_RADIUS_CM = 4.03f;
+constexpr float WHEEL_DIST_CM   = 21.0f;   // robot center -> wheel contact (rotation scale)
 
 // Degrees each wheel must rotate to execute the command.
 // Positive = forward spin direction for that wheel.

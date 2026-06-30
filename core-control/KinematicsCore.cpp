@@ -10,14 +10,17 @@ static constexpr float DEG2RAD = M_PI / 180.f;
 static constexpr float RAD2DEG = 180.f / M_PI;
 
 static constexpr float THETA[3] = {
-    150.f * DEG2RAD,   // W1
-    270.f * DEG2RAD,   // W2
-     30.f * DEG2RAD,   // W3
+    60.f * DEG2RAD,   // W1
+    180.f * DEG2RAD,   // W2
+    300.f * DEG2RAD,   // W3
 };
 
 WheelAngles compute(const Command& cmd) {
-    // Translation contribution per wheel (cm of wheel arc)
-    // d_i = dx·cos(θi) + dy·sin(θi)
+    // Translation contribution per wheel (cm of wheel arc). MUST match the ESP32
+    // firmware inverse kinematics (OmniKinematics.h), or commanded motion comes
+    // out rotated off-axis:
+    //   ω_i = (−sin(α_i)·vx + cos(α_i)·vy + L·ω_z) / r   with α = 60/180/300
+    // d_i = −dx·sin(θi) + dy·cos(θi)   (NOT cos/sin — that rotates motion by 90°)
     // → wheel rotation = d_i / r  (rad)  × RAD2DEG  (deg)
 
     // Rotation contribution: each wheel travels rotate_rad × L tangentially
@@ -30,10 +33,13 @@ WheelAngles compute(const Command& cmd) {
     float* out[3] = { &wa.w1_deg, &wa.w2_deg, &wa.w3_deg };
 
     for (int i = 0; i < 3; ++i) {
-        float linear_cm = cmd.dx_cm * std::cos(THETA[i])
-                        + cmd.dy_cm * std::sin(THETA[i]);
+        float linear_cm = -cmd.dx_cm * std::sin(THETA[i])
+                        +  cmd.dy_cm * std::cos(THETA[i]);
         float linear_deg = (linear_cm / WHEEL_RADIUS_CM) * RAD2DEG;
-        *out[i] = linear_deg + rot_contribution;
+        // stepper positive-step direction is wired OPPOSITE the IK roll
+        // convention, so negate the whole command (translation + rotation).
+        // Verified on hardware 2026-06-29.
+        *out[i] = -(linear_deg + rot_contribution);
     }
 
     return wa;
@@ -44,9 +50,9 @@ void printResult(const Command& cmd, const WheelAngles& wa) {
     printf("  Command  : dx=%.1f cm  dy=%.1f cm  rot=%.1f°\n",
            cmd.dx_cm, cmd.dy_cm, cmd.rotate_deg);
     printf("─────────────────────────────────────\n");
-    printf("  W1 (150°): %+8.2f °\n", wa.w1_deg);
-    printf("  W2 (270°): %+8.2f °\n", wa.w2_deg);
-    printf("  W3 ( 30°): %+8.2f °\n", wa.w3_deg);
+    printf("  W1 (60°): %+8.2f °\n", wa.w1_deg);
+    printf("  W2 (180°): %+8.2f °\n", wa.w2_deg);
+    printf("  W3 (300°): %+8.2f °\n", wa.w3_deg);
     printf("─────────────────────────────────────\n");
 }
 
