@@ -2,6 +2,60 @@
 
 Actions taken beyond the literal request are recorded here for transparency.
 
+## 2026-07-02 — metric stereo calibration (B=5.4cm) + rectified stereo_ruler
+- User gave baseline 5.4cm and asked for metric labels. Sanity check exposed that the
+  naive Z=fB/disp was wrong: the rig is toed-in (yaw +2.14°, tilt +3.61°) with a tilted
+  baseline (right cam +4.8cm right AND +2.5cm down) -> slanted epipolar lines. Also both
+  chessboards sat at ~0.9m, so the earlier "translation consistent across depth" check
+  had no real depth spread (corrected in memory).
+- Created `stereo-camera/tools/stereo_calibrate_2view.py` (stereoCalibrate anchored by
+  |T|=baseline; fx=1124px joint estimate; stereoRectify alpha=-1 — alpha=0 degenerates,
+  focal explodes to 166k px) -> `stereo-camera/calib/stereo_rectify.yml`, f·B=60.69.
+- Rewrote stereo_ruler.py normalize step to full rectification (remap both images +
+  mono map; warp fallback kept with a metric warning). Labels now in metres and
+  physically plausible (wall 1.2m, bottle ~1m, clamp 0.72m vs board 0.91m same table).
+- Caveat logged: fx from 4 planar views ~±15% -> all Z scale together; one hand-measured
+  distance would pin it. Estimated square size 4.37cm.
+
+## 2026-07-02 — stereo_ruler.py pilot (pair 3, golden points, DA-V2 scale)
+- User requested + approved: created `depth-anything/src/stereo_ruler.py` (the module the
+  stereo-ruler task file specifies), ran it on left.jpg/righ.jpg. Result: 51 golden points,
+  24 inliers, d_mono = 0.0970*disp + 0.582, rms 0.085. Outputs in
+  `depth-anything/output/stereo_ruler/` (scale.yml, golden_points.csv, overlay, scatter,
+  right_aligned.jpg, pseudo_disparity.npy + vis).
+- Beyond literal request: retuned matcher after a weak first pass (12 pts) — d_max 96->140,
+  ±1-row search, 16x10 bucketing, ncc 0.70; added --fb flag reserved for the metric f·B
+  constant (user chose "later"); updated the stereo-ruler task file to executing with log.
+- Interpretation note: "scale of the right picture" delivered in disparity units
+  (Z ∝ 1/disp_px); metres require f·B. The (s,t) fit absorbs any constant mounting
+  x-offset, but metric conversion later must account for it (solve with 2 known distances).
+
+## 2026-07-02 — chessboard alignment tool (align_from_chessboard.py)
+- User requested the tool; plan approved. Created `stereo-camera/tools/align_from_chessboard.py`
+  + `stereo-camera/calib/alignment.yml` + `captures/align_check_pair1/2.jpg` debug overlays,
+  task file `agent/tasks/2026-07-02_chessboard-align-tool.md` (status testing).
+- Beyond literal request: added `warp_stereo` variant + `--apply --stereo` flag (keeps the
+  horizontal offset because it is the disparity/depth signal — principle from the 2026-06-23
+  finding that the old 210px chessboard config was depth-contaminated). Wrote test outputs
+  `captures/righ_aligned.jpg` and `righ_aligned_stereo.jpg`.
+- Design note: a planar board fits ANY integer-square grid mismatch equally well, so the
+  tool disambiguates the L/R grid correspondence with an ORB prior on the full scene.
+- Updated memory `project_stereo_alignment` with the new numbers (dy=+102.6px, rot=+1.17°,
+  dx=+14.3px ≈ true disparity; old 88.5px room measurement differs by ~14px → possible rig
+  shift between 06-23 and 06-27).
+
+## 2026-07-02 — depth-review bugfix (B1–B3)
+- User approved fixing the top-3 issues from the depth-pipeline review; edits applied to
+  `deepmap/scale_calib.py` (apply_scale: far points -> 0.0 invalid instead of d_max clamp)
+  and `deepmap/build_map.py` (--h-max ceiling cutoff; BEV point/class accumulation kept
+  alive on the open3d branch).
+- Beyond literal request: created protocol task file
+  `agent/tasks/2026-07-02_depth-review-bugfix.md` (status testing); ran py_compile +
+  a numpy-only unit check of apply_scale on the Windows dev machine (full run needs
+  the DA-V2 checkpoint on the Jetson).
+- Interpretation note: "3 issue" read as review items B1/B2/B3 (the three ranked most
+  severe). B4 (cam_offset sign), B5 (mirrored map), B6 (FOV mismatch) left untouched.
+
 ## 2026-06-28 — deepmap Test_round360 harness (plan step A4 port)
 - Created `deepmap/scale_calib.py` (motion-parallax metric-scale step A4 ported from the
   RTAB-Map plan to the non-ROS deepmap pipeline).

@@ -33,13 +33,18 @@ TEST_K = 1.0
 # ── Core conversions ──────────────────────────────────────────────────────────
 
 def apply_scale(rel_depth, k, d_max):
-    """Relative inverse depth -> metric depth (metres), clamped to [0, D_max].
+    """Relative inverse depth -> metric depth (metres).
+
+    Points farther than D_max are set to 0.0 (invalid — the ROS depth-image
+    convention) rather than clamped: clamping piles every far/sky pixel onto a
+    fake spherical shell at exactly D_max. The 0.0 markers are dropped by the
+    consumers' near-clips (project_metric >= 0.26 m, depth_node near_clip).
 
     Returns float32 array, same H×W as `rel_depth`.
     """
     rel = np.asarray(rel_depth, dtype=np.float32)
     metric = k / np.maximum(rel, 1e-6)
-    np.clip(metric, 0.0, d_max, out=metric)
+    metric[metric > d_max] = 0.0
     return metric.astype(np.float32)
 
 

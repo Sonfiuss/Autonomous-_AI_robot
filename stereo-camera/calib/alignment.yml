@@ -1,0 +1,51 @@
+%YAML:1.0
+---
+direction: "warp maps RIGHT image into LEFT frame (cv2.warpAffine)"
+date: "2026-07-02"
+image_width: 1280
+image_height: 720
+warp: !!opencv-matrix
+   rows: 2
+   cols: 3
+   dt: d
+   data: [ 0.9960553543960482, -0.020407648158816884, 24.142382797173536,
+       0.020407648158816884, 0.9960553543960482, 90.932227958513437 ]
+warp_stereo: !!opencv-matrix
+   rows: 2
+   cols: 3
+   dt: d
+   data: [ 0.9960553543960482, -0.020407648158816884, 9.871326523703214,
+       0.020407648158816884, 0.9960553543960482, 90.932227958513437 ]
+dx_center_px: 14.271056273470322
+dy_center_px: 102.57305036273362
+rotation_deg: 1.1737385216807303
+scale: 0.99626439318306026
+translation_consistent_across_depth: 1
+num_pairs: 2
+pair1_images: "chessboard_left1.jpg | chessboard_right1.jpg"
+pair1_warp: !!opencv-matrixgolden_overlay.jpg
+   rows: 2
+   cols: 3
+   dt: d
+   data: [ 0.98144323422877733, -0.021358244956487627,
+       36.138559168394067, 0.021358244956487627, 0.98144323422877733,
+       95.365533449800722 ]
+pair1_dx: 16.573260890476035
+pair1_dy: 102.35437454431269
+pair1_rotation_deg: 1.2466784868997649
+pair1_scale: 0.98167560662423714
+pair1_rms_px: 1.0925513093422838
+pair1_inliers: 82
+pair2_images: "chessboard_left2.jpg | chessboard_right2.jpg"
+pair2_warp: !!opencv-matrix
+   rows: 2
+   cols: 3
+   dt: d
+   data: [ 1.0106674745633191, -0.019457051361146137, 12.146206425953006,
+       0.019457051361146137, 1.0106674745633191, 86.498922467226137 ]
+pair2_dx: 11.968851656464608
+pair2_dy: 102.7917261811545
+pair2_rotation_deg: 1.1029040287284926
+pair2_scale: 1.0108547477199024
+pair2_rms_px: 0.70469003291121068
+pair2_inliers: 98

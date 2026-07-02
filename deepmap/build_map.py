@@ -100,6 +100,9 @@ def parse_args(argv=None):
     p.add_argument('--h-obs', type=float, default=0.10,
                    help='height above floor plane > this = obstacle (m). Lower to catch '
                         'shorter objects. Default 0.10')
+    p.add_argument('--h-max', type=float, default=2.0,
+                   help='ignore points higher above the floor than this (ceiling / over '
+                        'robot head) instead of marking them obstacle (m). Default 2.0')
     p.add_argument('--bottom-frac', type=float, default=0.30,
                    help='bottom fraction of each frame used as the floor seed for the '
                         'plane fit (--classify height). Default 0.30')
@@ -187,12 +190,15 @@ def fit_floor_plane_svd(floor_pts, max_samples=2000):
     return normal, centroid
 
 
-def classify_height(pts, keep, depth_shape, stride, bottom_frac, h_floor, h_obs):
+def classify_height(pts, keep, depth_shape, stride, bottom_frac, h_floor, h_obs,
+                    h_max):
     """Label each KEPT point by height above the floor plane.
 
     Floor seed = bottom `bottom_frac` rows of the frame (robust to camera pitch:
     we fit whatever plane those points lie on, then measure signed distance to it,
     re-fitting once on inliers to shed any obstacle that crept into the seed band).
+    Obstacle only within (h_obs, h_max] — higher points (ceiling, things over the
+    robot's head) stay unknown, same semantics as obstacle_grid.classify.
     Returns uint8 array (len = #kept points): 0=unknown, 1=floor, 2=obstacle."""
     H, W = depth_shape
     ys = np.arange(0, H, stride)
@@ -215,7 +221,7 @@ def classify_height(pts, keep, depth_shape, stride, bottom_frac, h_floor, h_obs)
 
     cls = np.zeros(len(pts), dtype=np.uint8)
     cls[np.abs(height) <= h_floor] = 1
-    cls[height > h_obs] = 2
+    cls[(height > h_obs) & (height <= h_max)] = 2
     return cls
 
 
@@ -332,7 +338,8 @@ def main(argv=None):
         if height_mode:
             with Timer(device) as tms:
                 cls = classify_height(pts, keep, depth.shape, args.stride,
-                                      args.bottom_frac, args.h_floor, args.h_obs)
+                                      args.bottom_frac, args.h_floor, args.h_obs,
+                                      args.h_max)
             ms_ms = tms.ms
             if not args.no_class_color:
                 cols = color_by_cls(cols, cls)
@@ -356,6 +363,11 @@ def main(argv=None):
             wpts = transform_to_world(pts, angles[f] + cam_yaw, args.cam_offset)
             if o3d is not None:
                 o3d_clouds.append(to_o3d(o3d, wpts, cols))
+                if height_mode:
+                    # BEV needs per-point classes, which the o3d merge cannot
+                    # carry — keep the classified raw points alongside.
+                    all_pts.append(wpts)
+                    all_cls.append(cls)
             else:
                 all_pts.append(wpts)
                 all_cols.append(cols)
