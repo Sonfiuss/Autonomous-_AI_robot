@@ -18,6 +18,14 @@ Pipeline (task 2026-07-02_stereo-ruler-mono-scale, steps 2-6):
 Usage:
   python3 stereo_ruler.py                     # defaults: pair 3 (left.jpg / righ.jpg)
   python3 stereo_ruler.py --left L.jpg --right R.jpg --fb 0.06
+
+Accuracy correction (anchors): auto golden points tend to cluster near-field,
+so the RANSAC affine fit extrapolates poorly to far distances. Measure a few
+real distances (near AND far) with a tape, note their pixel (x, y) in
+golden_overlay.jpg, put them in a CSV (x,y,z_m) and pass --anchors:
+  python3 stereo_ruler.py --anchors my_anchors.csv
+Anchors are shown as yellow squares in golden_overlay.jpg with both the
+fitted and measured distance, so you can check the correction worked.
 """
 import argparse
 import csv
@@ -187,6 +195,35 @@ def infer_mono(right_bgr, encoder, input_size, device_choice):
 
 
 # ---------------------------------------------------------------- scale fit --
+def load_anchors(path, fb, mono, w, h):
+    """Manual ground-truth points: x,y (left-rectified frame, as seen in
+    golden_overlay.jpg) + z_m (real measured distance). Used to correct the
+    affine fit across the FULL depth range, since auto golden points tend to
+    cluster near-field and the fit then extrapolates badly at far distances.
+    Returns list of dicts matching the golden_points() schema (disp, d_mono).
+    """
+    if fb is None or not fb:
+        sys.exit("[ruler] --anchors requires --fb (or stereo_rectify.yml) to "
+                 "convert real z_m into an expected disparity.")
+    out = []
+    with open(path, newline="") as f:
+        for row in csv.DictReader(f):
+            x, y, z_m = float(row["x"]), float(row["y"]), float(row["z_m"])
+            if z_m <= 0:
+                continue
+            disp_a = fb / z_m
+            xr = x - disp_a
+            xri, yi = int(round(xr)), int(round(y))
+            if not (0 <= xri < w and 0 <= yi < h):
+                print(f"[ruler] anchor ({x:.0f},{y:.0f} z={z_m}m) -> xr={xr:.1f} "
+                      f"out of bounds, skipped")
+                continue
+            out.append({"x": x, "y": y, "xr": float(xr), "disp": float(disp_a),
+                        "ncc": 1.0, "d_mono": float(mono[yi, xri]),
+                        "z_m": z_m, "anchor": True})
+    return out
+
+
 def fit_affine_ransac(disp, mono, iters=3000, seed=0):
     """Robust d_mono = s*disp + t. Returns (s, t, inlier_mask, rms, thresh)."""
     disp = np.asarray(disp, np.float64)
@@ -222,6 +259,31 @@ def fit_affine_ransac(disp, mono, iters=3000, seed=0):
     return float(s), float(t), best, rms, thresh
 
 
+def refit_with_anchors(disp, mono, inl, s0, t0, n_anchors, anchor_weight=5.0):
+    """Weighted least-squares refit: RANSAC-inlier auto points (weight 1) plus
+    manual anchors (last n_anchors rows of disp/mono, weight anchor_weight).
+    Anchors are real measured distances spanning near+far, so they pull the
+    fit's (s, t) to match the true depth range instead of only the near-field
+    cluster the automatic golden points tend to find.
+    """
+    n = len(disp)
+    mask = best = inl.copy()
+    if n_anchors:
+        mask = np.concatenate([inl, np.ones(n_anchors, dtype=bool)])
+    w = np.ones(mask.sum())
+    if n_anchors:
+        w[-n_anchors:] = anchor_weight
+    d = disp[mask]
+    m = mono[mask]
+    sw = np.sqrt(w)
+    A = np.stack([d, np.ones_like(d)], axis=1) * sw[:, None]
+    b = m * sw
+    s, t = np.linalg.lstsq(A, b, rcond=None)[0]
+    r = np.abs(mono - (s * disp + t))
+    rms = float(np.sqrt(np.mean((r[mask] * w / w.max()) ** 2)))
+    return float(s), float(t), rms
+
+
 # -------------------------------------------------------------------- output --
 def _point_distance(disp, fb):
     """Distance at a golden point. Metric metres if fb given, else relative
@@ -243,16 +305,23 @@ def _overlay(left_bgr, golden, inliers, fb=None):
             norm = 1.0 / _point_distance(max(inl_disp), None)
     font = cv2.FONT_HERSHEY_SIMPLEX
     for g, ok in zip(golden, inliers):
+        is_anchor = g.get("anchor", False)
         u = (g["disp"] - lo) / (hi - lo)
         color = tuple(int(c) for c in cv2.applyColorMap(
             np.array([[int(u * 255)]], np.uint8), cv2.COLORMAP_JET)[0, 0])
         x, y = int(g["x"]), int(g["y"])
-        cv2.circle(out, (x, y), 6, color, 2)
+        if is_anchor:
+            cv2.drawMarker(out, (x, y), (0, 255, 255), cv2.MARKER_SQUARE, 14, 2)
+        else:
+            cv2.circle(out, (x, y), 6, color, 2)
         if not ok:
             cv2.line(out, (x - 8, y - 8), (x + 8, y + 8), (0, 0, 255), 2)
             continue                               # label only inlier points
         if fb and g["disp"] < 2.0:
             label = "far"              # <2px disparity: distance unresolvable
+        elif is_anchor:
+            dist = _point_distance(g["disp"], fb) * norm
+            label = f"{dist:.2f}{unit} (meas {g['z_m']:.2f})"
         else:
             dist = _point_distance(g["disp"], fb) * norm
             label = f"{dist:.2f}{unit}" if fb else f"{dist:.2f}"
@@ -309,6 +378,14 @@ def main():
                         "from stereo_rectify.yml (fx 1124px * B 0.054m = "
                         "60.69). Pass 0 for relative units.")
     p.add_argument("--out-dir", default=str(_DEF_OUT))
+    p.add_argument("--anchors", default=None,
+                   help="CSV (x,y,z_m) of manually measured real distances, in "
+                        "the left-rectified frame (pixel coords as shown in "
+                        "golden_overlay.jpg). Span near AND far to correct the "
+                        "affine fit's extrapolation. Requires --fb.")
+    p.add_argument("--anchor-weight", type=float, default=5.0,
+                   help="relative weight of each anchor vs. an auto golden "
+                        "inlier in the refit (default 5)")
     args = p.parse_args()
 
     left = cv2.imread(args.left)
@@ -371,10 +448,29 @@ def main():
     disp = np.array(disp)
     dmono = np.array(dmono)
 
-    # 4 — robust affine fit: the ruler
+    # 4 — robust affine fit: the ruler (auto golden points only)
     s, t, inl, rms, thr = fit_affine_ransac(disp, dmono)
     print(f"[ruler] d_mono = s*disp + t : s={s:.5f}  t={t:.4f}  "
           f"inliers={int(inl.sum())}/{len(golden)}  rms={rms:.4f} (thr={thr:.4f})")
+
+    n_anchors = 0
+    if args.anchors:
+        anchors = load_anchors(args.anchors, fb, mono, w, h)
+        n_anchors = len(anchors)
+        if n_anchors:
+            disp = np.concatenate([disp, [a["disp"] for a in anchors]])
+            dmono = np.concatenate([dmono, [a["d_mono"] for a in anchors]])
+            golden = golden + anchors
+            inl = np.concatenate([inl, np.zeros(n_anchors, dtype=bool)])
+            s, t, rms = refit_with_anchors(disp, dmono, inl, s, t, n_anchors,
+                                            args.anchor_weight)
+            inl = np.concatenate([inl[:-n_anchors], np.ones(n_anchors, dtype=bool)])
+            print(f"[ruler] refit with {n_anchors} anchor(s) (weight="
+                  f"{args.anchor_weight}): s={s:.5f}  t={t:.4f}  rms={rms:.4f}")
+        else:
+            print("[ruler] no usable anchors (all out of bounds) — keeping "
+                  "auto-only fit")
+
     print(f"[ruler] pseudo-disparity of ANY right pixel: disp_px = (d_mono - t) / s")
     if fb:
         print(f"[ruler] metric: Z[m] = {fb:.4f} / disp_px")
@@ -385,10 +481,15 @@ def main():
     # 5 — outputs
     with open(out_dir / "golden_points.csv", "w", newline="") as f:
         wr = csv.DictWriter(f, fieldnames=["x", "y", "xr", "disp", "ncc",
-                                           "d_mono", "inlier"])
+                                           "d_mono", "inlier", "anchor", "z_m"],
+                            extrasaction="ignore")
         wr.writeheader()
         for g, ok in zip(golden, inl):
-            wr.writerow({**{k: f"{v:.3f}" for k, v in g.items()}, "inlier": int(ok)})
+            row = {k: (f"{v:.3f}" if isinstance(v, float) else v)
+                   for k, v in g.items()}
+            row["inlier"] = int(ok)
+            row.setdefault("anchor", 0)
+            wr.writerow(row)
 
     cv2.imwrite(str(out_dir / "golden_overlay.jpg"),
                 _overlay(left, golden, inl, fb=fb))
@@ -416,6 +517,7 @@ def main():
     fs.write("rms", rms)
     fs.write("encoder", args.encoder)
     fs.write("fb", fb if fb else 0.0)
+    fs.write("anchors", n_anchors)
     fs.release()
     print(f"[ruler] outputs -> {out_dir}")
 
