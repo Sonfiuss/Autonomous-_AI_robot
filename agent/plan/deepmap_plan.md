@@ -104,3 +104,75 @@ is TILT, not pan; pan left unchanged). Baked into
 firmware => survives flashing. User sets PAN_TRIM_DEG to measured offset, flash once.
 Software `--cam-yaw-deg` in build_map remains for map-side fine-tune (360° scan
 coverage is unaffected by the offset regardless).
+
+### Explore-and-map loop added (2026-07-01) — `deepmap/explore_map.py`
+Autonomous explore: robot drives toward the LARGEST reachable free area, stops
+every `--step-cm` (30cm default), captures image+depthmap, and merges each view
+into one growing global PLY (`output/explore_map.ply`, saved incrementally).
+- Reuses (no copied logic): `obstacle_grid` (BEV occupancy + flood reachability →
+  pick area via `goal_from_bev`), `slam/robot_drive` (forward + spin), `rotate_scan`
+  (camera open + fresh-frame), `depth_to_3d`/`merge_360` (3D + PLY/ICP).
+- NEW geometry: `Pose` dead-reckons world (x,z,yaw) from commanded moves;
+  `transform_to_world_pose` = merge_360.transform_to_world (yaw+cam_offset) PLUS
+  robot translation, so moving captures land at the right world position.
+- Stop rule (v1): `--max-steps` / `--max-dist-m` cap, plus halt if largest area
+  < `--min-free-cells` or the cell straight ahead isn't confirmed free (safety).
+- Validated offline (`--test-explore`): 4-step run accumulates pose
+  (0,0,0°)→(0.42,1.11,33°), 1.20m, clouds fan out into world frame correctly.
+- KNOWN LIMIT: no encoder/IMU → drift on long runs; `--voxel` enables ICP merge.
+  Untested on hardware as of this entry.
+
+### explore_map merge fix (2026-07-01) — duplicate-shell collapse
+Symptom: explore map came out as ~3 separate concentric shells. Cause:
+Depth-Anything depth is per-frame non-metric (each frame self-normalises scale),
+so the same surface lands at a different radius each capture → overlapping shells;
+dead-reckon translation spreads them. Raw vstack kept all → all visible.
+Fix (user's rule "lấy point gần nhất"): `nearest_merge` — spherical z-buffer that
+bins points by (azimuth, elevation) from a viewpoint and keeps only the NEAREST
+per cell. New flags: `--merge nearest|all` (default nearest), `--ang-res 0.3`,
+`--view-from mean|start|last`. Per-capture camera origins recorded as viewpoints.
+Validated: 3-step straight run 691200 pts → 29430 pts (one surface).
+LIMIT: single viewpoint — fine while the robot stays near one vantage; over a long
+multi-room run a per-segment viewpoint (or true per-frame metric scale via
+scale_calib) would be the next step.
+
+### explore_map merge fix v2 (2026-07-01) — metric floor-anchor (the real cause)
+v1 z-buffer was wrong tool: the "1 box → 3 copies" are SPATIALLY-OFFSET duplicates
+(mis-registration), not concentric shells, so per-direction nearest can't merge them.
+Also: open3d is NOT installed on this Jetson → merge_360.icp_merge / --voxel(open3d)
+never ran. Root cause = per-frame non-metric depth (each frame own scale + own floor
+tilt) → same object placed at different world spots.
+Fix (no open3d): `level_and_scale` — per frame fit floor (depth_to_3d.fit_floor_plane),
+rotate floor→horizontal (Rodrigues `_rot_to_up`), scale so camera = --camera-height
+above floor. Every frame becomes metric + gravity-aligned → captures overlap. Default
+ON via --metric-floor (--no-metric-floor reverts to fixed --tilt/--scale). Bonus:
+obstacle_grid thresholds (h_obs etc.) now real metres. depth_to_points called with
+tilt=0/height=0 (true tilt derived from floor fit). New numpy `voxel_dedup` (default
+--voxel 0.02) replaces open3d downsample. --merge default now 'all' (frames already
+aligned); 'nearest' kept as option. Residual error = dead-reckon pose drift only.
+Verified offline: per-frame scale now consistent (1.40/1.38/1.40 vs wild before).
+
+### stereo_walk_map added (2026-07-04) — stereo-metric walk, replaces floor-anchor scale
+`deepmap/stereo_walk_map.py`: straight-line walk (default 3 stops × 30 cm); each
+stop captures a STEREO pair and runs the stereo-ruler pipeline for METRIC depth
+(f*B from the 5.4 cm baseline), so every frame shares the same real-metre scale
+by construction — no more per-frame `level_and_scale` scale guessing.
+- stereo_ruler.py refactored for import: `load_model()` (DA-V2 loaded once),
+  `load_rectify()` → namespace incl. fx/fy/cx/cy from P2 (back-projection K),
+  `compute_metric_depth(left, right, calib, model)` → (Z_m, valid, info).
+- Floor plane still fitted per frame but ROTATION-ONLY (`level_to_floor`): levels
+  the ~13° camera tilt + puts floor at Y=0; `--no-level` to disable.
+- Merge chain reused from explore_map: incremental concat saves → final
+  `icp_merge_clouds` (open3d) → `voxel_dedup` → `output/stereo_walk/walk_map.ply`.
+- Calibration frame is 1280×720 (stereo_rectify.yml) — walk defaults match; a
+  size mismatch between shot and calib raises immediately.
+- Offline `--test` (same saved pair each stop) PASSED; hardware 3-stop run pending
+  (task 2026-07-04_stereo-walk-map, status testing).
+
+### explore_map merge v3 (2026-07-01) — open3d ICP enabled
+User installed open3d 0.16.0. Added `--merge icp` (now default): point-to-plane ICP
+(merge_360.icp_merge) refines the residual dead-reckon pose drift AFTER metric
+floor-anchoring has fixed scale+level, then merges. Runs once on the FINAL save
+(incremental saves stay cheap concat). Falls back to concat if open3d missing.
+Verified offline: icp fitness 0.93→1.00, rmse ~0.012-0.018. numpy --voxel still
+applied after. Modes: icp(default) | all | nearest.

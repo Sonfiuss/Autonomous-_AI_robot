@@ -29,9 +29,11 @@ fitted and measured distance, so you can check the correction worked.
 """
 import argparse
 import csv
+import glob
 import os
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import cv2
@@ -43,6 +45,14 @@ _DEF_LEFT = _REPO / "stereo-camera" / "tools" / "captures" / "left.jpg"
 _DEF_RIGHT = _REPO / "stereo-camera" / "tools" / "captures" / "righ.jpg"
 _DEF_ALIGN = _REPO / "stereo-camera" / "calib" / "alignment.yml"
 _DEF_OUT = _DA_ROOT / "output" / "stereo_ruler"
+
+# Live-camera defaults (match area-detection/capture_chessboard.py): left=video0,
+# right=video2, 640x480. Used when --camera is passed instead of --left/--right.
+_LEFT_IDX = 0
+_RIGHT_IDX = 2
+_CAM_W = 640
+_CAM_H = 480
+_CAM_WARMUP = 5
 
 _CFGS = {
     'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
@@ -68,6 +78,11 @@ def load_rectify(path, size):
     This rig is toed-in with a tilted baseline, so epipolar lines are slanted:
     only full rectification makes row-matching valid at every depth (the 2D
     warp from align_from_chessboard is exact at one depth plane only).
+
+    Returns a SimpleNamespace(map_l, map_r, fb, fx, fy, cx, cy, size).
+    fx/fy/cx/cy come from the rectified projection P2 (the frame the dense
+    depth lives in), so callers can back-project Z to 3D directly:
+      X = (u - cx) * Z / fx ;  Y = (v - cy) * Z / fy
     """
     fs = cv2.FileStorage(str(path), cv2.FILE_STORAGE_READ)
     K = fs.getNode("K").mat()
@@ -80,7 +95,48 @@ def load_rectify(path, size):
     fs.release()
     map_l = cv2.initUndistortRectifyMap(K, dist, R1, P1, size, cv2.CV_32FC1)
     map_r = cv2.initUndistortRectifyMap(K, dist, R2, P2, size, cv2.CV_32FC1)
-    return map_l, map_r, fb
+    return SimpleNamespace(map_l=map_l, map_r=map_r, fb=fb,
+                           fx=float(P2[0, 0]), fy=float(P2[1, 1]),
+                           cx=float(P2[0, 2]), cy=float(P2[1, 2]), size=size)
+
+
+# --------------------------------------------------------------- live camera --
+def capture_pair(dev_left, dev_right, width, height, warmup=_CAM_WARMUP):
+    """Grab one synchronized frame from each stereo camera.
+
+    Left/right default to /dev/video0 and /dev/video2 (same wiring as
+    area-detection/capture_chessboard.py). A few frames are read first so the
+    sensors settle on exposure/white-balance before the kept frame.
+    Returns (left_bgr, right_bgr).
+    """
+    cap_l = cv2.VideoCapture(dev_left)
+    cap_r = cv2.VideoCapture(dev_right)
+    for cap in (cap_l, cap_r):
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    try:
+        if not (cap_l.isOpened() and cap_r.isOpened()):
+            which = []
+            if not cap_l.isOpened():
+                which.append(f"left=/dev/video{dev_left}")
+            if not cap_r.isOpened():
+                which.append(f"right=/dev/video{dev_right}")
+            present = ", ".join(sorted(glob.glob("/dev/video*"))) or "(none)"
+            sys.exit(f"[ruler] could not open {' and '.join(which)}. This rig "
+                     f"needs TWO cameras. Present now: {present}. Plug in the "
+                     f"missing camera, then check 'v4l2-ctl --list-devices' and "
+                     f"pass its index via --device-left/--device-right.")
+        for _ in range(max(warmup, 1)):
+            cap_l.read()
+            cap_r.read()
+        ok_l, left = cap_l.read()
+        ok_r, right = cap_r.read()
+        if not (ok_l and ok_r):
+            sys.exit(f"[ruler] frame grab failed on {dev_left}/{dev_right}")
+        return left, right
+    finally:
+        cap_l.release()
+        cap_r.release()
 
 
 # ------------------------------------------------------------- golden points --
@@ -180,7 +236,9 @@ def golden_points(gray_l, gray_r, d_min=-4, d_max=140, block=11,
 
 
 # ------------------------------------------------------------------ mono depth --
-def infer_mono(right_bgr, encoder, input_size, device_choice):
+def load_model(encoder='vits', device_choice='auto'):
+    """Load DA-V2 once — callers doing several frames reuse the same model.
+    Returns (model, device)."""
     import torch
     sys.path.insert(0, str(_HERE))
     from depth_anything_v2.dpt import DepthAnythingV2
@@ -189,9 +247,66 @@ def infer_mono(right_bgr, encoder, input_size, device_choice):
     model = DepthAnythingV2(**_CFGS[encoder])
     ckpt = _DA_ROOT / "model" / f"depth_anything_v2_{encoder}.pth"
     model.load_state_dict(torch.load(str(ckpt), map_location='cpu'))
-    model = model.to(device).eval()
+    return model.to(device).eval(), device
+
+
+def infer_mono(right_bgr, encoder, input_size, device_choice):
+    model, device = load_model(encoder, device_choice)
     depth = model.infer_image(right_bgr, input_size)   # relative inverse depth
     return depth.astype(np.float64), device
+
+
+# ------------------------------------------------------- one-call metric depth --
+def compute_metric_depth(left_bgr, right_bgr, calib, model, input_size=518,
+                         d_max=140, block=11, ncc_min=0.70, min_disp=0.5):
+    """Full stereo-ruler pipeline for ONE pair, as a library call.
+
+    calib = load_rectify(path, (w, h)) and model = load_model(...)[0] are
+    created ONCE by the caller and reused across frames (no model reload).
+
+    Steps: rectify pair -> golden points -> DA-V2 on the original right image
+    warped into the rectified frame -> RANSAC affine d_mono = s*disp + t ->
+    dense pseudo-disparity -> Z[m] = f*B / disp.
+
+    Returns (Z_m, valid, info):
+      Z_m    float32 HxW metric depth in the RIGHT-rectified frame (0 where invalid)
+      valid  bool HxW — inside the rectified warp AND disparity resolvable
+      info   dict: s, t, rms, n_golden, n_inliers, left_rect, right_rect
+    Raises RuntimeError if too few golden points survive to fit.
+    """
+    left_r = cv2.remap(left_bgr, calib.map_l[0], calib.map_l[1], cv2.INTER_LINEAR)
+    right_r = cv2.remap(right_bgr, calib.map_r[0], calib.map_r[1], cv2.INTER_LINEAR)
+    gray_l = cv2.cvtColor(left_r, cv2.COLOR_BGR2GRAY)
+    gray_r = cv2.cvtColor(right_r, cv2.COLOR_BGR2GRAY)
+    golden = golden_points(gray_l, gray_r, d_max=d_max, block=block,
+                           ncc_min=ncc_min)
+
+    mono_raw = model.infer_image(right_bgr, input_size).astype(np.float64)
+    mono = cv2.remap(mono_raw, calib.map_r[0], calib.map_r[1], cv2.INTER_LINEAR)
+    valid = cv2.remap(np.ones_like(mono_raw), calib.map_r[0], calib.map_r[1],
+                      cv2.INTER_LINEAR) > 0.99
+
+    h, w = mono.shape
+    disp, dmono = [], []
+    for g in golden:
+        xi, yi = int(round(g["xr"])), int(round(g["y"]))
+        if 0 <= xi < w and 0 <= yi < h and valid[yi, xi]:
+            disp.append(g["disp"])
+            dmono.append(float(mono[yi, xi]))
+    if len(disp) < 10:
+        raise RuntimeError(f"[ruler] only {len(disp)} golden points — need >=10 "
+                           f"(scene too textureless?)")
+    disp = np.array(disp)
+    dmono = np.array(dmono)
+    s, t, inl, rms, _thr = fit_affine_ransac(disp, dmono)
+
+    disp_dense = np.clip((mono - t) / s, 0.0, None)
+    resolvable = disp_dense > min_disp
+    Z = np.where(resolvable, calib.fb / np.maximum(disp_dense, min_disp), 0.0)
+    return (Z.astype(np.float32), valid & resolvable,
+            {"s": s, "t": t, "rms": rms, "n_golden": len(disp),
+             "n_inliers": int(inl.sum()),
+             "left_rect": left_r, "right_rect": right_r})
 
 
 # ---------------------------------------------------------------- scale fit --
@@ -360,6 +475,15 @@ def main():
         description="Scale DA-V2 mono depth with stereo golden points.")
     p.add_argument("--left", default=str(_DEF_LEFT))
     p.add_argument("--right", default=str(_DEF_RIGHT))
+    p.add_argument("--camera", action="store_true",
+                   help="grab a live stereo pair from the cameras instead of "
+                        "reading --left/--right image files")
+    p.add_argument("--device-left", type=int, default=_LEFT_IDX,
+                   help="left camera index (/dev/videoN)")
+    p.add_argument("--device-right", type=int, default=_RIGHT_IDX,
+                   help="right camera index (/dev/videoN)")
+    p.add_argument("--cam-width", type=int, default=_CAM_W)
+    p.add_argument("--cam-height", type=int, default=_CAM_H)
     p.add_argument("--align", default=str(_DEF_ALIGN),
                    help="alignment.yml fallback (single-depth warp)")
     p.add_argument("--rectify",
@@ -388,23 +512,33 @@ def main():
                         "inlier in the refit (default 5)")
     args = p.parse_args()
 
-    left = cv2.imread(args.left)
-    right = cv2.imread(args.right)
-    if left is None or right is None:
-        sys.exit(f"[ruler] cannot read {args.left} / {args.right}")
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.camera:
+        left, right = capture_pair(args.device_left, args.device_right,
+                                   args.cam_width, args.cam_height)
+        cv2.imwrite(str(out_dir / "capture_left.jpg"), left)
+        cv2.imwrite(str(out_dir / "capture_right.jpg"), right)
+        print(f"[ruler] captured live pair from /dev/video{args.device_left} "
+              f"(L) & /dev/video{args.device_right} (R) -> saved to {out_dir}")
+    else:
+        left = cv2.imread(args.left)
+        right = cv2.imread(args.right)
+        if left is None or right is None:
+            sys.exit(f"[ruler] cannot read {args.left} / {args.right}")
 
     # 1 — bring both images into a row-aligned frame
     h, w = left.shape[:2]
     fb = args.fb
     if Path(args.rectify).exists():
-        map_l, map_r, fb_file = load_rectify(args.rectify, (w, h))
+        rect = load_rectify(args.rectify, (w, h))
+        map_l, map_r = rect.map_l, rect.map_r
         left = cv2.remap(left, map_l[0], map_l[1], cv2.INTER_LINEAR)
         right_al = cv2.remap(right, map_r[0], map_r[1], cv2.INTER_LINEAR)
         warp_mono = lambda m: cv2.remap(m, map_r[0], map_r[1], cv2.INTER_LINEAR)
         if fb is None:
-            fb = fb_file
+            fb = rect.fb
         print(f"[ruler] rectified pair (epipolar horizontal) via "
               f"{Path(args.rectify).name}, f*B={fb:.2f}")
     else:
@@ -432,7 +566,8 @@ def main():
 
     # 3 — DA-V2 on the ORIGINAL right image, then warp its map to the same frame
     mono_raw, device = infer_mono(right, args.encoder, args.input_size, args.device)
-    print(f"[ruler] DA-V2 {args.encoder} on {Path(args.right).name} (device={device})")
+    right_name = "live capture" if args.camera else Path(args.right).name
+    print(f"[ruler] DA-V2 {args.encoder} on {right_name} (device={device})")
     mono = warp_mono(mono_raw)
     valid = warp_mono(np.ones_like(mono_raw)) > 0.99
 
