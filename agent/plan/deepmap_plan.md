@@ -169,6 +169,26 @@ by construction — no more per-frame `level_and_scale` scale guessing.
 - Offline `--test` (same saved pair each stop) PASSED; hardware 3-stop run pending
   (task 2026-07-04_stereo-walk-map, status testing).
 
+### stereo_walk_map pipeline rebuild (2026-07-06) — one thread per stage
+Task 2026-07-04_pipeline-walk-speed (status testing — hardware step pending).
+`deepmap/pipeline_bus.py` (NEW, stdlib-only): Msg / Bus (per-subscriber queue
+fan-out, stop_event-aware publish) / Worker (catches BaseException so
+stereo_ruler's sys.exit can't kill a thread silently) / ordered join_all
+(pill re-offered while joining — one-shot pills get lost when a busy worker's
+queue is full). Future VoiceWorker/DetectWorker plug into this bus.
+`stereo_ruler.py`: compute_metric_depth split into `stereo_half` +
+`depth_half` + `fuse_metric` (same pieces run sequentially OR on threads;
+fuse_metric raises RuntimeError — incl. converted RANSAC sys.exit — as the
+"expected per-frame failure" tier). `stereo_walk_map.py`: PersistentStereoCam
+(open once, BUFFERSIZE=1, grab-flush `--discard-s` to drop frames buffered
+during the move), Capture/Stereo/Depth/FusionMapper/Motion workers (one owner
+per resource: cameras/model/UART+Pose), Coordinator issues "move" as soon as
+the pair lands. `--sequential` A/B (same persistent cams), `--profile`,
+`--save-every`, `--inject-crash/--inject-badframe`. Offline: regression
+identical, crash → partial map + clean join, bad frame → skipped + walk
+continues; wall 21.9s vs 26.6s sequential on CPU (depth-bound; Jetson GPU +
+real drives overlap far more). Hardware A/B pending (plan step 8).
+
 ### explore_map merge v3 (2026-07-01) — open3d ICP enabled
 User installed open3d 0.16.0. Added `--merge icp` (now default): point-to-plane ICP
 (merge_360.icp_merge) refines the residual dead-reckon pose drift AFTER metric
