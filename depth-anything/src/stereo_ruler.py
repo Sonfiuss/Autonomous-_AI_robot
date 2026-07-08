@@ -257,35 +257,43 @@ def infer_mono(right_bgr, encoder, input_size, device_choice):
 
 
 # ------------------------------------------------------- one-call metric depth --
-def compute_metric_depth(left_bgr, right_bgr, calib, model, input_size=518,
-                         d_max=140, block=11, ncc_min=0.70, min_disp=0.5):
-    """Full stereo-ruler pipeline for ONE pair, as a library call.
-
-    calib = load_rectify(path, (w, h)) and model = load_model(...)[0] are
-    created ONCE by the caller and reused across frames (no model reload).
-
-    Steps: rectify pair -> golden points -> DA-V2 on the original right image
-    warped into the rectified frame -> RANSAC affine d_mono = s*disp + t ->
-    dense pseudo-disparity -> Z[m] = f*B / disp.
-
-    Returns (Z_m, valid, info):
-      Z_m    float32 HxW metric depth in the RIGHT-rectified frame (0 where invalid)
-      valid  bool HxW — inside the rectified warp AND disparity resolvable
-      info   dict: s, t, rms, n_golden, n_inliers, left_rect, right_rect
-    Raises RuntimeError if too few golden points survive to fit.
-    """
+# Split into three stage functions so the stereo_walk_map pipeline can run
+# them on separate threads (StereoWorker / DepthWorker / FusionMapper) while
+# compute_metric_depth keeps the one-call sequential behaviour.
+def stereo_half(left_bgr, right_bgr, calib, d_max=140, block=11, ncc_min=0.70):
+    """Stereo stage: rectify the pair + golden-point disparities.
+    Returns (left_rect, right_rect, golden list)."""
     left_r = cv2.remap(left_bgr, calib.map_l[0], calib.map_l[1], cv2.INTER_LINEAR)
     right_r = cv2.remap(right_bgr, calib.map_r[0], calib.map_r[1], cv2.INTER_LINEAR)
     gray_l = cv2.cvtColor(left_r, cv2.COLOR_BGR2GRAY)
     gray_r = cv2.cvtColor(right_r, cv2.COLOR_BGR2GRAY)
     golden = golden_points(gray_l, gray_r, d_max=d_max, block=block,
                            ncc_min=ncc_min)
+    return left_r, right_r, golden
 
+
+def depth_half(right_bgr, calib, model, input_size=518):
+    """Mono stage: DA-V2 on the RAW right image, then warp the depth map AND
+    its validity mask into the rectified frame (fusion samples mono at
+    rectified golden coords, so the remap lives here, with the model).
+    Returns (mono float64, valid bool)."""
     mono_raw = model.infer_image(right_bgr, input_size).astype(np.float64)
     mono = cv2.remap(mono_raw, calib.map_r[0], calib.map_r[1], cv2.INTER_LINEAR)
     valid = cv2.remap(np.ones_like(mono_raw), calib.map_r[0], calib.map_r[1],
                       cv2.INTER_LINEAR) > 0.99
+    return mono, valid
 
+
+def fuse_metric(golden, mono, valid, calib, min_disp=0.5):
+    """Fusion stage: sample mono at the golden coords, RANSAC affine
+    d_mono = s*disp + t, dense pseudo-disparity, Z[m] = f*B / disp.
+
+    Raises RuntimeError when THIS frame cannot be fused (<10 usable golden
+    points, or the RANSAC fit fails) — an EXPECTED per-frame failure a
+    multi-frame caller may skip while continuing the walk.
+
+    Returns (Z_m float32, valid bool, info dict s/t/rms/n_golden/n_inliers).
+    """
     h, w = mono.shape
     disp, dmono = [], []
     for g in golden:
@@ -298,15 +306,43 @@ def compute_metric_depth(left_bgr, right_bgr, calib, model, input_size=518,
                            f"(scene too textureless?)")
     disp = np.array(disp)
     dmono = np.array(dmono)
-    s, t, inl, rms, _thr = fit_affine_ransac(disp, dmono)
+    try:
+        s, t, inl, rms, _thr = fit_affine_ransac(disp, dmono)
+    except SystemExit as e:            # fit_affine_ransac sys.exit()s on failure
+        raise RuntimeError(str(e)) from None
 
     disp_dense = np.clip((mono - t) / s, 0.0, None)
     resolvable = disp_dense > min_disp
     Z = np.where(resolvable, calib.fb / np.maximum(disp_dense, min_disp), 0.0)
     return (Z.astype(np.float32), valid & resolvable,
             {"s": s, "t": t, "rms": rms, "n_golden": len(disp),
-             "n_inliers": int(inl.sum()),
-             "left_rect": left_r, "right_rect": right_r})
+             "n_inliers": int(inl.sum())})
+
+
+def compute_metric_depth(left_bgr, right_bgr, calib, model, input_size=518,
+                         d_max=140, block=11, ncc_min=0.70, min_disp=0.5):
+    """Full stereo-ruler pipeline for ONE pair, as a library call.
+
+    calib = load_rectify(path, (w, h)) and model = load_model(...)[0] are
+    created ONCE by the caller and reused across frames (no model reload).
+
+    = stereo_half + depth_half + fuse_metric run back to back (the pipeline
+    runs the same three pieces on separate threads — no logic duplicated).
+
+    Returns (Z_m, valid, info):
+      Z_m    float32 HxW metric depth in the RIGHT-rectified frame (0 where invalid)
+      valid  bool HxW — inside the rectified warp AND disparity resolvable
+      info   dict: s, t, rms, n_golden, n_inliers, left_rect, right_rect
+    Raises RuntimeError if too few golden points survive to fit.
+    """
+    left_r, right_r, golden = stereo_half(left_bgr, right_bgr, calib,
+                                          d_max=d_max, block=block,
+                                          ncc_min=ncc_min)
+    mono, valid = depth_half(right_bgr, calib, model, input_size)
+    Z, ok, info = fuse_metric(golden, mono, valid, calib, min_disp)
+    info["left_rect"] = left_r
+    info["right_rect"] = right_r
+    return Z, ok, info
 
 
 # ---------------------------------------------------------------- scale fit --
