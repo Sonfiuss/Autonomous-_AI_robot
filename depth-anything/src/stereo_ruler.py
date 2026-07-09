@@ -284,19 +284,134 @@ def depth_half(right_bgr, calib, model, input_size=518):
     return mono, valid
 
 
-def fuse_metric(golden, mono, valid, calib, min_disp=0.5):
+def floor_anchors(mono, valid, calib, cam_h, tilt_deg,
+                  z_near=0.3, z_far=2.5, n_rows=12, col_band=0.6, pctl=25,
+                  golden=None):
+    """Synthetic anchor correspondences (disp, mono) from the visible floor.
+
+    The camera sits cam_h metres above the floor at a fixed downward mount
+    tilt. A floor pixel at image row v then has a KNOWN metric depth
+    Z(v) = cam_h / (dy·cos(tilt) + sin(tilt)),  dy = (v - cy) / fy — so rows
+    from the image bottom up toward the horizon give real distances spanning
+    z_near..z_far, exactly the far range the golden corners miss when the
+    only texture is the near floor.
+
+    Floor extraction per sampled row: a LOW percentile of valid mono inside
+    the central col_band (mono is inverse-depth-like, so the floor is the
+    smallest value on a row shared with closer obstacles), then a
+    monotonicity filter (true floor gets closer, i.e. mono grows, as v grows;
+    rows that break the running trend are wall/obstacle, dropped).
+
+    Both extraction filters assume SOME floor is visible on the row — an
+    obstacle filling the band defeats them, and a dark cavity that DA-V2
+    hallucinates as far defeats them silently (the low percentile then picks
+    the cavity, not the floor). The stereo golden points are metric truth, so
+    when `golden` is given they veto: a golden point in the band whose stereo
+    depth is much closer than the floor depth predicted for its row is an
+    OBSTACLE — the floor behind it is occluded, i.e. every row above the
+    obstacle's deepest evidence cannot be floor and is cut.
+
+    Returns (disp_anchor, mono_anchor) float64 arrays — empty when fewer
+    than 4 rows survive.
+    """
+    h, w = mono.shape
+    t = np.deg2rad(tilt_deg)
+    # rows where the floor ray depth lies in [z_near, z_far]
+    dy_of = lambda z: (cam_h / z - np.sin(t)) / np.cos(t)   # noqa: E731
+    v_far = int(np.clip(calib.cy + dy_of(z_far) * calib.fy, 0, h - 1))
+    v_near = int(np.clip(calib.cy + dy_of(z_near) * calib.fy, 0, h - 1))
+    if v_near <= v_far + n_rows:
+        return np.empty(0), np.empty(0)
+    c0, c1 = int(w * (1 - col_band) / 2), int(w * (1 + col_band) / 2)
+    v_cut = -1                              # rows v <= v_cut are occluded
+    if golden is not None:
+        for g in golden:
+            if g["disp"] < 2.0 or not (c0 <= g["xr"] <= c1):
+                continue
+            den = (g["y"] - calib.cy) / calib.fy * np.cos(t) + np.sin(t)
+            if den <= 0:
+                continue                    # above the horizon — never floor
+            if calib.fb / g["disp"] < 0.6 * (cam_h / den):
+                v_cut = max(v_cut, int(g["y"]) + 10)   # obstacle + margin
+    rows = np.linspace(v_far, v_near, n_rows).astype(int)
+    kept_d, kept_m = [], []
+    run_max = -np.inf                       # mono must grow from far to near
+    for v in rows:                          # far (top) → near (bottom)
+        if v <= v_cut:                      # floor occluded by an obstacle
+            continue
+        band = mono[v, c0:c1][valid[v, c0:c1]]
+        if len(band) < 20:
+            continue
+        m = float(np.percentile(band, pctl))
+        if m <= run_max:                    # wall/obstacle row, not floor
+            continue
+        dy = (v - calib.cy) / calib.fy
+        Z = cam_h / (dy * np.cos(t) + np.sin(t))
+        if z_near * 0.5 < Z < z_far * 2:
+            kept_d.append(calib.fb / Z)
+            kept_m.append(m)
+            run_max = m
+    if len(kept_d) < 4:
+        return np.empty(0), np.empty(0)
+    return np.asarray(kept_d, np.float64), np.asarray(kept_m, np.float64)
+
+
+def estimate_tilt(golden, calib, cam_h, img_shape,
+                  row_frac=0.70, col_frac=0.35, min_disp_px=5.0):
+    """Per-frame camera tilt (rad) from golden points on the near floor.
+
+    The tilt servo can sit at a different angle every run, so a fixed
+    mount-tilt constant is unreliable. Golden points in the bottom-center of
+    the frame are almost surely floor; their stereo depth is metric, so with
+    the measured camera height each one solves
+        Z·(dy·cos t + sin t) = cam_h   →   t = asin(cam_h/R) − atan2(Z·dy, Z)
+    Median over points; None when fewer than 3 usable (caller falls back to
+    its configured tilt).
+    """
+    h, w = img_shape
+    ts = []
+    for g in golden:
+        if g["disp"] < min_disp_px:
+            continue
+        if g["y"] < row_frac * h or abs(g["xr"] - calib.cx) > col_frac * w:
+            continue
+        Z = calib.fb / g["disp"]
+        A = Z * (g["y"] - calib.cy) / calib.fy
+        R = float(np.hypot(A, Z))
+        if R <= cam_h:                       # ray too short to reach the floor
+            continue
+        t = float(np.arcsin(cam_h / R) - np.arctan2(A, Z))
+        if 0.0 < t < np.deg2rad(70):
+            ts.append(t)
+    return float(np.median(ts)) if len(ts) >= 3 else None
+
+
+def fuse_metric(golden, mono, valid, calib, min_disp=0.5, min_span_ratio=2.0,
+                cam_h=None, tilt_deg=13.0, trust_beyond=1.5):
     """Fusion stage: sample mono at the golden coords, RANSAC affine
     d_mono = s*disp + t, dense pseudo-disparity, Z[m] = f*B / disp.
 
-    Raises RuntimeError when THIS frame cannot be fused (<10 usable golden
-    points, or the RANSAC fit fails) — an EXPECTED per-frame failure a
-    multi-frame caller may skip while continuing the walk.
+    Golden points with disp < min_disp are excluded from the fit (negative /
+    near-zero disparities are garbage matches that would feed RANSAC).
+    When cam_h is given, floor_anchors() pins the fit's far range via
+    refit_with_anchors; the camera tilt is estimated per frame from the
+    bottom-center golden points (estimate_tilt — the tilt servo can sit
+    anywhere), falling back to tilt_deg. Without anchors, an inlier
+    disparity span narrower than min_span_ratio (max/min) means the far
+    scene would be extrapolated — the frame is rejected instead.
 
-    Returns (Z_m float32, valid bool, info dict s/t/rms/n_golden/n_inliers).
+    Raises RuntimeError when THIS frame cannot be fused (<10 usable golden
+    points, RANSAC failure, or narrow span with no anchors) — an EXPECTED
+    per-frame failure a multi-frame caller may skip while continuing.
+
+    Returns (Z_m float32, valid bool,
+             info dict s/t/rms/n_golden/n_inliers/span/n_anchors).
     """
     h, w = mono.shape
     disp, dmono = [], []
     for g in golden:
+        if g["disp"] < min_disp:            # garbage match — never fit on it
+            continue
         xi, yi = int(round(g["xr"])), int(round(g["y"]))
         if 0 <= xi < w and 0 <= yi < h and valid[yi, xi]:
             disp.append(g["disp"])
@@ -311,16 +426,65 @@ def fuse_metric(golden, mono, valid, calib, min_disp=0.5):
     except SystemExit as e:            # fit_affine_ransac sys.exit()s on failure
         raise RuntimeError(str(e)) from None
 
+    span = float(disp[inl].max() / max(disp[inl].min(), min_disp))
+    n_anchors = 0
+    tilt_used = tilt_deg
+    if cam_h:
+        t_est = estimate_tilt(golden, calib, cam_h, mono.shape)
+        if t_est is not None:
+            tilt_used = float(np.degrees(t_est))
+        ad, am = floor_anchors(mono, valid, calib, cam_h, tilt_used,
+                               golden=golden)
+        if len(ad):
+            # Two-pass: anchors first, then drop golden points that disagree
+            # with the anchor-informed line. Aliased stereo matches (NCC on
+            # repetitive floor texture) form a cluster INCONSISTENT with the
+            # floor ramp; a single weighted LS over both clusters yields a
+            # slope flatter than either (Simpson blend) → still-compressed
+            # depth. Gate first, blend after.
+            A = np.stack([ad, np.ones_like(ad)], axis=1)
+            sa, ta = np.linalg.lstsq(A, am, rcond=None)[0]
+            gate = max(0.05 * float(np.ptp(np.concatenate([dmono, am]))), 1e-6)
+            keep = inl & (np.abs(dmono - (sa * disp + ta)) < gate)
+            s, t, rms = refit_with_anchors(np.concatenate([disp[keep], ad]),
+                                           np.concatenate([dmono[keep], am]),
+                                           np.ones(keep.sum(), bool),
+                                           sa, ta, len(ad))
+            inl = keep
+            n_anchors = len(ad)
+            span = float(max(disp[keep].max(), ad.max())
+                         / max(min(disp[keep].min(), ad.min()), min_disp)
+                         ) if keep.any() else float(ad.max() / ad.min())
+    if s <= 0:
+        raise RuntimeError(f"[ruler] fit slope s={s:.4f} <= 0 after anchor "
+                           f"refit — frame unusable")
+    if n_anchors == 0 and span < min_span_ratio:
+        raise RuntimeError(
+            f"[ruler] inlier disparity span x{span:.2f} < x{min_span_ratio:.1f}"
+            f" — all golden points at similar depth; far scene would be "
+            f"extrapolated (no floor anchors available)")
+
+    # Trust horizon: the metric evidence (golden inliers + anchors) only
+    # reaches so deep — beyond it the affine line is pure extrapolation and
+    # DA-V2's hallucinated "very far" regions (dark cavities, glass) land at
+    # arbitrary depths. Such pixels are marked UNRESOLVED instead of guessed:
+    # an honest hole in the map beats a wall at a made-up distance (the robot
+    # re-observes it when closer).
+    evid_disp = np.concatenate([disp[inl], ad]) if n_anchors else disp[inl]
+    z_trust = trust_beyond * calib.fb / max(float(evid_disp.min()), min_disp)
+
     disp_dense = np.clip((mono - t) / s, 0.0, None)
-    resolvable = disp_dense > min_disp
+    resolvable = disp_dense > max(min_disp, calib.fb / z_trust)
     Z = np.where(resolvable, calib.fb / np.maximum(disp_dense, min_disp), 0.0)
     return (Z.astype(np.float32), valid & resolvable,
             {"s": s, "t": t, "rms": rms, "n_golden": len(disp),
-             "n_inliers": int(inl.sum())})
+             "n_inliers": int(inl.sum()), "span": span, "z_trust": z_trust,
+             "n_anchors": n_anchors, "tilt_deg": tilt_used})
 
 
 def compute_metric_depth(left_bgr, right_bgr, calib, model, input_size=518,
-                         d_max=140, block=11, ncc_min=0.70, min_disp=0.5):
+                         d_max=140, block=11, ncc_min=0.70, min_disp=0.5,
+                         min_span_ratio=2.0, cam_h=None, tilt_deg=13.0):
     """Full stereo-ruler pipeline for ONE pair, as a library call.
 
     calib = load_rectify(path, (w, h)) and model = load_model(...)[0] are
@@ -339,7 +503,9 @@ def compute_metric_depth(left_bgr, right_bgr, calib, model, input_size=518,
                                           d_max=d_max, block=block,
                                           ncc_min=ncc_min)
     mono, valid = depth_half(right_bgr, calib, model, input_size)
-    Z, ok, info = fuse_metric(golden, mono, valid, calib, min_disp)
+    Z, ok, info = fuse_metric(golden, mono, valid, calib, min_disp,
+                              min_span_ratio=min_span_ratio,
+                              cam_h=cam_h, tilt_deg=tilt_deg)
     info["left_rect"] = left_r
     info["right_rect"] = right_r
     return Z, ok, info
