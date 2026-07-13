@@ -390,3 +390,103 @@ Beyond-request / notable actions:
 Pending (noted, not done): continuous-sweep firmware feedback wiring (ServoController is
 step-and-hold only — does not stream P-feedback into an AngleBuffer); hand-eye calibration
 is a documented scaffold (needs checkerboard detections).
+
+## 2026-07-09 — view_web.py zoom/pan smoothness
+User yeu cau tang do muot zoom/keo trong depth-anything/src/view_web.py.
+Da sua: bat OrbitControls damping (dampingFactor 0.08), giam zoomSpeed/rotateSpeed/panSpeed, zoomToCursor=true; near/far 0.01/1000 -> 0.05/500; PointsMaterial sizeAttenuation=true.
+
+## 2026-07-09 — view_web.py fix zoom dot ngot + click
+Nguyen nhan: sizeAttenuation lam diem phinh to khi zoom -> che man hinh.
+Sua: sizeAttenuation=false, size 0.02->2.0 (pixel); them minDistance 0.5/maxDistance 50; zoomSpeed 0.6->0.4.
+
+## 2026-07-11 - stereo accuracy plan (user-approved)
+Gac plan free-move-merge (design: agent/description/deepmap_free_move_merge.md).
+Task moi: agent/tasks/2026-07-11_stereo-accuracy.md - recalibrate stereo + eval harness.
+Ngoai yeu cau truc tiep: them section "SHELVED" vao agent/plan/deepmap_plan.md de danh dau huong free-move-merge tam dung (theo CLAUDE.md task lifecycle).
+
+## 2026-07-12 - stereo accuracy toolchain (Stage A-D)
+Theo task 2026-07-11_stereo-accuracy: tao calib_io.py, epipolar_check.py, depth_eval.py,
+capture_eval.sh, make_checkerboard.py, sgbm_probe.py, lock_exposure.sh; rewrite
+stereo_calibrate_2view.py (giu --legacy-screen); sua stereo_ruler.load_rectify (schema moi
++ fb_measured) va golden_points (them dy_search).
+Ngoai yeu cau truc tiep:
+- VA capture_pair.sh (atomic .tmp): phat hien left.jpg/righ.jpg chup cach nhau 8 ngay
+  (cap stereo gia) do capture fail mot ben - moi test offline gan day dung cap nay.
+- Them fallback classic detector + cornerSubPix vao find_board (SB pixel-lock +-0.23px).
+- Viet history: agent/history/2026-07-12_stereo-camera.md
+
+## 2026-07-12 - do do lech + depth tren 3 cap shot_0/1/2 (user yeu cau, chua co chessboard)
+Chay epipolar_check (feature mode) + sgbm_probe tren stereo-camera/captures.
+Ngoai yeu cau truc tiep:
+- sgbm_probe --vis ghi 3 file shot_N_left_sgbm.jpg vao stereo-camera/captures/ (co the xoa).
+- CSV bao cao ghi vao scratchpad (khong dong project): epipolar_report_w20.csv, sgbm_report.csv.
+- Script tam raw_dy_check.py (do dy tren anh tho) nam trong scratchpad, khong them vao repo.
+Ket qua chinh: raw dy ~+135px (rig lech co dinh, 3 cap giong nhau) -> sau rectify con
+dy p50 ~7.5px p90 ~17px (do window +-5px truoc do bi clip); SGBM coverage 12-14%,
+depth center ~0.57-0.67m nhung KHONG tin cay khi dy con lon. Can calib chessboard that.
+
+## 2026-07-12 - replay_shots.py: DA-V2 ve chung scale met + merge (task scale-merge-deepmap, user duyet)
+Tao deepmap/replay_shots.py (offline, Windows): moi cap shot_N -> golden points
+(dy_search noi +-12px) / fallback SGBM anchors -> DA-V2 vits (CPU) -> fuse_metric ->
+Z met -> level -> VOTracker -> stop_N.ply + merged_walk.ply + report.csv vao
+depth-anything/output/pointcloud/session_20260712/ (PLY cu 09-10/07 KHONG dong den).
+Ngoai yeu cau truc tiep:
+- Phat hien stop_0/1/2.ply cu (09-10/07) khac session voi shot hom nay -> khong re-scale
+  PLY cu, tai tao tu cap moi (user da duyet qua AskUserQuestion).
+- Can --cam-height-m 0.32 (default robot trong stereo_walk_map) de floor anchors hoat dong.
+
+## 2026-07-12 - kiem tra tien do chessboard: eval 6 cap moi + baseline calib cu (user yeu cau "tiep tuc")
+- Phat hien board user dung la 19x10 inner corners (20x11 o, dan tren cua) — khac PDF 9x6 25mm da tao;
+  detect SB 190/190 tren ca 12 anh, thu tu corner L/R nhat quan (khong flip).
+- Chay epipolar_check + depth_eval (pattern 19x10) tren 6 cap left/right_{81..180} voi calib hien tai:
+  dy p50 22-123px, Z err -29..-51%, fb_i troi 85->124, fit-fb can offset +41.7px -> calib cu khong the
+  cuu bang fb_measured, phai recalib. Cap _120 nghi ngo lech (disparity non-monotonic, L/R cach 35s).
+- Thu chay stereo_calibrate_2view.py --pattern 19x10: tu choi vi chi 6 cap (<12) — dung, day la session
+  eval; session calib 20-25 cap chua chup. Khong ghi/di chuyen yml nao. Output phan tich o scratchpad.
+- Cap nhat execution log task 2026-07-11_stereo-accuracy.md.
+
+## 2026-07-12 - plan-B calib tu 6 cap frontal + fix bug write_fb (user: "tiep tuc, thong so dam bao dung")
+- Calibrate day du tu 6 cap frontal bi SUY BIEN (fx no 2560, f*B=0) -> lam plan-B: fx neo bang
+  khoang cach thuoc day (fx_l=1023, fx_r=1032), pp=center, dist=0, chi uoc luong R,T (loai _112 vi
+  dy held-out -13.7px). Ghi calib/stereo_rectify_20260712.yml (versioned) + coverage jpg. CHUA promote
+  sang stereo_rectify.yml active — gate epipolar p90<0.5px chua dat (dy p50 0.5-2.2px tren cap sach).
+- FIX code depth_eval.py:371: write_fb ghi fb_median kem d0 lstsq (2 model khac nhau) -> Z bias;
+  nay ghi fb_lstsq khi co offset. Khoi phuc yml tu archive roi ghi lai fb_measured=62.766/d0=+2.04.
+- Ket qua: Z vs thuoc 5 cap sach trong +-2.4% (gate <=3% PASS 0.8-1.8m). A/B sgbm tren shot 15:06
+  khong ket luan duoc (thieu ground truth; dist=0 sai o ria anh). Bang so lieu o scratchpad.
+
+## 2026-07-13 - pitch_from_board.py (user duyet workflow servo sweep, yeu cau trien khai)
+- Tao stereo-camera/tools/pitch_from_board.py: solvePnP board tuong (19x10, o 25mm user do)
+  -> pitch/yaw/roll tung camera tren anh RAW (+pitch = cui xuong), kem dy p50/p90 rectify
+  per goc (reuse epipolar_check.board_dy) + cot dPitch (map servo cmd -> deg) va L-R
+  (do cung/rig flex). Selftest synth PASS 0.0000 deg; smoke test 6 cap that hop ly
+  (pitchL ~0-2 deg khop camera nhin thang, right cui hon left ~4-5 deg).
+- Cap nhat plan task stereo-accuracy: them step F (done) + G (sweep, cho user chup);
+  Stage E hoan theo user. O board chot 25.0mm -> baseline hieu dung ~5.9-6.1cm,
+  lan calib sau bo --pin-baseline.
+
+## 2026-07-13 - user dinh chinh "cac cap co goc lech" -> phat hien board o KHONG vuong + hoi cong
+- User bao _82/_120/_180 chup lech goc: dung (PnP yaw -43..+26). Chan doan "6 cap deu frontal"
+  truoc do la SAI; chay lai Zhang voi model rang buoc (pp=center, dist=0) van no fx~2500 ->
+  dieu tra tiep: o board doc/ngang = 1.101 (ca 2 cam), board cong nhe (homography res 0.5-1.2px).
+- Zhang voi o chu nhat 25x27.5mm: fx 905-1019, |T|=5.63cm, R khop plan-B -> tat ca phuong phap
+  hoi tu; yml plan-B hien tai van dung (Z neo thuoc day, mien nhiem loi sq).
+- pitch_from_board.py them --square-y-mm; selftest PASS lai; smoke voi 27.53mm: PnP Z khop tape
+  ca o 1.7m. Scripts phan tich o scratchpad (calib_zhang_constrained/rect, board_flatness).
+- Can user: do 4 o NGANG va 4 o DOC cua board tuong; khuyen dung PDF 9x6 25mm cho session calib.
+
+## 2026-07-13 - plan-B v2 voi kich thuoc o that (user do 4o = 9.0cm ngang / 10.4cm doc)
+- O that 22.5x26.0mm + ty le pixel anh 1.101 -> phat hien PIXEL KHONG VUONG fy/fx~0.95
+  (tape va Zhang doc lap trung nhau tren ca 2 cam). Dung calib/stereo_rectify_20260713.yml:
+  K fx!=fy, |T|=5.54cm square-trusted (khong pin, ~do tay 5.4), fb_measured=61.29 voi
+  d0 chi +0.27px (v1 can +2.04 -> model vat ly hon). Z err 5 cap sach +1.8/-3.2/+0.7/-0.7/-1.2%.
+- Scratchpad manifest bi mat khi user don o C -> tao lai. Khuyen dung yml 20260713 thay
+  20260712 cho moi anh tu toi 12/07; sweep servo hoan theo user.
+
+## 2026-07-13 - promote calib v2 thanh ACTIVE (user: "saving this config")
+- Archive stereo_rectify.yml (02/07) -> calib/archive/stereo_rectify_ACTIVE_pre20260713_*.yml,
+  copy stereo_rectify_20260713.yml de len stereo_rectify.yml. Verify calib_io.load_calib:
+  per-camera schema, fb_used=61.289 (fb_measured), fx_rect=1045.4.
+- Tu nay moi tool doc yml active mac dinh se dung calib v2; anh/PLY truoc toi 12/07
+  (huong camera cui cu) khong tuong thich voi calib nay (da ghi memory).
+- Bao cao truc quan (artifact): https://claude.ai/code/artifact/1310644e-96cb-44c2-b6e3-b1d0581539f1

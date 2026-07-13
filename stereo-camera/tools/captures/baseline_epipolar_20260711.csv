@@ -1,0 +1,5 @@
+tag,mode,n,dy_mean,dy_p50,dy_p90,dy_max,bright_L,bright_R,bright_delta,sharp_L,sharp_R
+chessboard1,feature,23,0.4863,1.0046,1.4265,4.5887,98.1,84.9,-13.2,243,234
+chessboard2,feature,125,0.0873,1.6872,3.2945,4.6982,100.3,105.6,+5.3,307,345
+left,none,0,,,,,131.9,122.8,-9.1,266,297
+ALL-feature,feature,148,0.1493,1.5546,3.2840,4.6982,,,,,
