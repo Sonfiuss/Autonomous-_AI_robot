@@ -85,6 +85,3 @@ angles_deg_tilt_yaw_roll: !!opencv-matrix
    dt: d
    data: [ 5.5439996689416446, 0.50983083960006226, -2.7611508440192765 ]
 note: "planB v2: cells 22.5x26.0mm (ruler 13/07), fx!=fy tape-anchored (pixel aspect ~0.95), pp=centre dist=0, _112 excluded, |T| square-trusted (no pin)"
-fb_measured: 61.288714
-fb_measured_date: "2026-07-13"
-fb_measured_targets: 5

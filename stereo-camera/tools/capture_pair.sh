@@ -70,10 +70,14 @@ wait $WARM_L
 wait $WARM_R
 
 # ── capture both cameras simultaneously ───────────────────────────────────────
+# Grab to temp names and promote ONLY if BOTH succeed: a partial failure must
+# never leave a mismatched left/right pair on disk (on 2026-07-05 a failed left
+# grab left left.jpg 8 days older than righ.jpg — every later offline test on
+# that "pair" computed stereo on two different moments).
 echo "[capture] Grabbing frame from ${LEFT_DEV} and ${RIGHT_DEV} at ${WIDTH}x${HEIGHT} ..."
-grab "${LEFT_DEV}"  "${LEFT_OUT}"  &
+grab "${LEFT_DEV}"  "${LEFT_OUT}.tmp"  &
 PID_L=$!
-grab "${RIGHT_DEV}" "${RIGHT_OUT}" &
+grab "${RIGHT_DEV}" "${RIGHT_OUT}.tmp" &
 PID_R=$!
 
 DONE_L=0; DONE_R=0
@@ -82,10 +86,17 @@ wait $PID_R && DONE_R=1 || true
 
 # ── report ────────────────────────────────────────────────────────────────────
 OK=1
-[[ $DONE_L -eq 1 ]] && echo "[capture] left  -> ${LEFT_OUT}" \
-                     || { echo "[capture] ERROR: left  (${LEFT_DEV}) failed"; OK=0; }
-[[ $DONE_R -eq 1 ]] && echo "[capture] right -> ${RIGHT_OUT}" \
-                     || { echo "[capture] ERROR: right (${RIGHT_DEV}) failed"; OK=0; }
+[[ $DONE_L -eq 1 ]] || { echo "[capture] ERROR: left  (${LEFT_DEV}) failed"; OK=0; }
+[[ $DONE_R -eq 1 ]] || { echo "[capture] ERROR: right (${RIGHT_DEV}) failed"; OK=0; }
+if [[ $OK -eq 1 ]]; then
+    mv "${LEFT_OUT}.tmp"  "${LEFT_OUT}"
+    mv "${RIGHT_OUT}.tmp" "${RIGHT_OUT}"
+    echo "[capture] left  -> ${LEFT_OUT}"
+    echo "[capture] right -> ${RIGHT_OUT}"
+else
+    rm -f "${LEFT_OUT}.tmp" "${RIGHT_OUT}.tmp"
+    echo "[capture] partial failure — no files written (old pair untouched)"
+fi
 
 if [[ $OK -eq 1 ]]; then
     echo "[capture] Done. Run stereo pipeline:"

@@ -39,12 +39,18 @@ import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111111);
-const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.01, 1000);
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.05, 500);
 camera.position.set(0, 0, 6);
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;        // quan tinh -> muot khi tha chuot
+controls.dampingFactor = 0.08;        // cang nho cang "troi" lau
+controls.zoomSpeed = 0.4;             // zoom tu tu, khong giat 1 phat
+controls.rotateSpeed = 0.6;
+controls.panSpeed = 0.8;
+controls.zoomToCursor = true;         // zoom vao vi tri con tro
 
 let current = null, axes = null;
 const loader = new PLYLoader();
@@ -131,7 +137,7 @@ def make_handler(ply_dir):
 
 def main():
     ap = argparse.ArgumentParser(description='Web viewer cho point cloud (.ply)')
-    ap.add_argument('--dir', default=os.path.join(ROOT, 'output', 'pointcloud'))
+    ap.add_argument('--dir', default=os.path.join(ROOT, 'output', 'pointcloud/session_20260712'))
     ap.add_argument('--port', type=int, default=8000)
     ap.add_argument('--no-browser', action='store_true')
     args = ap.parse_args()

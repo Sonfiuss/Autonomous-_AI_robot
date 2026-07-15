@@ -189,6 +189,18 @@ identical, crash → partial map + clean join, bad frame → skipped + walk
 continues; wall 21.9s vs 26.6s sequential on CPU (depth-bound; Jetson GPU +
 real drives overlap far more). Hardware A/B pending (plan step 8).
 
+### Free-move merge design SHELVED — stereo accuracy first (2026-07-11)
+Free-movement multi-frame merge (route F/S/T, turn-burst yaw, motion-type VO
+gates, QC gate, pairwise ICP) was designed and approved but is ON HOLD — design
+saved at `agent/description/deepmap_free_move_merge.md` for later. Reason: the
+stereo ruler that everything depends on is untrustworthy at the root —
+calibration from only 2 chessboard pairs @0.9m (laptop screen), stereo RMS
+1.897px, distortion=0, fx ±15%, never tape-measure-validated. Decision: fix
+stereo accuracy FIRST (recalibrate + measure), then revisit the merge design.
+Active task: `agent/tasks/2026-07-11_stereo-accuracy.md` (stages A–E: eval
+harness → printed-board recalib → empirical fb → matching experiments →
+integration + deepmap replay A/B).
+
 ### explore_map merge v3 (2026-07-01) — open3d ICP enabled
 User installed open3d 0.16.0. Added `--merge icp` (now default): point-to-plane ICP
 (merge_360.icp_merge) refines the residual dead-reckon pose drift AFTER metric

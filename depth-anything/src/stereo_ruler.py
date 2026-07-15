@@ -85,17 +85,35 @@ def load_rectify(path, size):
       X = (u - cx) * Z / fx ;  Y = (v - cy) * Z / fy
     """
     fs = cv2.FileStorage(str(path), cv2.FILE_STORAGE_READ)
-    K = fs.getNode("K").mat()
-    dist = fs.getNode("dist").mat()
-    R1 = fs.getNode("R1").mat()
-    R2 = fs.getNode("R2").mat()
-    P1 = fs.getNode("P1").mat()
-    P2 = fs.getNode("P2").mat()
-    fb = fs.getNode("fb").real()
+
+    def _mat(name):
+        n = fs.getNode(name)
+        return None if n.empty() else n.mat()
+
+    def _real(name):
+        n = fs.getNode(name)
+        return None if n.empty() else float(n.real())
+
+    # per-camera schema (stereo_calibrate_2view printed-board path, 2026-07-11)
+    # with fallback to the legacy shared-K schema
+    K_l, K_r = _mat("K_left"), _mat("K_right")
+    if K_l is not None and K_r is not None:
+        d_l, d_r = _mat("dist_left"), _mat("dist_right")
+    else:
+        K_l = K_r = _mat("K")
+        d_l = d_r = _mat("dist")
+    R1, R2, P1, P2 = _mat("R1"), _mat("R2"), _mat("P1"), _mat("P2")
+    fb = _real("fb")
+    # tape-measure-corrected scale (depth_eval.py --fit-fb --write-fb) beats
+    # the calibration-derived fb when present — it absorbs printer scale,
+    # residual focal error and baseline error in one measured number
+    fb_measured = _real("fb_measured")
     fs.release()
-    map_l = cv2.initUndistortRectifyMap(K, dist, R1, P1, size, cv2.CV_32FC1)
-    map_r = cv2.initUndistortRectifyMap(K, dist, R2, P2, size, cv2.CV_32FC1)
-    return SimpleNamespace(map_l=map_l, map_r=map_r, fb=fb,
+    map_l = cv2.initUndistortRectifyMap(K_l, d_l, R1, P1, size, cv2.CV_32FC1)
+    map_r = cv2.initUndistortRectifyMap(K_r, d_r, R2, P2, size, cv2.CV_32FC1)
+    return SimpleNamespace(map_l=map_l, map_r=map_r,
+                           fb=fb_measured if fb_measured else fb,
+                           fb_calib=fb, fb_measured=fb_measured,
                            fx=float(P2[0, 0]), fy=float(P2[1, 1]),
                            cx=float(P2[0, 2]), cy=float(P2[1, 2]), size=size)
 
@@ -183,10 +201,12 @@ def _match_row(strip, patch):
 
 def golden_points(gray_l, gray_r, d_min=-4, d_max=140, block=11,
                   ncc_min=0.70, uniq_margin=0.05, lr_tol=1.0,
-                  grid=(16, 10), per_cell=3):
+                  grid=(16, 10), per_cell=3, dy_search=(0, -1, 1)):
     """Sparse high-confidence disparities left->right_aligned.
 
-    Searches rows y-1..y+1 (tolerates ~1px residual rotation).
+    dy_search: rows searched around y (default y-1..y+1 tolerates ~1px
+    residual rotation; with a sub-0.5px-rectified calib pass (0,) — the extra
+    rows then only admit false matches).
     Returns list of dicts {x, y, xr, disp, ncc}.
     """
     b = block // 2
@@ -204,7 +224,7 @@ def golden_points(gray_l, gray_r, d_min=-4, d_max=140, block=11,
         if x0 < 0 or x1 > w:
             continue
         m = None
-        for dy in (0, -1, 1):                      # residual rotation tolerance
+        for dy in dy_search:                       # residual rotation tolerance
             cand = _match_row(gray_r[yi + dy - b:yi + dy + b + 1, x0:x1], patch)
             if cand is not None and (m is None or cand[1] > m[1]):
                 m = cand
