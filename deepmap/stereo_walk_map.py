@@ -71,6 +71,7 @@ from explore_map import (                              # noqa: E402
     Pose, voxel_dedup, icp_merge_clouds, _rot_to_up,
 )
 import pipeline_bus as pb                              # noqa: E402
+import visual_odom as vo                               # noqa: E402
 
 _DEF_RECTIFY = os.path.abspath(os.path.join(
     ROOT, '..', 'stereo-camera', 'calib', 'stereo_rectify.yml'))
@@ -103,24 +104,55 @@ def backproject(Z, valid, right_rect, calib, stride, z_min, z_max):
     return pts, cols, v
 
 
-def level_to_floor(pts, rows, img_h, bottom_frac):
-    """Rotate the cloud so the fitted floor is horizontal, floor at Y=0.
+def _rot_x_up(tilt_deg):
+    """Pitch-up rotation about X undoing a downward camera tilt: the optical
+    axis (0,0,1) maps to (0, -sin t, cos t) — i.e. the cloud is raised so the
+    camera looks level."""
+    t = np.deg2rad(tilt_deg)
+    c, s = np.cos(t), np.sin(t)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]], dtype=np.float32)
 
-    The camera is tilted down; without leveling, pose.advance() along world Z
-    would not match the robot's horizontal travel. ROTATION ONLY — the stereo
-    scale is already metric, so unlike explore_map.level_and_scale nothing is
-    scaled here. Returns (pts, cam_height_m, ok); on a failed fit the points
-    are unchanged and ok=False.
+
+def level_to_floor(pts, rows, img_h, bottom_frac, tilt_deg=None):
+    """Rotate the cloud so the floor is horizontal, floor at Y=0.
+
+    Two stages: FIRST undo the KNOWN downward camera tilt (per-frame estimate
+    from stereo golden points — the tilt servo can sit anywhere after boot),
+    THEN fit the floor plane for the small residual (roll + estimate error).
+    Before, leveling relied on the plane fit ALONE: on frames whose dense
+    depth is unreliable the fit is shaky, and when it failed the cloud kept
+    the full ~20-30 deg tilt. Now a failed/absurd fit (>20 deg residual, i.e.
+    it latched onto furniture, not floor) falls back to the known tilt with
+    the floor height taken as the median of the bottom-rows points.
+
+    ROTATION ONLY — the stereo scale is already metric, nothing is scaled.
+    Returns (pts, cam_height_m, fit_ok, lvl); lvl = (R, floor_y) so
+    visual_odom can move its keypoints into the SAME leveled frame; only when
+    no tilt is given AND the fit fails are the points returned unchanged with
+    lvl=None.
     """
     floor_mask = rows >= int((1.0 - bottom_frac) * img_h)
-    normal, centroid = fit_floor_plane(pts, floor_mask)
-    if normal is None:
-        return pts, None, False
-    R = _rot_to_up(normal.astype(np.float32))
-    p = pts @ R.T
-    floor_y = float(centroid.astype(np.float32) @ R.T[:, 1])   # (centroid@R.T)[1]
+    R = np.eye(3, dtype=np.float32)
+    p = pts
+    if tilt_deg:
+        R = _rot_x_up(tilt_deg)
+        p = pts @ R.T
+    normal, centroid = fit_floor_plane(p, floor_mask)
+    resid_deg = (np.degrees(np.arccos(np.clip(abs(normal[1]), -1.0, 1.0)))
+                 if normal is not None else None)
+    if normal is None or (tilt_deg and resid_deg > 20.0):
+        if not tilt_deg:
+            return pts, None, False, None
+        floor_y = (float(np.median(p[floor_mask, 1])) if floor_mask.any()
+                   else 0.0)
+        p = p.copy()
+        p[:, 1] -= floor_y                 # tilt-only leveling
+        return p.astype(np.float32), -floor_y, False, (R, floor_y)
+    R2 = _rot_to_up(normal.astype(np.float32))
+    p = p @ R2.T
+    floor_y = float(centroid.astype(np.float32) @ R2.T[:, 1])  # (centroid@R2.T)[1]
     p[:, 1] -= floor_y                     # floor → Y=0, camera at Y=|floor_y|
-    return p.astype(np.float32), -floor_y, True
+    return p.astype(np.float32), -floor_y, True, (R2 @ R, floor_y)
 
 
 def to_world(pts, pose):
@@ -141,6 +173,24 @@ def _pose_snapshot(pose):
     p = Pose()
     p.x, p.z, p.yaw = pose.x, pose.z, pose.yaw
     return p
+
+
+def _pose_from_xzyaw(xzyaw):
+    """visual_odom works on plain (x, z, yaw) tuples — wrap back into Pose."""
+    p = Pose()
+    p.x, p.z, p.yaw = float(xzyaw[0]), float(xzyaw[1]), float(xzyaw[2])
+    return p
+
+
+def _make_tracker(args, calib):
+    return None if args.no_vo else vo.VOTracker(
+        calib, z_min=args.z_min, z_max=args.z_max,
+        min_inliers=args.vo_min_inliers)
+
+
+def _ts():
+    """Wall-clock prefix for per-stop output lines."""
+    return time.strftime('[%H:%M:%S]')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -284,9 +334,10 @@ class FusionMapper(pb.Worker):
     fuse_metric → cloud → accumulate → incremental save every --save-every.
     A frame that can't be fused is SKIPPED and the walk continues."""
 
-    def __init__(self, bus, in_q, calib, args, out_ply):
+    def __init__(self, bus, in_q, calib, args, out_ply, tracker=None):
         super().__init__('fusion', bus, in_q)
         self.calib, self.args, self.out_ply = calib, args, out_ply
+        self.tracker = tracker                # visual_odom.VOTracker or None
         self.pending = {}                     # idx -> {'golden': Msg, 'mono': Msg}
         self.all_pts, self.all_cols = [], []
         self.stops_done, self.skipped = 0, []
@@ -303,34 +354,50 @@ class FusionMapper(pb.Worker):
         err, Z, ok, info = g.err or m.err, None, None, None
         if not err:
             try:
-                Z, ok, info = sr.fuse_metric(g.payload['golden'],
-                                             m.payload['mono'],
-                                             m.payload['valid'], self.calib)
+                a = self.args
+                Z, ok, info = sr.fuse_metric(
+                    g.payload['golden'], m.payload['mono'],
+                    m.payload['valid'], self.calib,
+                    cam_h=None if a.no_floor_anchor else a.cam_height_m,
+                    tilt_deg=a.cam_tilt_deg)
             except RuntimeError as e:
                 err = str(e)
         if err:
             self.skipped.append(idx)
-            print(f'stop {idx}: SKIPPED — {err} (walk continues)', flush=True)
+            print(f'{_ts()} stop {idx}: SKIPPED — {err} (walk continues)',
+                  flush=True)
             return
         a = self.args
         np.save(os.path.join(a.out_dir, f'depth_{idx}_m.npy'), Z)
         pts, cols, rows = backproject(Z, ok, g.payload['right_rect'],
                                       self.calib, a.stride, a.z_min, a.z_max)
-        height_note = ''
+        height_note, lvl = '', None
         if a.level:
-            pts, cam_h, lok = level_to_floor(pts, rows, a.height, a.bottom_frac)
+            pts, cam_h, lok, lvl = level_to_floor(
+                pts, rows, a.height, a.bottom_frac,
+                tilt_deg=info.get('tilt_deg', a.cam_tilt_deg))
             height_note = (f'cam_h={cam_h:.2f}m' if lok
+                           else f'cam_h={cam_h:.2f}m (tilt-only)' if lvl
                            else 'floor fit FAILED (raw frame)')
         pose = g.payload['pose']
+        vo_note = ''
+        if self.tracker is not None:
+            xzyaw, vo_note = self.tracker.update(
+                g.payload['right_rect'], Z, ok, lvl,
+                (pose.x, pose.z, pose.yaw))
+            pose = _pose_from_xzyaw(xzyaw)
         self.all_pts.append(to_world(pts, pose))
         self.all_cols.append(cols)
         self.stops_done += 1
 
         zc = Z[ok]
-        print(f'stop {idx}: {pose}  golden={info["n_golden"]} '
-              f'(inl={info["n_inliers"]}, rms={info["rms"]:.4f})  '
+        print(f'{_ts()} stop {idx}: {pose}  golden={info["n_golden"]} '
+              f'(inl={info["n_inliers"]}, rms={info["rms"]:.4f}, '
+              f'span=x{info["span"]:.1f}, anch={info["n_anchors"]})  '
               f'pts={len(pts)}  Z[{zc.min():.2f},{zc.max():.2f}]m  '
               f'{height_note}  [fused +{time.time() - t0:.1f}s]', flush=True)
+        if vo_note:
+            print(f'{_ts()} stop {idx}: {vo_note}', flush=True)
 
         # Incremental PLY on THIS thread's clock: it re-voxelizes ALL points
         # (cost grows with map size) and must never block the join loop above
@@ -426,8 +493,27 @@ def parse_args(argv=None):
     d.add_argument('--z-max', type=float, default=5.0, help='Reject farther (m)')
     d.add_argument('--bottom-frac', type=float, default=0.30,
                    help='Bottom image fraction assumed floor (for leveling)')
+    d.add_argument('--cam-height-m', type=float, default=0.32,
+                   help='Measured camera height above the floor — anchors the '
+                        'metric fit far range via floor rows (fix for the '
+                        'near-floor-only golden cluster compressing the scene)')
+    d.add_argument('--cam-tilt-deg', type=float, default=13.0,
+                   help='Fallback downward camera tilt (deg) — normally the '
+                        'tilt is estimated per frame from floor golden points '
+                        '(the tilt servo can sit anywhere after boot)')
+    d.add_argument('--no-floor-anchor', action='store_true',
+                   help='Disable floor anchoring; frames whose golden inliers '
+                        'span too little depth are then SKIPPED (span guard) '
+                        'instead of rescued')
     d.add_argument('--no-level', dest='level', action='store_false', default=True,
                    help='Skip floor leveling (keep raw tilted camera frame)')
+    d.add_argument('--no-vo', action='store_true',
+                   help='Disable visual odometry — place clouds at the raw '
+                        'dead-reckoned pose (VO measures the real travelled '
+                        'distance/heading from the images and only falls back '
+                        'to dead-reckoning when unconfident)')
+    d.add_argument('--vo-min-inliers', type=int, default=12,
+                   help='Min RANSAC inlier matches before a VO pose is trusted')
 
     o = p.add_argument_group('output')
     o.add_argument('--out-dir', default=os.path.join(ROOT, 'output', 'stereo_walk'))
@@ -443,6 +529,11 @@ def parse_args(argv=None):
                         'appear once per stop since the scene never changes)')
     o.add_argument('--test-left', default=_DEF_TEST_LEFT)
     o.add_argument('--test-right', default=_DEF_TEST_RIGHT)
+    o.add_argument('--replay', action='store_true',
+                   help='Offline: re-run the fuse+map from shot_N_*.jpg saved '
+                        'in --out-dir by a previous walk (no robot, no '
+                        'cameras; sequential mode only). Dead-reckon poses '
+                        'are rebuilt from --step-cm as on the original walk')
     o.add_argument('--inject-crash', type=int, default=None, metavar='IDX',
                    help='(test) DepthWorker raises SystemExit at this stop — '
                         'verifies fault shutdown + partial map save')
@@ -500,11 +591,20 @@ def _wait_for(q, idx, stop_event, timeout, what):
 
 
 def _profile_table(workers, t_wall):
-    print('\n--profile  (per-stage handle() time)')
+    print('\n--profile  (per-step handle() time, ms)')
+    timed = [w for w in workers if w.stage_ms]
+    all_idx = sorted({i for w in timed for i in w.stage_ms})
+    header = '  step  ' + ''.join(f'{w.name:>9}' for w in timed)
+    print(header)
+    for i in all_idx:
+        cells = ''.join(
+            f'{w.stage_ms[i]:9.0f}' if i in w.stage_ms else f'{"-":>9}'
+            for w in timed)
+        print(f'  {i:<6}{cells}')
+
+    print('\n--profile  (per-stage summary)')
     total = 0.0
-    for w in workers:
-        if not w.stage_ms:
-            continue
+    for w in timed:
         vals = list(w.stage_ms.values())
         total += sum(vals)
         print(f'  {w.name:<8} n={len(vals)}  avg={np.mean(vals):7.0f} ms  '
@@ -541,7 +641,8 @@ def run_pipeline(args, calib, model, out_ply):
     stereo = StereoWorker(bus, q_stereo, calib, args.inject_badframe)
     depth = DepthWorker(bus, q_depth, calib, model, args.input_size,
                         args.inject_crash)
-    fusion = FusionMapper(bus, q_fusion, calib, args, out_ply)
+    fusion = FusionMapper(bus, q_fusion, calib, args, out_ply,
+                          tracker=_make_tracker(args, calib))
     # join_all order = upstream first, so in-flight msgs drain before pills
     workers = [capture, stereo, depth, fusion, motion]
 
@@ -596,13 +697,15 @@ def run_pipeline(args, calib, model, out_ply):
 # Sequential mode — original loop, kept for A/B (same persistent cameras)
 # ─────────────────────────────────────────────────────────────────────────────
 def run_sequential(args, calib, model, out_ply):
+    cam = None
     if args.test:
-        cam = None
         test_left = cv2.imread(args.test_left)
         test_right = cv2.imread(args.test_right)
         if test_left is None or test_right is None:
             raise FileNotFoundError(f'--test pair missing: {args.test_left} / '
                                     f'{args.test_right}')
+    elif args.replay:
+        pass                                   # per-stop shots read in the loop
     else:
         cam = PersistentStereoCam(args.device_left, args.device_right,
                                   args.width, args.height)
@@ -610,45 +713,68 @@ def run_sequential(args, calib, model, out_ply):
 
     t0_all = time.time()
     pose = Pose()
+    tracker = _make_tracker(args, calib)
     all_pts, all_cols = [], []
     try:
         for i in range(args.steps):
             t0 = time.time()
             if args.test:
                 left, right = test_left, test_right
+            elif args.replay:
+                lp = os.path.join(args.out_dir, f'shot_{i}_left.jpg')
+                rp = os.path.join(args.out_dir, f'shot_{i}_right.jpg')
+                left, right = cv2.imread(lp), cv2.imread(rp)
+                if left is None or right is None:
+                    raise FileNotFoundError(f'--replay shot missing: {lp} / {rp}')
             else:
                 left, right = cam.grab_fresh(args.discard_s)
-            cv2.imwrite(os.path.join(args.out_dir, f'shot_{i}_left.jpg'), left)
-            cv2.imwrite(os.path.join(args.out_dir, f'shot_{i}_right.jpg'), right)
+            if not args.replay:                # in replay the shots ARE the input
+                cv2.imwrite(os.path.join(args.out_dir, f'shot_{i}_left.jpg'), left)
+                cv2.imwrite(os.path.join(args.out_dir, f'shot_{i}_right.jpg'), right)
             if (left.shape[0], left.shape[1]) != (args.height, args.width):
                 raise RuntimeError(f'shot {i} is {left.shape[1]}x{left.shape[0]}'
                                    f', calib expects {args.width}x{args.height}')
             Z, valid, info = sr.compute_metric_depth(
-                left, right, calib, model, input_size=args.input_size)
+                left, right, calib, model, input_size=args.input_size,
+                cam_h=None if args.no_floor_anchor else args.cam_height_m,
+                tilt_deg=args.cam_tilt_deg)
             np.save(os.path.join(args.out_dir, f'depth_{i}_m.npy'), Z)
 
             pts, cols, rows = backproject(Z, valid, info['right_rect'], calib,
                                           args.stride, args.z_min, args.z_max)
-            height_note = ''
+            height_note, lvl = '', None
             if args.level:
-                pts, cam_h, ok = level_to_floor(pts, rows, args.height,
-                                                args.bottom_frac)
+                pts, cam_h, ok, lvl = level_to_floor(
+                    pts, rows, args.height, args.bottom_frac,
+                    tilt_deg=info.get('tilt_deg', args.cam_tilt_deg))
                 height_note = (f'cam_h={cam_h:.2f}m' if ok
+                               else f'cam_h={cam_h:.2f}m (tilt-only)' if lvl
                                else 'floor fit FAILED (raw frame)')
-            all_pts.append(to_world(pts, pose))
+            place_pose, vo_note = pose, ''
+            if tracker is not None:
+                xzyaw, vo_note = tracker.update(
+                    info['right_rect'], Z, valid, lvl,
+                    (pose.x, pose.z, pose.yaw))
+                place_pose = _pose_from_xzyaw(xzyaw)
+            all_pts.append(to_world(pts, place_pose))
             all_cols.append(cols)
 
             zc = Z[valid]
-            print(f'stop {i}: {pose}  golden={info["n_golden"]} '
-                  f'(inl={info["n_inliers"]}, rms={info["rms"]:.4f})  '
+            print(f'{_ts()} stop {i}: {place_pose}  golden={info["n_golden"]} '
+                  f'(inl={info["n_inliers"]}, rms={info["rms"]:.4f}, '
+                  f'span=x{info["span"]:.1f}, anch={info["n_anchors"]})  '
                   f'pts={len(pts)}  Z[{zc.min():.2f},{zc.max():.2f}]m  '
                   f'{height_note}  [{time.time() - t0:.1f}s]', flush=True)
+            if vo_note:
+                print(f'{_ts()} stop {i}: {vo_note}', flush=True)
 
             if args.save_every and (i + 1) % args.save_every == 0:
                 save_map(all_pts, all_cols, out_ply, args)   # incremental
 
             if i < args.steps - 1:
-                if args.test:
+                if args.replay:
+                    pass                       # commanded pose only — no robot
+                elif args.test:
                     print(f'  [test] skip drive_forward({args.step_cm:g}) '
                           f'(+0.5s like the fake worker)', flush=True)
                     time.sleep(0.5)
@@ -672,12 +798,15 @@ def main(argv=None):
     os.makedirs(args.out_dir, exist_ok=True)
     out_ply = os.path.join(args.out_dir, 'walk_map.ply')
 
+    if args.replay:
+        args.sequential = True                 # replay is sequential-only
     calib = sr.load_rectify(args.rectify, (args.width, args.height))
     model, device = sr.load_model(args.encoder, args.device)
     mode = 'SEQUENTIAL' if args.sequential else 'PIPELINE'
+    src = ('REPLAY (saved shots)' if args.replay
+           else 'TEST (offline)' if args.test else 'HARDWARE')
     print(f'device={device} encoder={args.encoder}  f*B={calib.fb:.2f}  '
-          f'{args.steps} stops x {args.step_cm}cm  {mode}  '
-          f'{"TEST (offline)" if args.test else "HARDWARE"}')
+          f'{args.steps} stops x {args.step_cm}cm  {mode}  {src}')
 
     run = run_sequential if args.sequential else run_pipeline
     return run(args, calib, model, out_ply)

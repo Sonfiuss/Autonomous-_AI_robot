@@ -45,9 +45,8 @@ const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
-scene.add(new THREE.AxesHelper(1));
 
-let current = null;
+let current = null, axes = null;
 const loader = new PLYLoader();
 function load(name){
   if(current){ scene.remove(current); current.geometry.dispose(); current.material.dispose(); }
@@ -55,10 +54,26 @@ function load(name){
     g.computeBoundingBox();
     const c = g.boundingBox.getCenter(new THREE.Vector3());
     g.translate(-c.x, -c.y, -c.z);
-    const m = new THREE.PointsMaterial({size:0.02, vertexColors: g.hasAttribute('color')});
+    // auto-fit moi don vi (m hoac mm): dat camera/near/far/co diem theo
+    // ban kinh cloud thay vi hang so — cloud mm ban kinh ~2000 truoc day
+    // bi cat boi far=1000 nen khong the zoom out nhin toan canh
+    g.computeBoundingSphere();
+    const r = Math.max(g.boundingSphere.radius, 1e-6);
+    camera.near = r / 1000; camera.far = r * 100;
+    camera.position.set(0, 0, r * 2.2);
+    camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0);
+    controls.minDistance = r * 0.01; controls.maxDistance = r * 20;
+    controls.update();
+    if(axes) scene.remove(axes);
+    axes = new THREE.AxesHelper(r * 0.5);
+    scene.add(axes);
+    const m = new THREE.PointsMaterial({size: r/300, vertexColors: g.hasAttribute('color')});
     if(!g.hasAttribute('color')) m.color.set(0x88ccff);
     current = new THREE.Points(g, m);
     scene.add(current);
+    document.getElementById('info').textContent =
+      `ban kinh ~${r.toFixed(0)} don vi | chuot trai: xoay | lan: zoom | chuot phai: di chuyen`;
   });
 }
 
