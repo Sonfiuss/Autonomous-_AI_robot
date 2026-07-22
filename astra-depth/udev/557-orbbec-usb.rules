@@ -1,0 +1,6 @@
+# Orbbec Astra Pro (and other 2bc5 devices) — grant OpenNI2 write access to the
+# depth sensor for non-root users. Install:
+#   sudo cp 557-orbbec-usb.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# then replug the camera.
+SUBSYSTEM=="usb", ATTR{idVendor}=="2bc5", MODE:="0666", OWNER:="root", GROUP:="video"

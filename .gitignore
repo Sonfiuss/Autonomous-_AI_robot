@@ -73,6 +73,9 @@ stereo-camera/calibration/*.yaml
 stereo-camera/calibration/*.json
 stereo-camera/captures/
 
+# Vendor archives (too large for GitHub, source already extracted in-tree)
+*.rar
+
 # Node modules (if any)
 node_modules/
 **/model
