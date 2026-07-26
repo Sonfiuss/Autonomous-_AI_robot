@@ -490,3 +490,72 @@ Ngoai yeu cau truc tiep:
 - Tu nay moi tool doc yml active mac dinh se dung calib v2; anh/PLY truoc toi 12/07
   (huong camera cui cu) khong tuong thich voi calib nay (da ghi memory).
 - Bao cao truc quan (artifact): https://claude.ai/code/artifact/1310644e-96cb-44c2-b6e3-b1d0581539f1
+
+## 2026-07-15 - test depth cap _180: stereo_cloud can --disp-offset 0 (user yeu cau chay thu)
+- Chay stereo_cloud.py tren left/right_180 (cap eval 12/07, board thuoc day 1.80m).
+  Lan 1 voi default --disp-offset 51 bi REJECT (RANSAC fail, 14/234 diem song sot):
+  offset +51px la drift do ngay 14/07, KHONG ap dung cho anh 12/07 (calib v2 20260713
+  fit chinh session nay, d0 chi +0.27px). Chay lai --disp-offset 0 -> PASS.
+- Ket qua: cloud.ply 210,998 diem; board do 1.782m vs tape 1.80m (-1.0%); |Z err|
+  golden mean 3.6cm; holdout local field 23.6% -> 6.4%. Output de vao
+  depth-anything/output/stereo_cloud/ (thu muc default cua tool, de len ket qua cu).
+- Script kiem chung khoang cach + render cloud nam o scratchpad, khong them vao repo.
+
+## 2026-07-15 - stereo_cloud mau RGB + view_web xoay tu do (user yeu cau)
+- stereo_cloud.py: mac dinh MOI la mau — DA-V2 chay tren anh mau, PLY mang uchar RGB
+  (sample tu anh phai rectified); them --gray giu nguyen fast path xyz-only cho Jetson.
+  depth_to_cloud tra them (u,v); save_ply_xyz nhan colors optional. Verify: cap _180
+  color 209,265 diem RGB, board van 1.782m; --gray tai lap dung 210,998 diem nhu cu.
+  DA-V2 tren anh mau con TOT hon: holdout local field 6.4% -> 2.9%.
+- view_web.py: OrbitControls -> TrackballControls (orbit khoa goc polar o dinh/day
+  by design -> "han che goc quay"); rotateSpeed 2.5, damping 0.12, them handleResize.
+  Tradeoff: TrackballControls KHONG co zoomToCursor (zoom ve tam thay vi con tro).
+- Xoa thu muc test tam output/stereo_cloud_graytest sau khi verify.
+
+## 2026-07-15 - thu vitb cho "tuong cong" (user chi dinh) -> KHONG dat, giu vits
+- Tai depth_anything_v2_vitb.pth (390MB, HuggingFace) vao depth-anything/model/.
+- A/B tren cap _180 (do phang mat phang fit tung vung): vits@518 tuong phai 9.6cm rms /
+  holdout 2.9%; vitb@518 12.4cm / 8.7%; vitb@700 te nhat (board region 5.1cm, Zerr 7.8cm).
+  -> vitb KHONG giam warp mono o canh nay; KHONG doi default encoder (van vits).
+- Chay lai vits mau de khoi phuc output/stereo_cloud/cloud.ply tot nhat.
+- Checkpoint vitb giu lai trong model/ de thu canh khac; xoa duoc neu can dung lượng.
+
+## 2026-07-15 - flatten-planes cho stereo_cloud (user duyet plane-RANSAC qua AskUserQuestion)
+- Y tuong YOLO detect tuong cua user duoc phan tich: YOLO/COCO khong co class tuong,
+  bbox van phai fit plane -> chot huong hinh hoc (plane detection), user chon option nay.
+- Trai qua 4 vong lap thuat toan (deu do luong bang plane-fit rms tren vung phang that):
+  v1 RANSAC toan cuc: FAIL (lat cheo ma xuyen san+tuong, warp > nguong inlier).
+  v2 normal-clustering + growing: FAIL (warp lam phap tuyen sai 40-60 deg, plane xien
+  nuot 230k px gom ca cua).
+  v3 Manhattan: san tin cay -> vector up -> tuong = duong 2D top-down. Cua phang 0.0cm
+  nhung fit tren dense map cong -> sai yaw (chord cua banana) + seam bac thang.
+  v4 FINAL: line-RANSAC tren GOLDEN POINTS (metric that, khong bias) thay vi dense map;
+  feather band->2*band khu seam; band theo DO CAO so voi san (0.12m duoi 0.5m de bao ve
+  do vat thap, 0.30m tren cao noi warp nang nhat va khong co vat can).
+- Ket qua cap _180: tuong phai 10.0->4.0cm rms (phap tuyen |ny|=0.07 dung tuong dung),
+  cua tren board 0.0cm, san 1.6cm, do vat khong doi (ung 2.32/chai 1.92/khoan 2.45m).
+  Con lai: vung board 4.0cm (seam band thap cat ngang, median 1.837 vs tape 1.80 = +2.1%).
+- Flags moi: --flatten-planes --flat-band/--flat-band-hi/--flat-h-split/--flat-max-planes/
+  --flat-min-blob; debug flatten_labels.jpg. Mac dinh TAT (opt-in).
+
+## 2026-07-16 - yolo protect mask cho flatten-planes (user approve plan)
+- Van de: band hinh hoc khong phan biet duoc "tuong warp" vs "vat the that" -> de vat
+  thap tren san bi ep phang. YOLO-seg (yolo11n-seg) detect vat -> mask bao ve:
+  khong bi capture boi plane nao, khong tham gia fit plane, anchor tren vat bi loai
+  khoi wall RANSAC.
+- Hanh dong ngoai yeu cau: tai yolo11n-seg.pt (5.9MB, ultralytics auto-download) ->
+  chuyen vao depth-anything/model/; tao output/stereo_cloud_yolotest (+_base) de A/B,
+  copy cloud baseline thanh cloud_no_yolo.ply de xem chung 1 viewer.
+- A/B cap _180: floor capture 177k->158k px, wall2 104k->94k px (vat duoc tha),
+  phap tuyen plane khong doi -> khong hai fit. bottle@1.91m khop tape 1.92m.
+- Gioi han da biet: COCO 80 class — ung/khoan/dep KHONG duoc detect, van bi band ep.
+
+## 2026-07-26 — Cleanup legacy + memory
+- Xoá dead code (user duyệt, đã cảnh báo mất task YOLO + thay đổi chưa commit):
+  toàn bộ DA-V2/stereo trong depth-anything/src (giữ astra_cloud/astra_slam/rec),
+  cả thư mục deepmap/, và stereo-camera/tools/*.py|*.sh.
+- Viết lại agent/plan/deepmap_plan.md (clean, Astra-only); xoá stereo_plan.md,
+  implement_plan_stereo.md.
+- Cập nhật auto-memory: xoá 3 memory stereo/deepmap lỗi thời, thêm
+  project_astra_slam_pipeline.
+- Chưa git commit — xoá mới ở working tree.
