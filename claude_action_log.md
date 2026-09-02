@@ -2,6 +2,21 @@
 
 Actions taken beyond the literal request are recorded here for transparency.
 
+## 2026-07-26 — auto-review gate hooks
+- User asked to auto-run the two review skills (/code-standards-review, /code-logic-review)
+  after coding. Skills can't self-trigger, so added a hook-based gate.
+- Design decision beyond the literal ask: made it **loop-safe and once-per-user-turn** via
+  three cooperating scripts + a per-session marker in `${TMPDIR:-/tmp}/claude_review_state`
+  (jq unavailable in hook shell -> parse stdin JSON with grep/sed).
+- New scripts in `agent/scripts/`: `review_reset.sh` (UserPromptSubmit, clears markers),
+  `review_flag.sh` (PostToolUse Write|Edit, sets "changed" marker for .cpp/.hpp/.h/.cc/.py),
+  `review_gate.sh` (Stop, blocks once with a reason telling the agent to run both skills).
+- Wired into `.claude/settings.json` using the existing Jetson absolute-path convention
+  (`/home/nvidia/Documents/agent/scripts/...`) — so the gate fires in the Jetson runtime,
+  NOT on the Windows editing box (same as the pre-existing context_loader/session_logger).
+- Tested all four state transitions locally; JSON validated. No .gitignore change needed
+  (markers live in /tmp, not the repo).
+
 ## 2026-07-02 — metric stereo calibration (B=5.4cm) + rectified stereo_ruler
 - User gave baseline 5.4cm and asked for metric labels. Sanity check exposed that the
   naive Z=fB/disp was wrong: the rig is toed-in (yaw +2.14°, tilt +3.61°) with a tilted
@@ -559,3 +574,13 @@ Ngoai yeu cau truc tiep:
 - Cập nhật auto-memory: xoá 3 memory stereo/deepmap lỗi thời, thêm
   project_astra_slam_pipeline.
 - Chưa git commit — xoá mới ở working tree.
+
+## 2026-07-26 — RGB-D upgrade cho astra_slam (task astra-rgbd-color-slam)
+- Theo plan đã duyệt: tạo astra_calib.py, astra_rgbd.py; mở rộng astra_slam.py
+  (--calib mode B, --rgbd-odom, --tsdf, record/replay .npz có color).
+- Ngoài yêu cầu trực tiếp: chạy 2 skill review theo protocol — standards-review
+  tự sửa 9 lỗi style (hằng số, đổi tên ok_o→odo_ok, check imwrite);
+  logic-review tự sửa 2 lỗi (keyframe bỏ RGBD khi color drop, cache undistort
+  map). Tạo dữ liệu synthetic + test script trong scratchpad (ngoài repo).
+- Cập nhật agent/: task file mới (status testing), deepmap_plan.md, history.
+- Chưa git commit.
