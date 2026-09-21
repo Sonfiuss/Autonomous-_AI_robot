@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Room Simulator</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f4f4f4; color: #222; }
+  header { display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: #fff;
+           border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0 16px 0 0; }
+  button, input { font-size: 14px; padding: 6px 10px; }
+  input[type=number] { width: 110px; }
+  #layout { display: flex; gap: 16px; padding: 16px; flex-wrap: wrap; }
+  canvas { background: #fff; border: 1px solid #ccc; max-width: 100%; }
+  #side { min-width: 280px; max-width: 420px; flex: 1; }
+  #info { font-size: 13px; line-height: 1.5; }
+  #legend div { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 2px 0; }
+  #legend span.sw { width: 18px; height: 12px; display: inline-block; border: 1px solid #555; }
+  pre { background: #272822; color: #f8f8f2; padding: 10px; font-size: 11px; max-height: 420px;
+        overflow: auto; border-radius: 4px; }
+  .sel { outline: 2px solid #e91e63; }
+</style>
+</head>
+<body>
+<header>
+  <h1>2D Room Simulator</h1>
+  <label>Seed <input id="seed" type="number" min="1" placeholder="random"></label>
+  <button id="btnNew">New room</button>
+  <button id="btnLoad">Load seed</button>
+  <button id="btnDownload">Download JSON</button>
+  <label><input id="chkLabels" type="checkbox" checked> labels</label>
+  <label><input id="chkSides" type="checkbox"> free sides</label>
+  <span id="status"></span>
+</header>
+
+<div id="layout">
+  <canvas id="cv" width="900" height="700"></canvas>
+  <div id="side">
+    <div id="info"></div>
+    <div id="legend"></div>
+    <h3 style="font-size:14px;margin:12px 0 4px">Selected object</h3>
+    <pre id="objJson">click an object</pre>
+  </div>
+</div>
+
+<script>
+const COLORS = {
+  bed: "#90caf9", table: "#bcaaa4", chair: "#a5d6a7", fan: "#e0e0e0",
+  cup: "#ef9a9a", bottle: "#80cbc4", ball: "#ffcc80", box: "#d7ccc8", plant: "#66bb6a", book: "#fff59d",
+};
+const SIDE_ANGLE = { front: 0, left: Math.PI / 2, back: Math.PI, right: -Math.PI / 2 };
+const PAD = 40;                 // canvas padding in px
+const GRID_STEP_M = 0.5;
+
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+let scene = null;
+let selectedId = null;
+let scale = 100;                // px per meter
+
+// ---- coordinate transform (world m -> canvas px, y flipped)
+function toPx(x, y) {
+  return [PAD + x * scale, cv.height - PAD - y * scale];
+}
+function fromPx(px, py) {
+  return [(px - PAD) / scale, (cv.height - PAD - py) / scale];
+}
+
+function fitScale() {
+  const w = scene.room.width, l = scene.room.length;
+  scale = Math.min((cv.width - 2 * PAD) / w, (cv.height - 2 * PAD) / l);
+}
+
+// ---- drawing
+function draw() {
+  if (!scene) return;
+  fitScale();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  drawGrid();
+  drawWalls();
+  drawDoors();
+  scene.objects.forEach(drawObject);
+  drawRobot();
+}
+
+function drawGrid() {
+  const w = scene.room.width, l = scene.room.length;
+  ctx.strokeStyle = "#eee"; ctx.lineWidth = 1; ctx.fillStyle = "#888"; ctx.font = "10px sans-serif";
+  for (let x = 0; x <= w + 1e-6; x += GRID_STEP_M) {
+    const [px] = toPx(x, 0);
+    ctx.beginPath(); ctx.moveTo(px, toPx(0, 0)[1]); ctx.lineTo(px, toPx(0, l)[1]); ctx.stroke();
+    if (Math.abs(x % 1) < 1e-6) ctx.fillText(x.toFixed(0) + " m", px - 8, cv.height - PAD + 14);
+  }
+  for (let y = 0; y <= l + 1e-6; y += GRID_STEP_M) {
+    const [, py] = toPx(0, y);
+    ctx.beginPath(); ctx.moveTo(toPx(0, 0)[0], py); ctx.lineTo(toPx(w, 0)[0], py); ctx.stroke();
+    if (Math.abs(y % 1) < 1e-6) ctx.fillText(y.toFixed(0), PAD - 18, py + 3);
+  }
+}
+
+function drawWalls() {
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 6; ctx.lineCap = "butt";
+  scene.walls.forEach(wl => {
+    const a = toPx(wl.p1.x, wl.p1.y), b = toPx(wl.p2.x, wl.p2.y);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+  });
+}
+
+function drawDoors() {
+  scene.doors.forEach(d => {
+    const a = toPx(d.p1.x, d.p1.y), b = toPx(d.p2.x, d.p2.y);
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    ctx.strokeStyle = "#f57c00"; ctx.lineWidth = 4; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    if (document.getElementById("chkLabels").checked) {
+      ctx.fillStyle = "#f57c00"; ctx.font = "bold 12px sans-serif";
+      ctx.fillText(d.id, (a[0] + b[0]) / 2 - 18, (a[1] + b[1]) / 2 - 8);
+    }
+  });
+}
+
+function drawObject(o) {
+  const pts = o.polygon.map(p => toPx(p.x, p.y));
+  ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+  ctx.closePath();
+  ctx.fillStyle = COLORS[o.class] || "#ccc";
+  ctx.fill();
+  ctx.strokeStyle = o.id === selectedId ? "#e91e63" : "#444";
+  ctx.lineWidth = o.id === selectedId ? 3 : 1.5;
+  ctx.stroke();
+
+  const [cx, cy] = toPx(o.center.x, o.center.y);
+  // heading tick (object x axis)
+  ctx.strokeStyle = "#444"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + 10 * Math.cos(o.yaw), cy - 10 * Math.sin(o.yaw)); ctx.stroke();
+
+  if (document.getElementById("chkLabels").checked) {
+    ctx.fillStyle = "#111"; ctx.font = "11px sans-serif";
+    ctx.fillText(`${o.class} (${o.id})`, cx + 6, cy - 6);
+  }
+  if (document.getElementById("chkSides").checked) drawFreeSides(o);
+}
+
+function drawFreeSides(o) {
+  const r = scene.robot.radius * scale;
+  const [cx, cy] = toPx(o.center.x, o.center.y);
+  // approximate half-extent along a side direction from the polygon
+  o.free_sides.forEach(side => {
+    const a = o.yaw + SIDE_ANGLE[side];
+    const ux = Math.cos(a), uy = Math.sin(a);
+    let half = 0;
+    o.polygon.forEach(p => {
+      half = Math.max(half, (p.x - o.center.x) * ux + (p.y - o.center.y) * uy);
+    });
+    const d = (half + scene.robot.radius + 0.05) * scale;
+    ctx.beginPath(); ctx.arc(cx + d * ux, cy - d * uy, r, 0, 2 * Math.PI);
+    ctx.strokeStyle = "rgba(76,175,80,0.9)"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#2e7d32"; ctx.font = "9px sans-serif";
+    ctx.fillText(side, cx + d * ux - 10, cy - d * uy + 3);
+  });
+}
+
+function bodyToPx(rb, p) {
+  const c = Math.cos(rb.theta), s = Math.sin(rb.theta);
+  return toPx(rb.x + c * p.x - s * p.y, rb.y + s * p.x + c * p.y);
+}
+
+function drawBodyPolygon(rb, poly, fill, stroke, width) {
+  ctx.beginPath();
+  poly.forEach((p, i) => { const q = bodyToPx(rb, p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  ctx.strokeStyle = stroke; ctx.lineWidth = width; ctx.stroke();
+}
+
+function drawRobot() {
+  const rb = scene.robot;
+  const [cx, cy] = toPx(rb.x, rb.y);
+  // collision hull (chassis + wheels), dashed
+  ctx.setLineDash([3, 3]);
+  drawBodyPolygon(rb, rb.footprint, null, "rgba(21,101,192,0.5)", 1);
+  ctx.setLineDash([]);
+  drawBodyPolygon(rb, rb.chassis, "rgba(33,150,243,0.5)", "#1565c0", 2);
+  rb.wheels.forEach(w => drawBodyPolygon(rb, w.polygon, "#333", "#111", 1));
+  // heading arrow (+x forward)
+  const len = 0.15 * scale;
+  ctx.strokeStyle = "#0d47a1"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + len * Math.cos(rb.theta), cy - len * Math.sin(rb.theta)); ctx.stroke();
+  ctx.fillStyle = "#1565c0"; ctx.font = "bold 11px sans-serif";
+  ctx.fillText("robot", cx + rb.radius * scale + 3, cy + 4);
+}
+
+// ---- side panel
+function renderInfo() {
+  const r = scene.room;
+  document.getElementById("info").innerHTML =
+    `<b>seed</b> ${scene.seed} &nbsp; <b>room</b> ${r.width} × ${r.length} m &nbsp; ` +
+    `<b>objects</b> ${scene.objects.length} &nbsp; <b>door</b> ${scene.doors[0].wall}<br>` +
+    `<b>robot</b> x=${scene.robot.x} y=${scene.robot.y} θ=${scene.robot.theta} rad ` +
+    `(hex chassis, 3 wheels @ ${scene.robot.wheels.map(w => w.angle_deg).join("/")}°, hull r=${scene.robot.radius} m)`;
+  const counts = {};
+  scene.objects.forEach(o => counts[o.class] = (counts[o.class] || 0) + 1);
+  document.getElementById("legend").innerHTML = Object.keys(counts).map(c =>
+    `<div><span class="sw" style="background:${COLORS[c] || '#ccc'}"></span>${c} × ${counts[c]}</div>`
+  ).join("") + `<div><span class="sw" style="background:rgba(33,150,243,0.5)"></span>robot chassis (dashed = collision hull)</div>` +
+    `<div><span class="sw" style="background:#f57c00"></span>door</div>`;
+}
+
+function showSelected() {
+  const o = scene.objects.find(x => x.id === selectedId);
+  document.getElementById("objJson").textContent = o ? JSON.stringify(o, null, 2) : "click an object";
+}
+
+// ---- point in polygon (ray casting)
+function inPolygon(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+cv.addEventListener("click", ev => {
+  if (!scene) return;
+  const rect = cv.getBoundingClientRect();
+  const sx = cv.width / rect.width, sy = cv.height / rect.height;
+  const [wx, wy] = fromPx((ev.clientX - rect.left) * sx, (ev.clientY - rect.top) * sy);
+  const hit = scene.objects.slice().reverse().find(o => inPolygon(wx, wy, o.polygon));
+  selectedId = hit ? hit.id : null;
+  showSelected(); draw();
+});
+
+// ---- API
+async function load(url) {
+  document.getElementById("status").textContent = "loading…";
+  const res = await fetch(url);
+  scene = await res.json();
+  selectedId = null;
+  document.getElementById("seed").value = scene.seed;
+  document.getElementById("status").textContent = `saved scenes/room_${scene.seed}.json`;
+  renderInfo(); showSelected(); draw();
+}
+
+document.getElementById("btnNew").onclick = () => load("/api/room/new");
+document.getElementById("btnLoad").onclick = () => {
+  const s = document.getElementById("seed").value;
+  load(s ? `/api/room/new?seed=${s}` : "/api/room/new");
+};
+document.getElementById("btnDownload").onclick = () => {
+  if (!scene) return;
+  const blob = new Blob([JSON.stringify(scene, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `room_${scene.seed}.json`; a.click();
+  URL.revokeObjectURL(a.href);
+};
+document.getElementById("chkLabels").onchange = draw;
+document.getElementById("chkSides").onchange = draw;
+
+load("/api/room/latest");
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "rm",
+  "version": "0.1.0",
+  "description": "RM kinematics layer for a 3-wheel omni robot: inverse/forward kinematics, velocity profiles, odometry, step/dir conversion. Pure C++, no hardware dependencies.",
+  "keywords": ["omni", "kinematics", "odometry", "stepper", "esp32"],
+  "license": "MIT",
+  "frameworks": ["arduino", "espidf"],
+  "platforms": ["espressif32", "native"],
+  "build": {
+    "srcDir": "src",
+    "includeDir": "include",
+    "srcFilter": ["+<RM/*.cpp>"],
+    "flags": ["-I config"]
+  }
+}

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LLM Grounding</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f4f4f4; color: #222; }
+  header { display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: #fff;
+           border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0 16px 0 0; }
+  button, input { font-size: 14px; padding: 6px 10px; }
+  input[type=number] { width: 90px; }
+  #layout { display: flex; gap: 16px; padding: 16px; flex-wrap: wrap; }
+  canvas { background: #fff; border: 1px solid #ccc; max-width: 100%; }
+  #side { min-width: 320px; max-width: 460px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  #chat { background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 8px; height: 380px;
+          overflow-y: auto; font-size: 13px; }
+  .msg { margin: 4px 0; padding: 6px 8px; border-radius: 6px; max-width: 90%; white-space: pre-wrap; }
+  .user { background: #e3f2fd; margin-left: auto; }
+  .bot { background: #f1f8e9; }
+  .bot.goal { background: #c8e6c9; font-weight: 600; }
+  .bot.none, .bot.error { background: #ffebee; }
+  #row { display: flex; gap: 6px; }
+  #text { flex: 1; }
+  #slots { font-family: monospace; font-size: 12px; background: #272822; color: #f8f8f2; padding: 8px;
+           border-radius: 4px; }
+  #matches { font-size: 12px; max-height: 160px; overflow: auto; }
+  #matches div { padding: 2px 4px; }
+  #matches div.final { background: #c8e6c9; font-weight: 600; }
+  #left { display: flex; flex-direction: column; gap: 8px; }
+  #motion { background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 8px; }
+  #transport { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  #scrub { flex: 1; }
+  #clock { font-family: monospace; font-size: 12px; min-width: 70px; text-align: right; }
+  #readout { font-family: monospace; font-size: 12px; color: #333; margin-top: 6px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LLM Grounding</h1>
+  <label>Seed <input id="seed" type="number" min="1" placeholder="random"></label>
+  <button id="btnNew">New room</button>
+  <button id="btnLoad">Load seed</button>
+  <label><input id="chkLabels" type="checkbox" checked> labels</label>
+  <label><input id="chkAll" type="checkbox"> all spots</label>
+  <label><input id="chkPath" type="checkbox" checked> path</label>
+  <span id="status"></span>
+</header>
+
+<div id="layout">
+  <div id="left">
+    <canvas id="cv" width="900" height="700"></canvas>
+    <div id="motion" hidden>
+      <div id="transport">
+        <button id="btnPlay">▶ Play</button>
+        <input id="scrub" type="range" min="0" max="0" value="0" step="1">
+        <span id="clock">0.00 s</span>
+      </div>
+      <canvas id="chart" width="900" height="220"></canvas>
+      <div id="readout">—</div>
+    </div>
+  </div>
+  <div id="side">
+    <div id="chat"></div>
+    <div id="row">
+      <input id="text" placeholder='e.g. "near my bed"' autocomplete="off">
+      <button id="btnSend">Send</button>
+      <button id="btnReset">Reset</button>
+    </div>
+    <div id="slots">slots: -</div>
+    <div id="matches"></div>
+  </div>
+</div>
+
+<script>
+const COLORS = {
+  bed: "#90caf9", table: "#bcaaa4", chair: "#a5d6a7", fan: "#e0e0e0",
+  cup: "#ef9a9a", bottle: "#80cbc4", ball: "#ffcc80", box: "#d7ccc8", plant: "#66bb6a", book: "#fff59d",
+};
+const PAD = 40;
+const GRID_STEP_M = 0.5;
+const SPOT_R_PX = 5;
+const WAYPOINT_R_PX = 4;
+const PATH_CELL_COLOR = "rgba(156,39,176,0.35)";   // A* cell chain
+const PATH_LINE_COLOR = "#6a1b9a";                 // smoothed waypoint polyline
+const WHEEL_COLORS = ["#d32f2f", "#1976d2", "#388e3c"];   // wheel 1 (60 deg), 2 (180), 3 (300)
+const CHART_PAD = { left: 52, right: 12, top: 12, bottom: 24 };
+const PLAY_SPEED = 1.0;                            // 1.0 = real time
+const MIN_FRAME_MS = 16;                           // never schedule faster than ~60 fps
+const MIN_PEAK_RAD_S = 0.1;                        // keeps a near-still chart from exploding
+const LEGEND_RIGHT_PX = 220;                       // legend block, measured from the right edge
+const LEGEND_GAP_PX = 70;
+
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+let scene = null, candidates = [], matches = [], resolved = false;
+let plan = null;                    // MV reply: {ok, path, waypoints, primitives, length_m, ...}
+let trajectory = null;              // MC reply: {steps[], tick_s, stride, duration_s, end}
+let origin = null;                  // pose the trajectory starts from (the snapped start cell)
+let tickIndex = 0;                  // row of trajectory.steps being shown
+let playTimer = null;
+let scale = 100;
+
+function toPx(x, y) { return [PAD + x * scale, cv.height - PAD - y * scale]; }
+function fitScale() {
+  scale = Math.min((cv.width - 2 * PAD) / scene.room.width, (cv.height - 2 * PAD) / scene.room.length);
+}
+
+// ---- drawing (renderer shared in spirit with simulation/room/static/index.html)
+function draw() {
+  if (!scene) return;
+  fitScale();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  drawGrid(); drawWalls(); drawDoors();
+  scene.objects.forEach(drawObject);
+  drawPath();
+  drawRobot();
+  drawSpots();
+  drawMovingRobot();
+}
+
+// ---- the robot as it is at the scrubbed tick (MC pose, not the scene pose)
+function drawMovingRobot() {
+  const step = currentStep();
+  if (!step || !origin) return;   // no trajectory armed yet
+  const pose = { x: origin.x + step.x, y: origin.y + step.y, theta: step.theta };
+  drawBodyPolygon(pose, scene.robot.chassis, "rgba(255,152,0,0.55)", "#e65100", 2);
+  scene.robot.wheels.forEach(w => drawBodyPolygon(pose, w.polygon, "#5d4037", "#3e2723", 1));
+  const [px, py] = toPx(pose.x, pose.y);
+  const len = 0.2 * scale;
+  ctx.strokeStyle = "#e65100"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(px, py);
+  ctx.lineTo(px + len * Math.cos(pose.theta), py - len * Math.sin(pose.theta)); ctx.stroke();
+}
+
+function currentStep() {
+  if (!trajectory || !trajectory.ok || !trajectory.steps.length) return null;
+  return trajectory.steps[Math.min(tickIndex, trajectory.steps.length - 1)];
+}
+
+// ---- MV path (A* cells, smoothed waypoints, waypoint index labels)
+function drawPath() {
+  if (!plan || !plan.ok || !document.getElementById("chkPath").checked) return;
+  const cells = plan.path || [], wps = plan.waypoints || [];
+  ctx.strokeStyle = PATH_CELL_COLOR; ctx.lineWidth = 2; ctx.setLineDash([2, 3]);
+  ctx.beginPath();
+  cells.forEach((p, i) => { const q = toPx(p.x, p.y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = PATH_LINE_COLOR; ctx.lineWidth = 3;
+  ctx.beginPath();
+  wps.forEach((p, i) => { const q = toPx(p.x, p.y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
+  ctx.stroke();
+  wps.forEach((p, i) => {
+    const [px, py] = toPx(p.x, p.y);
+    ctx.fillStyle = PATH_LINE_COLOR; ctx.beginPath(); ctx.arc(px, py, WAYPOINT_R_PX, 0, 2 * Math.PI); ctx.fill();
+    if (labels() && i && i < wps.length - 1) {
+      ctx.font = "10px sans-serif"; ctx.fillText(String(i), px + 6, py - 6);
+    }
+  });
+}
+
+function drawGrid() {
+  const w = scene.room.width, l = scene.room.length;
+  ctx.strokeStyle = "#eee"; ctx.lineWidth = 1; ctx.fillStyle = "#888"; ctx.font = "10px sans-serif";
+  for (let x = 0; x <= w + 1e-6; x += GRID_STEP_M) {
+    const [px] = toPx(x, 0);
+    ctx.beginPath(); ctx.moveTo(px, toPx(0, 0)[1]); ctx.lineTo(px, toPx(0, l)[1]); ctx.stroke();
+    if (Math.abs(x % 1) < 1e-6) ctx.fillText(x.toFixed(0) + " m", px - 8, cv.height - PAD + 14);
+  }
+  for (let y = 0; y <= l + 1e-6; y += GRID_STEP_M) {
+    const [, py] = toPx(0, y);
+    ctx.beginPath(); ctx.moveTo(toPx(0, 0)[0], py); ctx.lineTo(toPx(w, 0)[0], py); ctx.stroke();
+    if (Math.abs(y % 1) < 1e-6) ctx.fillText(y.toFixed(0), PAD - 18, py + 3);
+  }
+  ctx.fillStyle = "#aaa"; ctx.font = "bold 11px sans-serif";
+  ctx.fillText("N (top)", cv.width / 2 - 20, PAD - 10);
+}
+
+function drawWalls() {
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 6;
+  scene.walls.forEach(wl => {
+    const a = toPx(wl.p1.x, wl.p1.y), b = toPx(wl.p2.x, wl.p2.y);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+  });
+}
+
+function drawDoors() {
+  scene.doors.forEach(d => {
+    const a = toPx(d.p1.x, d.p1.y), b = toPx(d.p2.x, d.p2.y);
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    ctx.strokeStyle = "#f57c00"; ctx.lineWidth = 4; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    if (labels()) { ctx.fillStyle = "#f57c00"; ctx.font = "bold 12px sans-serif";
+      ctx.fillText(d.id, (a[0] + b[0]) / 2 - 18, (a[1] + b[1]) / 2 - 8); }
+  });
+}
+
+function labels() { return document.getElementById("chkLabels").checked; }
+const targetIds = () => new Set(matches.map(m => m.target_id));
+
+function drawObject(o) {
+  const pts = o.polygon.map(p => toPx(p.x, p.y));
+  ctx.beginPath();
+  pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+  ctx.closePath();
+  ctx.fillStyle = COLORS[o.class] || "#ccc"; ctx.fill();
+  const hot = targetIds().has(o.id);
+  ctx.strokeStyle = hot ? "#e91e63" : "#444"; ctx.lineWidth = hot ? 3 : 1.5; ctx.stroke();
+  const [cx, cy] = toPx(o.center.x, o.center.y);
+  ctx.strokeStyle = "#444"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 10 * Math.cos(o.yaw), cy - 10 * Math.sin(o.yaw)); ctx.stroke();
+  if (labels()) { ctx.fillStyle = "#111"; ctx.font = "11px sans-serif"; ctx.fillText(`${o.class} (${o.id})`, cx + 6, cy - 6); }
+}
+
+function bodyToPx(rb, p) {
+  const c = Math.cos(rb.theta), s = Math.sin(rb.theta);
+  return toPx(rb.x + c * p.x - s * p.y, rb.y + s * p.x + c * p.y);
+}
+function drawBodyPolygon(rb, poly, fill, stroke, width) {
+  ctx.beginPath();
+  poly.forEach((p, i) => { const q = bodyToPx(rb, p); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  ctx.strokeStyle = stroke; ctx.lineWidth = width; ctx.stroke();
+}
+function drawRobot() {
+  const rb = scene.robot;
+  const [cx, cy] = toPx(rb.x, rb.y);
+  ctx.setLineDash([3, 3]); drawBodyPolygon(rb, rb.footprint, null, "rgba(21,101,192,0.5)", 1); ctx.setLineDash([]);
+  drawBodyPolygon(rb, rb.chassis, "rgba(33,150,243,0.5)", "#1565c0", 2);
+  rb.wheels.forEach(w => drawBodyPolygon(rb, w.polygon, "#333", "#111", 1));
+  const len = 0.15 * scale;
+  ctx.strokeStyle = "#0d47a1"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + len * Math.cos(rb.theta), cy - len * Math.sin(rb.theta)); ctx.stroke();
+}
+
+function drawSpot(s, style) {
+  const [px, py] = toPx(s.x, s.y);
+  if (style === "final") {
+    // robot hull ghost at the goal pose + heading arrow
+    ctx.setLineDash([]);
+    drawBodyPolygon({x: s.x, y: s.y, theta: s.theta}, scene.robot.footprint, "rgba(76,175,80,0.35)", "#2e7d32", 2);
+    const len = 0.25 * scale;
+    ctx.strokeStyle = "#1b5e20"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + len * Math.cos(s.theta), py - len * Math.sin(s.theta)); ctx.stroke();
+    ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(px, py, SPOT_R_PX + 2, 0, 2 * Math.PI); ctx.fill();
+    ctx.font = "bold 12px sans-serif"; ctx.fillText("GOAL " + s.id, px + 10, py - 10);
+    return;
+  }
+  const fill = style === "match" ? "rgba(233,30,99,0.85)" : "rgba(120,120,120,0.35)";
+  ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(px, py, style === "match" ? SPOT_R_PX + 1 : SPOT_R_PX - 1, 0, 2 * Math.PI); ctx.fill();
+  if (style === "match") {
+    ctx.strokeStyle = "rgba(233,30,99,0.5)"; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.arc(px, py, scene.robot.radius * scale, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#880e4f"; ctx.font = "10px sans-serif"; ctx.fillText(s.spot, px + 7, py + 3);
+  }
+}
+
+function drawSpots() {
+  const matchIds = new Set(matches.map(m => m.id));
+  if (document.getElementById("chkAll").checked) candidates.filter(c => !matchIds.has(c.id)).forEach(c => drawSpot(c, "all"));
+  if (resolved && matches.length === 1) { drawSpot(matches[0], "final"); return; }
+  matches.forEach(m => drawSpot(m, "match"));
+}
+
+// ---- wheel-speed chart: three curves over time, with a marker at the current tick
+const chartCv = document.getElementById("chart");
+const chartCtx = chartCv.getContext("2d");
+
+function drawChart() {
+  const w = chartCv.width, h = chartCv.height;
+  chartCtx.clearRect(0, 0, w, h);
+  if (!trajectory || !trajectory.ok || trajectory.steps.length < 2) return;
+  const steps = trajectory.steps;
+  const tEnd = steps[steps.length - 1].t || 1;
+  const peak = trajectory.peak;          // computed once in setTrajectory, not per frame
+  const x0 = CHART_PAD.left, x1 = w - CHART_PAD.right;
+  const y0 = CHART_PAD.top, y1 = h - CHART_PAD.bottom;
+  const toX = t => x0 + (t / tEnd) * (x1 - x0);
+  const toY = v => (y0 + y1) / 2 - (v / peak) * ((y1 - y0) / 2);
+
+  // axes: zero line, frame, and labels in rad/s and seconds
+  chartCtx.strokeStyle = "#ddd"; chartCtx.lineWidth = 1;
+  chartCtx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  chartCtx.beginPath(); chartCtx.moveTo(x0, toY(0)); chartCtx.lineTo(x1, toY(0)); chartCtx.stroke();
+  chartCtx.fillStyle = "#888"; chartCtx.font = "10px sans-serif";
+  chartCtx.fillText(peak.toFixed(2), 6, y0 + 10);
+  chartCtx.fillText("0", 6, toY(0) + 3);
+  chartCtx.fillText((-peak).toFixed(2), 6, y1 - 2);
+  chartCtx.fillText("rad/s", 6, y0 - 2);
+  chartCtx.fillText(tEnd.toFixed(1) + " s", x1 - 34, y1 + 16);
+  chartCtx.fillText("0 s", x0, y1 + 16);
+
+  for (let wheel = 0; wheel < 3; wheel++) {
+    chartCtx.strokeStyle = WHEEL_COLORS[wheel]; chartCtx.lineWidth = 2;
+    chartCtx.beginPath();
+    steps.forEach((s, i) => {
+      const px = toX(s.t), py = toY(s.w[wheel]);
+      i ? chartCtx.lineTo(px, py) : chartCtx.moveTo(px, py);
+    });
+    chartCtx.stroke();
+    chartCtx.fillStyle = WHEEL_COLORS[wheel];
+    chartCtx.fillText("wheel " + (wheel + 1),
+                      x1 - LEGEND_RIGHT_PX + wheel * LEGEND_GAP_PX, y0 + 12);
+  }
+
+  const step = currentStep();
+  if (step) {
+    const px = toX(step.t);
+    chartCtx.strokeStyle = "#111"; chartCtx.lineWidth = 1;
+    chartCtx.beginPath(); chartCtx.moveTo(px, y0); chartCtx.lineTo(px, y1); chartCtx.stroke();
+  }
+}
+
+function showTick() {
+  const step = currentStep();
+  document.getElementById("scrub").value = String(tickIndex);
+  document.getElementById("clock").textContent = step ? step.t.toFixed(2) + " s" : "0.00 s";
+  if (step) {
+    const col = v => v.padStart(8);
+    const x = origin ? origin.x + step.x : step.x;
+    const y = origin ? origin.y + step.y : step.y;
+    document.getElementById("readout").textContent = [
+      "wheels rad/s " + step.w.map(v => col(v.toFixed(3))).join(""),
+      "pulses Hz    " + step.hz.map((v, i) => col((v * step.dir[i]).toFixed(0))).join(""),
+      "body         u " + step.u.toFixed(3) + "  v " + step.v.toFixed(3) + "  r " + step.r.toFixed(3),
+      "pose         x " + x.toFixed(3) + "  y " + y.toFixed(3) +
+        "  theta " + (step.theta * 180 / Math.PI).toFixed(1) + "°",
+    ].join("\n");
+  }
+  drawChart(); draw();
+}
+
+function setPlaying(on) {
+  const button = document.getElementById("btnPlay");
+  if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  if (!on || !trajectory || !trajectory.ok) { button.textContent = "▶ Play"; return; }
+  button.textContent = "❚❚ Pause";
+  if (tickIndex >= trajectory.steps.length - 1) { tickIndex = 0; showTick(); }   // replay from the start
+  // One row covers stride ticks, so a row lasts stride * tick_s of robot time.
+  const rowMs = Math.max(MIN_FRAME_MS,
+                         trajectory.tick_s * trajectory.stride * 1000 / PLAY_SPEED);
+  playTimer = setInterval(() => {
+    if (tickIndex >= trajectory.steps.length - 1) { setPlaying(false); return; }
+    tickIndex++; showTick();
+  }, rowMs);
+}
+
+// ---- chat
+function addMsg(text, cls) {
+  const el = document.createElement("div");
+  el.className = "msg " + cls; el.textContent = text;
+  const chat = document.getElementById("chat");
+  chat.appendChild(el); chat.scrollTop = chat.scrollHeight;
+}
+
+function showState(slots) {
+  document.getElementById("slots").textContent = "slots: " + JSON.stringify(slots || {});
+  document.getElementById("matches").innerHTML = matches.map(m =>
+    `<div class="${resolved ? 'final' : ''}"><b>${m.id}</b> — ${m.description} (${m.x}, ${m.y})</div>`).join("");
+}
+
+async function send() {
+  const input = document.getElementById("text");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ""; addMsg(text, "user");
+  document.getElementById("status").textContent = "thinking…";
+  const res = await fetch("/api/ground/say", { method: "POST", headers: { "Content-Type": "application/json" },
+                                              body: JSON.stringify({ text }) });
+  const r = await res.json();
+  document.getElementById("status").textContent = "";
+  if (r.error) { addMsg(r.error, "bot error"); return; }
+  matches = r.matches; resolved = r.resolved; plan = null; setTrajectory(null);
+  const line = r.type === "goal" ? `Target: ${r.matches[0].description} → (${r.matches[0].x}, ${r.matches[0].y})`
+             : r.text || "(no text)";
+  addMsg(line, "bot " + r.type);
+  showState(r.slots); draw();
+  if (r.type === "goal") await planTo(r.matches[0]);
+}
+
+// ---- MV plans the route, MC turns it into wheel speeds; then draw and arm the player
+async function planTo(goal) {
+  document.getElementById("status").textContent = "planning…";
+  try {
+    const res = await fetch("/api/trajectory", { method: "POST", headers: { "Content-Type": "application/json" },
+                                                 body: JSON.stringify({ goal }) });
+    plan = await res.json();
+  } catch (err) {
+    plan = { ok: false, reason: String(err) };
+  }
+  document.getElementById("status").textContent = "";
+  setTrajectory(plan);
+  if (!plan.ok) {
+    addMsg(`No path: ${plan.reason || "planner error"}`, "bot none");
+    draw();
+    return;
+  }
+  addMsg(`Path: ${plan.length_m} m, ${plan.waypoints.length} waypoints, `
+       + `${plan.primitives.length} primitives.`, "bot");
+  if (trajectory && trajectory.ok) {
+    addMsg(`Motion: ${trajectory.duration_s} s over ${trajectory.step_count} ticks `
+         + `at ${(trajectory.tick_s * 1000).toFixed(0)} ms. Press Play.`, "bot");
+  } else if (trajectory) {
+    addMsg(`No wheel speeds: ${trajectory.reason || "executor error"}`, "bot none");
+  }
+  showTick();
+}
+
+// Arms the chart and player from a /api/trajectory reply.
+function setTrajectory(reply) {
+  setPlaying(false);
+  trajectory = (reply && reply.trajectory) || null;
+  origin = (reply && reply.origin) || null;
+  tickIndex = 0;
+  if (trajectory && trajectory.ok && trajectory.steps.length) {
+    // The y scale never changes while playing, so find it once here.
+    let peak = MIN_PEAK_RAD_S;
+    trajectory.steps.forEach(s => s.w.forEach(v => { peak = Math.max(peak, Math.abs(v)); }));
+    trajectory.peak = peak;
+  }
+  const panel = document.getElementById("motion");
+  const armed = !!(trajectory && trajectory.ok && trajectory.steps.length);
+  panel.hidden = !armed;
+  const scrub = document.getElementById("scrub");
+  scrub.max = String(armed ? trajectory.steps.length - 1 : 0);
+  scrub.value = "0";
+  if (!armed) { document.getElementById("readout").textContent = "—"; drawChart(); }
+}
+
+async function reset() {
+  await fetch("/api/ground/reset", { method: "POST" });
+  matches = []; resolved = false; plan = null; setTrajectory(null);
+  document.getElementById("chat").innerHTML = "";
+  showState({}); draw();
+}
+
+async function load(url) {
+  document.getElementById("status").textContent = "loading…";
+  const res = await fetch(url);
+  const data = await res.json();
+  scene = data.scene; candidates = data.candidates; matches = []; resolved = false; plan = null;
+  setTrajectory(null);
+  document.getElementById("seed").value = scene.seed;
+  document.getElementById("status").textContent = `seed ${scene.seed} · ${candidates.length} spots · provider ${data.provider}`;
+  document.getElementById("chat").innerHTML = "";
+  addMsg("Describe where I should go, e.g. \"near my bed\".", "bot");
+  showState(data.slots); draw();
+}
+
+document.getElementById("btnSend").onclick = send;
+document.getElementById("text").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+document.getElementById("btnReset").onclick = reset;
+document.getElementById("btnNew").onclick = () => load("/api/scene/new");
+document.getElementById("btnLoad").onclick = () => {
+  const s = document.getElementById("seed").value;
+  load(s ? `/api/scene/new?seed=${s}` : "/api/scene/new");
+};
+document.getElementById("chkLabels").onchange = draw;
+document.getElementById("chkAll").onchange = draw;
+document.getElementById("chkPath").onchange = draw;
+document.getElementById("btnPlay").onclick = () => setPlaying(playTimer === null);
+document.getElementById("scrub").oninput = e => {
+  setPlaying(false);
+  tickIndex = Number(e.target.value);
+  showTick();
+};
+load("/api/scene/latest");
+</script>
+</body>
+</html>

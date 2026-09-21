@@ -80,3 +80,5 @@ node_modules/
 **/pointcloud
 **/output
 **/document
+# secrets
+.env

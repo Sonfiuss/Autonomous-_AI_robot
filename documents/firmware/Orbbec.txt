@@ -1,0 +1,51 @@
+# Orbbec Astra Series - Basic Information
+
+## Overview
+Structured-light depth camera series for robotics. Three models: Astra (standard), Astra S (short-range), Astra Pro Plus (high-res RGB).
+
+**Robot uses**: Astra Pro with OpenNI2 driver and Open3D SLAM.
+
+---
+
+## Specifications
+
+### Depth Sensor
+| Spec | Value |
+|---|---|
+| Range | 0.6 - 8m |
+| Resolution | 640 × 480 |
+| FPS | 30 |
+| Precision | ±3mm @ 1m |
+| FOV | 58.4° × 45.5° (H×V) |
+
+### RGB Sensor
+| Spec | Value |
+|---|---|
+| Resolution (Pro Plus) | 1920 × 1080 |
+| Resolution (Standard) | 640 × 480 |
+| FPS | 30 |
+
+### Physical
+| Spec | Value |
+|---|---|
+| Dimensions | 165mm × 48mm × 40mm |
+| Weight | 310g |
+| Connector | USB 2.0 Type-A |
+| Power | < 2.4W |
+| Mount | M6 threaded holes |
+| Temperature | 10°C - 40°C |
+
+---
+
+## Model Variants
+- **Astra**: 0.6-8m depth, 640×480 RGB
+- **Astra S**: 0.4-2m depth, 640×480 RGB (short-range)
+- **Astra Pro Plus**: 0.6-8m depth, 1920×1080 RGB (high-res)
+
+---
+
+## Technology
+- **Type**: Structured Light (850nm near-infrared)
+- **Processor**: Orbbec ASIC
+- **Driver**: OpenNI2
+- **Output**: Depth map, RGB, IR, point cloud

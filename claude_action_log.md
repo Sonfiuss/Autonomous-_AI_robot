@@ -584,3 +584,96 @@ Ngoai yeu cau truc tiep:
   map). Tạo dữ liệu synthetic + test script trong scratchpad (ngoài repo).
 - Cập nhật agent/: task file mới (status testing), deepmap_plan.md, history.
 - Chưa git commit.
+
+## 2026-09-07 — RM module implement (task 2026-09-07_rm-module)
+- Khảo sát ngoài yêu cầu: ls project/, agent/, documents/, đọc memory + skill files, `where g++/cmake`
+  (không có cmake, chỉ MinGW g++ 6.3 → test build bằng g++ trực tiếp; py launcher hỏng nên sửa task file bằng sed).
+- Phát hiện project/config/constants.h là THƯ MỤC rỗng → xoá (user duyệt cấu trúc) rồi tạo file.
+- Thêm ngoài skeleton (đã báo): include/RM/types.h, rm_debug.h, StepAccumulator trong driver_stepdir,
+  project/README.md, library.json, tests/, CMakeLists (switch ESP-IDF component).
+- Chạy 2 skill review theo protocol: standards (2 fix), logic (3 fix: odometry giữ count khi dt nhỏ,
+  wrapAngle fmod O(1), README ghi O theta deg + cảnh báo frame lệnh M).
+- Lỗi thao tác: perl s||| mangle driver_stepdir.cpp (delimiter | trùng ||) → sửa tay, test pass lại.
+- Tạo agent/tasks/2026-09-07_rm-module.md, agent/plan/rm_plan.md, agent/history/2026-09-07_rm.md.
+- Sửa memory feedback_transparency_log: đường dẫn log thực tế là <root>/claude_action_log.md, không phải Develop/.
+- Chưa git commit.
+- 2026-09-11: created agent/tasks/2026-09-11_room-simulator.md and agent/plan/simulation_plan.md (task intake, user asked to create plan)
+- 2026-09-11: wrote agent/history/2026-09-11_simulation.md, updated agent/plan/simulation_plan.md (session end protocol); ran /code-standards-review + /code-logic-review with auto-fixes on simulation/room/*
+- 2026-09-11: robot footprint changed to user-drawn hexagon chassis (simulation/room/*), task/history updated
+
+## 2026-09-12 — CM LLM grounding
+- Created task `agent/tasks/2026-09-12_llm-grounding.md`, `agent/plan/cm_plan.md`, `agent/history/2026-09-12_cm.md` (protocol files, not code).
+- Beyond the literal request: added a door candidate spot (`door_1:inside:center`) because object `near` lists reference `door_1`; added `CM_PROVIDER=fake` mode so the UI runs without an API key; wired both OpenAI and Anthropic since no provider was chosen.
+- Ran /code-standards-review and /code-logic-review inline (fixes listed in the task execution log).
+- Added `.env` line to repo `.gitignore` (root file, not only CM) so the key file can never be committed.
+
+## 2026-09-13 — MV path planner (step 8-9 of the mv-astar task)
+- Beyond the literal plan steps: added `test_mv_bridge` + `test_session_tracks_goal` to
+  `project/src/CM/test_grounding.py` (step 8 named only the code, not tests) and documented both the CM
+  Flask API and the MV C API in `agent/description/interfaces.md` (step 9 named only the READMEs) —
+  the CM<->MV contract is cross-module, so it belongs in the interfaces doc.
+- Added `PROJECT_DIR` and the `MV_*` constants to `project/src/CM/config.py`; `GroundingSession` gained
+  `goal` / `resolved_goal()` so `/api/plan` can default to the dialog's own goal.
+- Ran /code-standards-review (4 fixes, 1 deferral) and /code-logic-review (0 code fixes, 2 findings
+  recorded) per the protocol; both logged in the task execution log.
+- Measured but did not change: MV refuses 4 of 1452 candidate spots over 40 seeds because it plans a
+  disc while CM tests the real footprint. Left as an open item in `agent/plan/mv_plan.md` rather than
+  silently loosening the safety margin.
+- Wrote `agent/history/2026-09-13_mv.md`, updated `agent/plan/mv_plan.md`, task status -> `testing`.
+- No git commit.
+
+## 2026-09-13 — MC motion executor (new module)
+- Task intake + plan presented and approved by user before any code (lifecycle protocol).
+  Two design choices put to the user: module location (new MC vs inside RM vs Python) and output shape
+  (per-tick trajectory vs per-primitive vs serial commands). User took both recommendations.
+- Beyond the literal plan steps: added `mc_max_speed` to the C API (the direction-dependent ceiling was
+  needed internally and is worth exposing), and an MC entry in `agent/description/interfaces.md`
+  (step 9 named only the README).
+- Deliberate deviations from the approved plan, both recorded in the task execution log: the speed
+  limiter exposes `peakWheelOmega` + `limitsFor` instead of the planned `maxBodySpeed` (superset), and
+  `POSE_TOLERANCE_M` / `ANGLE_TOLERANCE_RAD` stayed local to the test file instead of becoming unused
+  library constants.
+- Ran /code-standards-review (5 fixes) and /code-logic-review (3 fixes, 2 deviations recorded).
+  The logic review caught that `agent/plan/mc_plan.md` from step 1 had not been written; now written.
+- Touched the shared `project/config/constants.h`, so MV and RM test suites were recompiled from
+  current sources and re-run, not assumed.
+- CMake targets for MC were added but could NOT be verified: no cmake on this PC. Said so in the
+  README, the plan, the history and to the user.
+- Killed a leftover CM server process (PID 21404) that I had started with the fake provider in the
+  previous verification step and failed to clean up; it was holding port 5001 and answering the
+  user's browser, which made their dialog look broken. The user's own server was left untouched.
+- No git commit.
+- 2026-09-13 step 10 (user asked for the wheel speeds + robot motion in the UI): added the per-tick
+  pose to the MC C API (mc_version 1 -> 2) rather than re-integrating in Python, `mc_client.py`,
+  `POST /api/trajectory`, and a player + wheel-speed chart in the CM page. Ran /code-logic-review
+  (4 fixes). The page JS could not be executed here (no browser, no Node): bracket-checked and
+  reviewed only, and said so to the user. Used a non-5001 test path and the Flask test client so as
+  not to collide with the user's running server again.
+
+## 2026-09-15/16 — ESP32 firmware architecture (design discussion, no code written)
+- User hỏi về input module RM, rồi về cơ chế vòng lặp UART. Đã tự khảo sát (không được yêu cầu):
+  đọc `agent/description/interfaces.md`, `project_overview.md`, `agent/plan/rm_plan.md`,
+  `agent/history/2026-09-07_rm.md` + `2026-09-13_mc.md`, `project/README.md`, `config/constants.h`,
+  `agent/tasks/2026-09-13_mc-executor.md`, `agent/description/task_format.md`.
+- Phát hiện quan trọng: `motivation/esp32_unified_controller/` KHÔNG tồn tại trong repo, dù
+  `project_overview.md` và `interfaces.md` mô tả nó như đã có. `motivation/` và `communication/` rỗng.
+  Vòng lặp trong `project/README.md:68-113` chỉ là sketch, đúng như `rm_plan.md` ghi là pending.
+- Khảo sát toolchain trên PC này: chỉ có MinGW g++ (`/c/MinGW/bin/g++`). KHÔNG có PlatformIO, ESP-IDF,
+  cmake, arduino-cli → không thể build/flash firmware ESP32 ở đây, chỉ test được logic thuần trên host.
+- Suy luận thiết kế đã trình bày (chưa implement): tách RX khỏi control tick, dùng FreeRTOS tasks;
+  mailbox (xQueueOverwrite) cho lệnh M liên tục, FIFO cho F/T/R, flag riêng cho S (estop bỏ qua queue),
+  snapshot + mutex cho pose/servo, ghim Motion vào core riêng, Status là task duy nhất ghi UART TX.
+  User đề xuất 4 task (Communication / Motion / Peripheral / Status) và đã duyệt hướng này.
+- Chưa tạo/sửa file nào trong project ngoài chính entry log này. Chưa git commit.
+- 2026-09-16: user duyệt hướng thiết kế và yêu cầu ghi plan → tạo
+  `agent/tasks/2026-09-16_esp32-rtos-firmware.md` (status `planning`, CHƯA approved nên chưa chạy
+  bước nào). Tự quyết: tên slug `esp32-rtos-firmware`, viết bằng tiếng Anh cho khớp các task/history
+  file sẵn có (log này vẫn tiếng Việt theo quy ước riêng của file log). Chưa tạo
+  `agent/plan/firmware_plan.md` vì đó là bước 1 của plan, chỉ chạy sau khi user approve.
+- 2026-09-16: user duyệt đề xuất thêm dòng TX `E <code> <count>` → cập nhật task file (Input decision 7,
+  Expected output, bước 3/4/10/11, subtask 8.1.5 + 8.4.7-8, bảng tài nguyên, bảng mã lỗi mới).
+  Tự quyết phần chi tiết user không chỉ định: 6 mã lỗi (1 dòng hỏng, 2 lệnh lạ, 3 dòng quá dài,
+  4 queue đầy, 5 TX drop, 6 servo clamp); counter cumulative uint32 không bao giờ reset (mất 1 dòng E
+  không mất thông tin, Jetson tự diff); phát tối đa 1 Hz và CHỈ khi counter thay đổi (robot khoẻ =
+  không có traffic E). CRC + sequence number đã cân nhắc và chủ động HOÃN, ghi lý do trong task file.
+  `agent/description/interfaces.md` CHƯA sửa — việc đó là bước 11, chỉ chạy sau khi user approve plan.
