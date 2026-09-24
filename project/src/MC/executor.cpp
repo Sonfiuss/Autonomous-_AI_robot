@@ -3,8 +3,8 @@
 #include <cmath>
 
 #include "MC/mc_debug.h"
-#include "MC/speed_limit.h"
 #include "RM/odometry.h"   // wrapAngle
+#include "RM/speed_limit.h"
 
 namespace mc {
 
@@ -105,7 +105,7 @@ bool Executor::beginLeg() {
             direction_ = rm::OmniKinematics::globalToBody(world, theta_);
         }
 
-        const AxisLimits axis = limitsFor(kinematics_, direction_, requested);
+        const rm::AxisLimits axis = rm::limitsFor(kinematics_, direction_, requested);
         if (!profile_.plan(length, axis.vMax, axis.accel, axis.decel)) {
             MC_DLOG("leg %d: trapezoid rejected (len %.4f vMax %.3f), skipped\n",
                     index_, length, axis.vMax);

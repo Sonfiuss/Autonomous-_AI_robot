@@ -12,24 +12,35 @@
 // Scaling the whole vector (rather than clipping one wheel at its limit) is
 // what keeps the robot on the planned line: clipping a single wheel changes the
 // direction of motion, scaling does not.
-#ifndef MC_SPEED_LIMIT_H
-#define MC_SPEED_LIMIT_H
+//
+// Pure chassis maths, so it lives with the rest of it in RM. Both callers need
+// it: MC when previewing a trajectory, and the ESP32 firmware when planning a
+// leg live.
+#ifndef RM_SPEED_LIMIT_H
+#define RM_SPEED_LIMIT_H
 
-#include "MC/types.h"
 #include "RM/omni_kinematics.h"
+#include "RM/types.h"
 
-namespace mc {
+namespace rm {
+
+// Feasible speed and ramp for one direction of travel, in that direction's own
+// units (m and m/s for a linear leg, rad and rad/s for a rotation).
+struct AxisLimits {
+    float vMax  = 0.0f;
+    float accel = 0.0f;
+    float decel = 0.0f;
+};
 
 // Largest |ω| any wheel reaches for this body velocity, rad/s.
-float peakWheelOmega(const rm::OmniKinematics& kinematics, const rm::BodyVel& direction);
+float peakWheelOmega(const OmniKinematics& kinematics, const BodyVel& direction);
 
 // Feasible speed and ramp for travelling along `direction`. Only the direction
 // matters, not its magnitude. `requested` is the caller's speed in the same
 // units as the direction vector; the result is never faster than `requested`.
 // A direction that moves no wheel returns all-zero limits.
-AxisLimits limitsFor(const rm::OmniKinematics& kinematics, const rm::BodyVel& direction,
-                     float requested);
+AxisLimits limitsFor(const OmniKinematics& kinematics, const BodyVel& direction, float requested);
 
-}  // namespace mc
+}  // namespace rm
 
-#endif  // MC_SPEED_LIMIT_H
+#endif  // RM_SPEED_LIMIT_H

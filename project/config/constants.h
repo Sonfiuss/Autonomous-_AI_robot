@@ -76,6 +76,9 @@ constexpr float OMEGA_TOLERANCE_RAD_S = 1e-3f;
 constexpr float MIN_DT_S           = 1e-5f;  // update() calls with dt below this are ignored
 constexpr float MIN_DETERMINANT    = 1e-6f;  // kinematics matrix considered singular below this
 constexpr float MIN_PROFILE_LENGTH = 1e-6f;  // trapezoid distance below this is a no-op
+// A direction whose fastest wheel coefficient is below this is treated as "no
+// motion": it would need an unbounded chassis speed to turn any wheel at all.
+constexpr float MIN_WHEEL_COEFF    = 1e-6f;
 
 }  // namespace cfg
 }  // namespace rm
@@ -132,14 +135,88 @@ constexpr float CRUISE_SPEED_M_S = 0.15f;
 constexpr float YAW_RATE_RAD_S   = 0.8f;
 
 // ---------------------------------------------------------------- numeric guards
-// A direction whose fastest wheel coefficient is below this is treated as "no motion":
-// it would need an unbounded chassis speed to move any wheel.
-constexpr float MIN_WHEEL_COEFF   = 1e-6f;
 constexpr float MIN_LEG_LENGTH_M  = 1e-4f;   // shorter FORWARD/MOVE legs are skipped
 constexpr float MIN_LEG_ANGLE_RAD = 1e-4f;   // smaller ROTATE legs are skipped
 constexpr float STOP_HOLD_S       = 0.10f;   // STOP emits zero-speed ticks for this long
 
 }  // namespace cfg
 }  // namespace mc
+
+// ============================================================================
+// LINK module (Jetson <-> ESP32 wire protocol) -- line limits and the ranges a
+// received command must fall inside. Compiled into BOTH sides of the link.
+// ============================================================================
+namespace link {
+namespace cfg {
+
+// ---------------------------------------------------------------- framing
+// Longest line accepted, excluding the terminating '\n'. The widest line the
+// protocol produces is "M -1.234 -1.234 -12.345" at 25 characters, so this
+// leaves generous room while still bounding the assembler's buffer.
+constexpr int MAX_LINE_LEN = 63;
+// Fixed decimals every float is written with. Floats are formatted by hand
+// because ESP-IDF's newlib-nano option drops %f from printf.
+constexpr int   FLOAT_DECIMALS = 3;
+constexpr float FLOAT_SCALE    = 1000.0f;   // 10^FLOAT_DECIMALS
+// Values beyond this saturate on the wire rather than print nonsense.
+constexpr float MAX_WIRE_VALUE = 1.0e6f;
+
+// ---------------------------------------------------------------- accepted ranges
+// A command outside these is rejected as malformed instead of being executed.
+// Deliberately wider than the chassis can actually do (rm::cfg caps that), so
+// this layer only rejects values that are obviously corrupt.
+constexpr float MAX_LINEAR_SPEED_M_S  = 2.0f;
+constexpr float MAX_YAW_RATE_RAD_S    = 10.0f;
+constexpr float MAX_DISTANCE_M        = 100.0f;
+constexpr float MAX_TURN_DEG          = 3600.0f;
+constexpr float MAX_SERVO_RATE_DEG_S  = 180.0f;
+// `F`/`T` carry a speed, and a speed of zero would never finish the move.
+constexpr float MIN_MOVE_RATE         = 1e-3f;
+
+// ---------------------------------------------------------------- watchdogs
+// How long a streamed command (`M`, `V`) stays valid. The receiver treats
+// anything older as zero, so the sender must refresh faster than this. These
+// belong to the CONTRACT, not to either side: the firmware stops the robot on
+// them and the Jetson paces its keep-alive by them, so they are defined once.
+constexpr uint32_t MOTION_CMD_TIMEOUT_MS = 200;
+constexpr uint32_t SERVO_CMD_TIMEOUT_MS  = 300;
+// Refresh interval a sender should use — comfortably inside the shorter timeout.
+constexpr uint32_t KEEPALIVE_MS          = 50;
+
+}  // namespace cfg
+}  // namespace link
+
+// ============================================================================
+// SEQ module (plan sequencer, Jetson side) -- walks an MV primitive list onto
+// the wire one leg at a time. Every physical number comes from rm::cfg and the
+// leg thresholds from mc::cfg; only the handshake's own timing lives here.
+// ============================================================================
+namespace seq {
+namespace cfg {
+
+// ---------------------------------------------------------------- ack handshake
+// A leg's duration is computed the way the firmware plans it (rm::limitsFor +
+// rm::TrapezoidalProfile), so the timeout only has to cover serial latency, the
+// firmware's 50 Hz tick granularity and Linux scheduling -- not the motion itself.
+constexpr float    ACK_TIMEOUT_MARGIN   = 2.0f;    // x the computed leg duration ...
+constexpr uint32_t ACK_TIMEOUT_FLOOR_MS = 1500;    // ... plus this, so short legs keep slack
+// Grace period for `READY` on a freshly opened port. Not a requirement: the
+// firmware may have booted long before we opened the port, in which case its
+// READY is gone for good and the plan must still run (see Sequencer::update).
+constexpr uint32_t READY_WAIT_MS        = 2000;
+// Longest primitive list accepted, the same bound MC uses. One MOVE expands into
+// two legs, but that happens leg by leg, so the list length itself is unchanged.
+constexpr int      MAX_PRIMITIVES       = mc::cfg::MAX_PRIMITIVES;
+
+// ---------------------------------------------------------------- expansion
+// Most wire legs one primitive can become: a MOVE turns onto its bearing and
+// then drives it. Bounds the sequencer's expansion buffer.
+constexpr int MAX_LEGS_PER_PRIMITIVE = 2;
+// The matching FAULT_SLOTS lives in SEQ/sequencer.h, not here: it derives from
+// link::ErrCode, and LINK/protocol.h includes THIS file. jetson::cfg::ERR_SLOTS
+// is in its module header for the same reason.
+
+}  // namespace cfg
+}  // namespace seq
 
 #endif  // RM_CONFIG_CONSTANTS_H

@@ -2,8 +2,8 @@
 
 #include "MC/executor.h"
 #include "MC/mc_debug.h"
-#include "MC/speed_limit.h"
 #include "RM/odometry.h"
+#include "RM/speed_limit.h"
 
 namespace {
 
@@ -111,7 +111,7 @@ int mc_max_speed(float u, float v, float r, float requested, float* v_max, float
     direction.r = r;
     // A zero request means "as fast as the wheels allow".
     const float ask = requested > 0.0f ? requested : rm::cfg::MAX_WHEEL_OMEGA_RAD_S;
-    const mc::AxisLimits limits = mc::limitsFor(g_kinematics, direction, ask);
+    const rm::AxisLimits limits = rm::limitsFor(g_kinematics, direction, ask);
     *v_max = limits.vMax;
     *accel = limits.accel;
     return MC_OK;

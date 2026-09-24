@@ -9,7 +9,8 @@ built from the scene JSON. C++ library with a C API; CM (Python, ctypes) calls i
       status `testing`): ask for a spot, confirm the purple path appears from the robot to the green hull.
 
 ## Next (not started)
-- [ ] Executor: feed primitives to the motion layer (RM / ESP32) and re-plan from odometry.
+- [ ] Re-plan from odometry mid-run. Blocked on frame reconciliation: the ESP32 odometry (`O`,
+      zeroed at boot) and MV's room frame are unrelated today.
 - [ ] Dynamic obstacles / replanning when the scene changes mid-run.
 - [ ] Jetson build (`libmv.so`) and CM config for the library path (`tools/build_mv.sh` already picks
       the `.so` name on Linux; only the CM side has been exercised on Windows so far).
@@ -21,3 +22,5 @@ built from the scene JSON. C++ library with a C API; CM (Python, ctypes) calls i
       primitives, C API (`mv_plan`, `mv_grid`), CLI, unit tests — all 8 `test_mv` cases pass.
 - [x] CM integration: `mv_client.py` (ctypes), `POST /api/plan`, path drawing in the CM canvas,
       Python-side tests in `test_grounding.py`.
+- [x] 2026-09-24 Primitives now reach the robot: `project/src/SEQ` walks the list onto the wire, one
+      leg per `K`, and `robot_link --run-plan` drives it. See `agent/plan/seq_plan.md`.
