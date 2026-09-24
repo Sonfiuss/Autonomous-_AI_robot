@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 set(RM_SOURCES
     src/RM/omni_kinematics.cpp
     src/RM/velocity_profile.cpp
+    src/RM/speed_limit.cpp
     src/RM/odometry.cpp
     src/RM/driver_stepdir.cpp)
 
@@ -13,16 +14,26 @@ set(MV_SOURCES
     src/MV/mv_api.cpp)
 
 set(MC_SOURCES
-    src/MC/speed_limit.cpp
     src/MC/executor.cpp
     src/MC/mc_api.cpp)
+
+# The Jetson <-> ESP32 wire protocol. Built into both sides of the link, which
+# is the point: one implementation, so the two can never disagree about a line.
+set(LINK_SOURCES
+    src/LINK/protocol.cpp)
+
+# The Jetson-side plan sequencer. NOT registered with ESP-IDF below: the firmware
+# executes legs, it does not sequence them, and giving it this code would only
+# invite the two to disagree about whose job that is.
+set(SEQ_SOURCES
+    src/SEQ/sequencer.cpp)
 
 # --------------------------------------------------------------------------
 # ESP-IDF: when this directory sits under <firmware>/components/ the IDF build
 # system includes this file and idf_component_register is defined.
 # --------------------------------------------------------------------------
 if(COMMAND idf_component_register)
-    idf_component_register(SRCS ${RM_SOURCES} ${MV_SOURCES} ${MC_SOURCES}
+    idf_component_register(SRCS ${RM_SOURCES} ${MV_SOURCES} ${MC_SOURCES} ${LINK_SOURCES}
                            INCLUDE_DIRS include config)
     return()
 endif()
@@ -44,6 +55,10 @@ option(MV_BUILD_TESTS "Build MV unit tests and CLI" ON)
 option(MV_DEBUG "Enable MV_DLOG debug output" OFF)
 option(MC_BUILD_TESTS "Build MC unit tests and CLI" ON)
 option(MC_DEBUG "Enable MC_DLOG debug output" OFF)
+option(LINK_BUILD_TESTS "Build LINK unit tests" ON)
+option(LINK_DEBUG "Enable LINK_DLOG debug output" OFF)
+option(SEQ_BUILD_TESTS "Build SEQ unit tests" ON)
+option(SEQ_DEBUG "Enable SEQ_DLOG debug output" OFF)
 
 add_library(rm STATIC ${RM_SOURCES})
 target_include_directories(rm PUBLIC include config)
@@ -117,4 +132,42 @@ if(MC_BUILD_TESTS)
     add_executable(test_mc tests/test_mc.cpp)
     target_link_libraries(test_mc PRIVATE mc mv)
     add_test(NAME mc_unit COMMAND test_mc)
+endif()
+
+# ---- LINK: the wire protocol. Depends on config/constants.h and nothing else,
+# so both the ESP32 firmware and the Jetson application can link it as-is.
+add_library(link STATIC ${LINK_SOURCES})
+target_include_directories(link PUBLIC include config)
+if(LINK_DEBUG)
+    target_compile_definitions(link PUBLIC LINK_DEBUG)
+endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(link PRIVATE -Wall -Wextra -Wpedantic -fno-exceptions -fno-rtti)
+endif()
+
+if(LINK_BUILD_TESTS)
+    enable_testing()
+    add_executable(test_link tests/test_link.cpp)
+    target_link_libraries(test_link PRIVATE link)
+    add_test(NAME link_unit COMMAND test_link)
+endif()
+
+# ---- SEQ: walks an MV primitive list onto the wire, one leg at a time. Links RM
+# (it estimates each leg's duration the way the firmware plans it) and LINK (it
+# emits wire commands). Only MC/types.h is used from MC, which is header-only.
+add_library(seq STATIC ${SEQ_SOURCES})
+target_include_directories(seq PUBLIC include config)
+target_link_libraries(seq PUBLIC rm link)
+if(SEQ_DEBUG)
+    target_compile_definitions(seq PUBLIC SEQ_DEBUG)
+endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(seq PRIVATE -Wall -Wextra -Wpedantic -fno-exceptions -fno-rtti)
+endif()
+
+if(SEQ_BUILD_TESTS)
+    enable_testing()
+    add_executable(test_seq tests/test_seq.cpp)
+    target_link_libraries(test_seq PRIVATE seq)
+    add_test(NAME seq_unit COMMAND test_seq)
 endif()

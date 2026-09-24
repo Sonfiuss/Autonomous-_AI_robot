@@ -12,8 +12,9 @@ export PATH="$(dirname "$CXX"):$PATH"
 OUT=build/mc
 mkdir -p "$OUT"
 FLAGS="-std=c++14 -O2 -Wall -Wextra -Wpedantic -fno-exceptions -fno-rtti -Iinclude -Iconfig"
-SRC="src/MC/speed_limit.cpp src/MC/executor.cpp src/MC/mc_api.cpp \
-     src/RM/omni_kinematics.cpp src/RM/velocity_profile.cpp src/RM/odometry.cpp src/RM/driver_stepdir.cpp"
+SRC="src/MC/executor.cpp src/MC/mc_api.cpp \
+     src/RM/omni_kinematics.cpp src/RM/velocity_profile.cpp src/RM/speed_limit.cpp \
+     src/RM/odometry.cpp src/RM/driver_stepdir.cpp"
 case "$(uname -s)" in
     MINGW*|MSYS*|CYGWIN*) LIB="$OUT/mc.dll"; SHFLAGS="-shared -static-libgcc -static-libstdc++ -DMC_BUILD_SHARED" ;;
     *)                    LIB="$OUT/libmc.so"; SHFLAGS="-shared -fPIC" ;;

@@ -677,3 +677,61 @@ Ngoai yeu cau truc tiep:
   không mất thông tin, Jetson tự diff); phát tối đa 1 Hz và CHỈ khi counter thay đổi (robot khoẻ =
   không có traffic E). CRC + sequence number đã cân nhắc và chủ động HOÃN, ghi lý do trong task file.
   `agent/description/interfaces.md` CHƯA sửa — việc đó là bước 11, chỉ chạy sau khi user approve plan.
+- 2026-09-16: user chốt phương án A + yêu cầu viết firmware tách Jetson/ESP32 → implement bước 1-16.
+  Tự quyết những chỗ user chưa trả lời: body frame cho `M`, ESP-IDF, tick 50 Hz, pin map placeholder.
+  Tự quyết cấu trúc: tạo module thứ 4 `project/LINK` (protocol dùng chung, compile vào CẢ hai phía)
+  thay vì mỗi bên tự parse — lý do: hai bản parse là nguồn drift chắc chắn xảy ra. Thêm block
+  `link::cfg` vào `project/config/constants.h` (theo tiền lệ MC) và chuyển MOTION_CMD_TIMEOUT_MS /
+  SERVO_CMD_TIMEOUT_MS / KEEPALIVE_MS vào đó vì chúng ràng buộc cả hai bên.
+  Tự thêm ngoài spec: (a) watchdog cho lệnh M/V — không có nó robot chạy mãi khi rút cáp; (b) ESTOP
+  có CHỐT — bản đầu tự thoát khi bánh dừng nên lệnh M cũ làm robot chạy lại ngay sau dừng khẩn,
+  test_motion bắt được; (c) đếm SERVO_CLAMPED theo cạnh thay vì theo tick để không spam E.
+  Tự dựng stub header ESP-IDF/POSIX trong scratchpad (KHÔNG đưa vào repo) để syntax-check toàn bộ
+  code không build được trên Windows — sạch, 0 warning. Đã chạy lại toàn bộ test cũ vì constants.h
+  dùng chung: test_link/test_motion/test_mc/test_mv PASS; test_rm fail 1 check nhưng đã xác minh là
+  lỗi CÓ SẴN (chỉ fail khi -O2 trên x87 của MinGW), không do thay đổi này.
+- 2026-09-16: user yêu cầu bản vẽ kiến trúc + pipeline → tạo `agent/description/system_architecture.md`
+  (tự chọn vị trí: theo CLAUDE.md thì `agent/description/` là nơi chứa doc kiến trúc module) và publish
+  thêm 1 artifact HTML có sơ đồ SVG chi tiết. Khảo sát lại repo trước khi vẽ và PHÁT HIỆN drift lớn
+  giữa tài liệu và code: `interfaces.md` mô tả ZMQ 5555/5556, `simulation/movement/app.py`,
+  `/api/pathfind`, `/api/robot/*` — grep toàn repo KHÔNG có cái nào; `simulation/` thực tế chỉ là room
+  generator (:5000, /api/room/*). Cũng không có gì nối CM → RobotLink. Đã ghi đúng thực trạng này vào
+  doc kiến trúc kèm nhãn OK / UNBUILT / MISSING thay vì chép lại interfaces.md.
+- 2026-09-16: user chốt phương án B cho MC → task `2026-09-16_speed-limit-to-rm.md`.
+  Chuyển `speed_limit` từ MC sang RM (`rm::limitsFor` / `rm::peakWheelOmega` / `rm::AxisLimits`),
+  `MIN_WHEEL_COEFF` từ `mc::cfg` sang `rm::cfg`; XOÁ `include/MC/speed_limit.h` và
+  `src/MC/speed_limit.cpp` (xoá nằm trong phạm vi user đã duyệt — "move" nghĩa là xoá chỗ cũ).
+  Sửa 4 caller + 3 file build. Tự quyết thêm: bỏ hẳn `#include "MC/speed_limit.h"` trong test_mc.cpp
+  vì hoá ra không dùng gì từ nó (thay vì trỏ lại sang RM). Chạy lại cả 5 suite: test_mc, test_motion,
+  test_mv, test_link, test_rm đều PASS; firmware syntax-check lại với stub, và `grep MC/` trong
+  firmware giờ trả về rỗng. Sửa tài liệu ở 4 chỗ để MC đứng đúng vai "công cụ preview" chứ không phải
+  một tầng của pipeline. Viết `agent/history/2026-09-16_firmware.md` cho cả phiên.
+- 2026-09-16: user chỉ ra biểu đồ tự mâu thuẫn — dấu ✕ "CHƯA NỐI" đặt giữa MC và RobotLink, hàm ý MC
+  đáng lẽ phải nối xuống robot, trái với chính quyết định phương án A vừa chốt. Lỗi của mình khi vẽ.
+  Đã sửa cả artifact lẫn `system_architecture.md`: MV giờ là điểm rẽ nhánh — nhánh chính đi xuống qua
+  một khung đỏ "Bộ tuần tự — CHƯA VIẾT" rồi tới RobotLink; MC thành nhánh phụ rẽ ngang, kết thúc ở hộp
+  "Màn hình — trang CM" (đích đến đúng, không phải chỗ đứt). Sửa kèm mục "Những chỗ chưa có" và bảng
+  gaps cho khớp.
+- 2026-09-24: user yêu cầu "hoàn thành bộ tuần tự theo plan giữa MV và Robot link" → task
+  `agent/tasks/2026-09-24_mv-link-sequencer.md`. Trình bày phân tích + 3 quyết định trước, user chốt
+  A1/B/C rồi mới code (theo rule analyze-before-implement). Viết module mới `project/src/SEQ` +
+  `motivation/jetson/mission_runner.*` + cờ CLI `--run-plan`.
+  Tự quyết ngoài spec, nêu rõ ở đây:
+  (a) THÊM `readies` vào `RobotState` — đây là điểm C user đã duyệt, nhưng lý do chỉ lộ ra khi đọc
+      code: `ready` latch true lần đầu nên KHÔNG phân biệt được boot với reboot giữa plan.
+  (b) LỌC leg dưới ngưỡng ngay trong sequencer. Không có trong plan ban đầu; phát hiện khi đọc
+      `applyOneShot` — nó VỨT giá trị trả về của `beginForward`/`beginTurn`, nên leg quá ngắn biến
+      mất im lặng: không `K`, không counter. Không lọc thì sequencer treo tới hết timeout.
+  (c) VALIDATE `--speed`/`--yaw-rate` với dải `link::cfg` trong `load()` (do /code-logic-review chỉ
+      ra). Không có thì `--speed 5` bị firmware từ chối từng leg một, lỗi hiện ra sau vài giây thay
+      vì bị chặn ngay lúc load.
+  (d) SỬA sơ đồ mở đầu `project/README.md`: nó vẫn vẽ `MC → wheel speeds → ESP32`, mâu thuẫn với
+      phương án A và với việc hạ vai trò MC đã chốt 2026-09-16. LỖI CÓ SẴN, không do việc này gây ra;
+      sửa vì SEQ chính là thứ thuộc về mũi tên đó, để lại là chỗ thứ năm nói sai.
+  (e) Dựng harness end-to-end + shim POSIX trong scratchpad để chạy thử toàn chuỗi trên Windows —
+      KHÔNG đưa vào repo. Dùng chính output `mv_cli` làm plan file để kiểm chứng parser.
+  Kiểm chứng đáng ghi: cùng một tuyến, plan `holonomic 1` và `holonomic 0` sinh ra ĐÚNG 6 dòng wire
+  giống nhau — bằng chứng mạnh nhất cho phần bù heading khi phân rã MOVE.
+  Chạy lại đủ 6 suite (test_seq/link/mv/mc/rm/motion) đều PASS; test_rm vẫn fail 1 check khi -O2,
+  đã xác minh lại là lỗi CÓ SẴN. Đã chạy `/code-standards-review` (4 fix) và `/code-logic-review`
+  (1 fix). Viết `agent/plan/seq_plan.md` + `agent/history/2026-09-24_seq.md`.

@@ -10,6 +10,9 @@ C++14 library embeddable on ESP32. Spec: `documents/software/RM/omni3wheel.md`
 - [x] 2026-09-07 VelocityProfile (slew limiter, common scaling keeps direction) + TrapezoidalProfile
 - [x] 2026-09-07 Odometry from commanded steps, mid-point heading integration, θ wrap
 - [x] 2026-09-07 DriverStepDir conversions + StepAccumulator (steps emitted per tick)
+- [x] 2026-09-16 `speed_limit` (`limitsFor`, `peakWheelOmega`, `AxisLimits`) moved IN from MC: it is
+      chassis maths, and both MC and the ESP32 firmware need it. `MIN_WHEEL_COEFF` moved to `rm::cfg`
+      with it.
 - [x] 2026-09-07 CMake (PC + ESP-IDF component), library.json, README embed guide, unit tests pass (MinGW g++ 6.3)
 
 ## Pending

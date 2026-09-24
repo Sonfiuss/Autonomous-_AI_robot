@@ -1,14 +1,19 @@
-# `project/` — RM (motion), MV (path planning) and MC (executor) C++ libraries
+# `project/` — RM (chassis maths), MV (path planning), MC (trajectory preview), LINK (wire protocol) and SEQ (plan sequencer)
 
-Three heap-free C++ libraries that build both on a PC and on ESP32.
+Heap-free C++ libraries that build both on a PC and on ESP32.
 **RM** turns velocity commands into wheel steps, **MV** plans a route on an occupancy
-grid ([MV section](#mv--path-planning)), and **MC** drives that route by expanding it
-into per-wheel speeds ([MC section](#mc--motion-executor)). RM and MV do not depend on
-anything; MC depends on RM for every calculation. CM (Python) calls MV through its C API.
+grid ([MV section](#mv--path-planning)), **SEQ** walks that route onto the wire one leg
+at a time, and **LINK** is the wire format itself. **MC** expands the same route into
+per-wheel speeds ([MC section](#mc--motion-executor)) as a *preview*, not as the thing
+that drives the motors. RM, MV and LINK depend on nothing; MC and SEQ depend on RM.
+CM (Python) calls MV through its C API.
 
 ```
-CM goal ──► MV: A* ──► primitives ──► MC: tick loop ──► wheel speeds ──► ESP32
-                                         └── calls RM for all maths ──┘
+CM goal --> MV: A* --> primitives --> SEQ: one leg per K --> LINK --> ESP32 (RM) --> wheels
+                            |
+                            +-------> MC: tick loop --> wheel-speed chart on the CM page
+                                      (a preview: under option A the ESP32 recomputes the
+                                       ticks itself, so nothing here reaches a motor)
 ```
 
 # RM — Robot Movement kinematics layer
@@ -26,6 +31,7 @@ project/
     types.h               BodyVel, GlobalVel, WheelSpeeds, Pose
     omni_kinematics.h     body <-> wheel velocities, world <-> body frame
     velocity_profile.h    VelocityProfile (slew limiter), TrapezoidalProfile
+    speed_limit.h         AxisLimits: feasible speed + ramp for a direction of travel
     odometry.h            counts -> pose (x, y, θ) + velocity estimate
     driver_stepdir.h      ω <-> (Hz, DIR), angle/distance <-> steps, StepAccumulator
     rm_debug.h            RM_DLOG(...) gate, enabled by -DRM_DEBUG
@@ -187,17 +193,29 @@ result = mv_client.plan_path(scene, {"x": 1.2, "y": 0.8, "theta": 1.57})
 ```
 
 
-# MC — motion executor
+# MC — trajectory preview
 
 Takes the primitive list MV produced plus a commanded speed, and reports the angular
-speed of each wheel for every control tick (roadmap L5). It contains no maths of its
-own: every value comes from an RM call.
+speed of each wheel for every control tick. It contains no maths of its own: every
+value comes from an RM call.
+
+> **MC is a tool, not a stage of the live pipeline.** Under the option-A architecture
+> (decided 2026-09-16) the ESP32 owns the kinematics: the Jetson sends `F`/`T`/`M`
+> and the firmware's Motion task runs this same RM chain live, one tick at a time.
+> Nothing MC produces is ever sent to the robot.
+>
+> What MC is for: **drawing** the trajectory and the three wheel-speed curves in the CM
+> page, and **checking feasibility** before committing — how long a plan takes, whether
+> it exceeds any limit, and where it ends up. `test_mc` also replays a real MV plan
+> through `rm::Odometry` end to end, which is the strongest check the RM chain has.
+>
+> MC predates that decision; it was written on 2026-09-13, when the Jetson was still
+> expected to drive the wheels directly.
 
 ```
 project/
   include/MC/
-    types.h           Primitive, MotionLimits, AxisLimits, MotionStep
-    speed_limit.h     feasible chassis speed + ramp for a direction of travel
+    types.h           Primitive, MotionLimits, MotionStep
     executor.h        Executor: walks the primitive list one tick at a time
     mc_api.h          C API (McRequest / McResult / mc_run / mc_max_speed)
     mc_debug.h        MC_DLOG(...) gate, enabled by -DMC_DEBUG
@@ -215,9 +233,10 @@ distance stays accurate at 50 Hz. The reported body velocity is the forward kine
 of the wheel speeds actually commanded, so replaying the rows reproduces the real motion.
 
 **Speed is scaled, never clipped.** A 3-omni base is not equally fast in every
-direction, so MC computes the ceiling from the fastest wheel and scales the whole
-velocity vector. Clipping one wheel at its limit would bend the robot off the planned
-line. At the compiled limits:
+direction, so `rm::limitsFor` computes the ceiling from the fastest wheel and scales the
+whole velocity vector. Clipping one wheel at its limit would bend the robot off the
+planned line. That rule lives in RM, so the firmware applies exactly the same one.
+At the compiled limits:
 
 | Direction | Max speed | Max acceleration |
 |-----------|-----------|------------------|
@@ -248,3 +267,75 @@ run
 ' | build/mc/mc_cli
 ```
 `limit <u> <v> <r>` prints the feasible speed and ramp for any direction.
+
+# SEQ — plan sequencer
+
+The loop between a plan and a moving robot. `seq::Sequencer` walks an MV primitive
+list onto the wire one leg at a time: send a leg, wait for the firmware's `K`, send
+the next. Jetson-side only — it is deliberately NOT registered as an ESP-IDF
+component, because the firmware executes legs and does not sequence them.
+
+```
+project/
+  include/SEQ/
+    sequencer.h           State, Status, Config, Feedback, Action, Sequencer
+    seq_debug.h           SEQ_DLOG(...) gate, enabled by -DSEQ_DEBUG
+  src/SEQ/sequencer.cpp
+  tools/build_seq.sh
+  tests/test_seq.cpp      15 groups, all of them on a PC with no robot
+```
+
+**The handshake is the protocol.** The firmware's Motion task pops a one-shot only
+while it is idle, so legs sent back to back pile into an 8-deep FIFO and the ninth
+is dropped as `E 4`. Exactly one leg is ever in flight.
+
+**Pure, and that is the point.** No port, no clock, no heap, no exceptions. The
+caller polls `update(Feedback) -> Action` with what it knows — the millisecond
+clock, the ack and `READY` counts, the firmware's error tallies — and sends back
+the one command that comes out. `test_seq` therefore drives every failure path
+(ack timeout, dropped one-shot, mid-plan reboot, abort, a refused leg) against a
+fake firmware, with no ESP32 and no serial port. The platform half is
+`motivation/jetson/MissionRunner`, which owns only the loop and the port.
+
+| MV primitive | Wire | Acked |
+|---|---|---|
+| `ROTATE(rad)` | `T <deg> <rate>` | yes |
+| `FORWARD(m)` | `F <dist> <speed>` | yes |
+| `MOVE(dx, dy)` | `T` onto the bearing, then `F` along it | yes, both |
+| `STOP` | `S` | no |
+
+`MOVE` is decomposed rather than streamed as `M`: the protocol has no world-frame
+straight-line command, and a streamed leg has no acknowledgement to wait for. Since
+`mv::toPrimitives` emits its trailing `ROTATE` relative to the *planned* heading,
+the sequencer tracks the planned and the commanded heading separately and turns
+each `ROTATE` into the absolute heading the plan meant. A non-holonomic plan has
+zero bias and maps 1:1; a holonomic plan of the same route produces the same wire
+lines as its non-holonomic twin.
+
+Two firmware facts it exists to respect:
+
+- **A leg the firmware refuses vanishes silently** — `applyOneShot` discards the
+  bool from `beginForward`/`beginTurn`, so a leg under `mc::cfg::MIN_LEG_LENGTH_M`
+  or `MIN_LEG_ANGLE_RAD` produces no `K` and bumps no counter. SEQ filters those
+  out itself, with the same constants.
+- **Legs are timed, not pose-driven**, so each leg's duration is computed with the
+  same `rm::limitsFor` + `rm::TrapezoidalProfile` call the firmware plans it with.
+  The ack timeout is that duration times `seq::cfg::ACK_TIMEOUT_MARGIN` plus
+  `ACK_TIMEOUT_FLOOR_MS`, not a fixed guess.
+
+## Build and test
+
+```bash
+cd project && tools/build_seq.sh && ./build/seq/test_seq
+```
+CMake target `seq` and test `test_seq` exist too, on the same
+`cmake .. && cmake --build . && ctest` flow as the other modules.
+
+Run a plan against a real robot (needs Linux and the ESP32):
+```bash
+cd project && printf 'room 6 6\nrobot 0.25\nstart 0.5 0.5 0\ngoal 5 5 1.57\nplan\n' \
+  | build/mv/mv_cli > plan.txt
+cd ../motivation/jetson && ./build/robot_link --run-plan ../../project/plan.txt --start-theta 0
+```
+`mv_cli` output is a valid plan file as it stands: the reader takes the lines that
+start with `ROTATE`/`FORWARD`/`MOVE`/`STOP` and ignores everything else.

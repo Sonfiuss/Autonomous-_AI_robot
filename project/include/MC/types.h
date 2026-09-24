@@ -31,18 +31,10 @@ struct Primitive {
 };
 
 // Speed the caller asks for. The executor lowers these per leg when the
-// direction cannot sustain them (see speed_limit.h); it never raises them.
+// direction cannot sustain them (see RM/speed_limit.h); it never raises them.
 struct MotionLimits {
     float cruiseSpeed = cfg::CRUISE_SPEED_M_S;  // m/s, for FORWARD and MOVE
     float yawRate     = cfg::YAW_RATE_RAD_S;    // rad/s, for ROTATE
-};
-
-// Feasible limits for one direction of travel, in that direction's own units
-// (m and m/s for a linear leg, rad and rad/s for a rotation).
-struct AxisLimits {
-    float vMax  = 0.0f;
-    float accel = 0.0f;
-    float decel = 0.0f;
 };
 
 // One control tick. `body` is what the wheels actually produce this tick
