@@ -1,6 +1,6 @@
 ---
 id: 2026-09-16_esp32-rtos-firmware
-status: planning
+status: blocked   # superseded 2026-09-21 by agent/tasks/2026-09-21_esp32-motion-firmware.md (motion only, servo deferred)
 module: motivation/esp32_unified_controller (ESP32 firmware, C++) — new
 started: 2026-09-16
 ---
