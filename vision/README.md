@@ -12,17 +12,21 @@ tương ứng → giữ yên → bấm `space` để chụp. Chưa có scan matc
 
 ```powershell
 python vision/map_builder.py                                    # chạy trực tiếp, ghi phiên vào captures/map_<thời gian>/
-python vision/map_builder.py --replay vision/captures/map_...   # dựng lại map từ phiên đã ghi, không cần camera
+python vision/map_builder.py --replay vision/captures/map_...   # dựng lại map từ phiên đã ghi, không cần camera hay model
 python vision/map_builder.py --replay DIR --cam-pitch 4         # ... thử lại với thông số gắn camera khác
-python vision/test_mapping.py                                   # test trên depth giả
+python vision/map_builder.py --no-da                            # không chạy Depth Anything: chỉ có vật cản, không có ô trống
+python vision/test_mapping.py                                   # test trên depth giả, không cần model
 ```
+
+Tuỳ chọn cho phần sàn: `--da-size 518` (cạnh ngắn ảnh đưa vào Depth Anything), `--floor-far 3.0` (tìm sàn
+trống tới bao xa), `--floor-half-width 0` (bề rộng mỗi bên đường nhìn; 0 = cả khung hình).
 
 | Phím | Ý nghĩa |
 |---|---|
 | `a` / `d` | camera vừa xoay trái / phải `--rot-step` độ (mặc định 45) |
 | `w` / `s` | camera vừa tiến / lùi `--move-step` mét (mặc định 0,5) theo hướng đang nhìn |
-| `space` | chụp tại pose hiện tại: 3 frame depth và nhãn YOLO được đưa vào map |
-| `f` | bật/tắt lớp tô từng pixel: sàn xanh lá, vật cản đỏ, cao hơn robot xanh dương, dải 5–8cm (bỏ qua) vàng, thấp hơn sàn tím. Mặc định bật; cũng được lưu thành `NNN_floor.png` mỗi lần chụp |
+| `space` | chụp tại pose hiện tại: 3 frame depth, Depth Anything trên ảnh màu và nhãn YOLO được đưa vào map |
+| `f` | bật/tắt lớp tô từng pixel: sàn trống xanh lá, vật cản đỏ, cao hơn robot xanh dương, chỗ hụt tím; viền trắng là hình thang tìm sàn, chấm trắng là điểm chạm sàn của vật. Mặc định bật; cũng được lưu thành `NNN_floor.png` mỗi lần chụp. Khi xem live, phần Depth Anything chạy nền nên trễ một lần suy luận (thanh trên cùng hiện `DA x.xs`) |
 | `m` | ghi file map ngay |
 | `q` / `ESC` | ghi file map rồi thoát |
 
@@ -35,21 +39,46 @@ python vision/test_mapping.py                                   # test trên dep
 xuống**. Ban đầu user cho số 5°, nhưng trên khung hình thật, khai "xuống 5°" đẩy chân đồ vật xuống dưới
 sàn (tô tím), còn 0° đặt chúng đúng lên mặt sàn. User đã chốt 0° (2026-09-25). Đối chiếu trong
 `captures/floor_pitch_compare.png`.
-Mỗi lần chụp, tool tự fit mặt sàn rồi in ra chiều cao và góc nghiêng *đo được* (cần thấy đủ sàn). Nếu
-lệch quá 2cm hoặc 1,5° thì tool gợi ý giá trị mới. Khai sai 5° thì sàn ở khoảng cách 3m lệch khoảng
-0,26m, sai 10° thì lệch khoảng 0,5m. Kiểm tra nhanh nhất bằng mắt: phím `f`, chân đồ vật phải nằm ở
-dải xanh lá.
+Mỗi lần chụp, tool kiểm mount theo hai cách và in ra số *đo được*: fit mặt sàn trên depth Astra (cần
+thấy đủ sàn có depth, trên gạch bóng thường không đủ) và pitch từ điểm chạm sàn của Depth Anything (xem
+dưới). Nếu lệch quá 2cm hoặc 1,5° thì tool gợi ý giá trị mới. Khai sai 5° thì sàn ở khoảng cách 3m lệch
+khoảng 0,26m, sai 10° thì lệch khoảng 0,5m. Kiểm tra nhanh bằng mắt: phím `f`, các chấm trắng (điểm
+chạm) phải nằm đúng chân đồ vật.
 
-**Sàn gạch bóng + camera thấp:** camera ở độ cao 24cm nhìn sàn ở góc chỉ 15–22° (khoảng cách 0,6–0,9m),
-nên chip depth không khớp được lưới chấm laser trên sàn. Sàn gần như **không có depth**, trong khi map
-chỉ coi ô là trống khi thấy sàn. Kết quả là trên loại sàn này, map gần như chỉ có vật cản và vùng chưa
-biết. Ảnh IR `captures/ir_pattern.png` cho thấy lưới chấm vẫn in lên sàn.
+**Sàn gạch bóng + camera thấp:** camera ở độ cao 24cm nhìn sàn ở góc chỉ 10–22°, nên chip depth không
+khớp được lưới chấm laser trên sàn. Trên frame thật, hình thang sàn 0,6–3m chỉ có 3,6% pixel có depth
+(0% ở 0,6–1m). Ảnh IR `captures/ir_pattern.png` cho thấy lưới chấm vẫn in lên sàn. Vì vậy **sàn trống lấy
+từ Depth Anything V2 Small chạy trên ảnh màu** (task `2026-09-25_vision-da-floor`).
+
+**Tìm sàn trống (`floor_segment.py`):**
+- Quy tắc (user): trong một hình thang ảo trên sàn trước robot, đi lên theo từng cột ảnh thì độ sâu phải
+  tăng dần; hết tăng dần là có vật. Dạng định lượng: nghịch đảo độ sâu của sàn thay đổi **đều** theo hàng
+  ảnh, còn mọi mặt đứng (tường, chân ghế, mặt trước hộp) giữ nó **không đổi** theo cột. Độ dốc theo cột
+  (cửa sổ 9 hàng) chia độ dốc của sàn ra ≈1 trên sàn, ≈0 trên mặt đứng.
+- Output của Depth Anything không có mét, và thang/độ lệch đổi theo từng ảnh. Vì vậy mỗi frame tự fit
+  một mặt phẳng sàn ngay trên output đó, trong hình thang. Pixel là sàn khi nằm sát mặt phẳng (±4%)
+  **và** có độ dốc cột giống sàn. Gần hơn mặt phẳng hoặc đứng thẳng là vật cản. Xa hơn mặt phẳng là
+  chỗ hụt (hố, bậc xuống), không bao giờ được tính trống. Vật cản và chỗ hụt phải kéo dài ≥3 hàng, để
+  một sợi dây điện 1cm không chặn cả cột.
+- Từ mép gần đi lên theo từng cột, sàn được tính là trống cho tới vật cản, chỗ hụt hoặc khung YOLO đầu
+  tiên. Hàng đó là **điểm chạm sàn** của vật, và được đưa vào map như vật cản. Sàn nằm sau vật để là
+  "chưa biết".
+- Vị trí trên sàn tính theo hình học: độ cao camera cộng pitch. Pitch được **đo lại mỗi lần chụp** từ
+  các điểm chạm nằm dưới một mặt đứng cao (≥40 hàng có depth Astra), vì chân vật nằm trên sàn nên depth
+  Astra ở đó cố định tia. Không đủ điểm như vậy thì dùng `--cam-pitch`. Log in ra pitch đo được và gợi ý
+  `--cam-pitch` khi lệch quá 1,5°.
+- Nếu hình thang không phải phần lớn là sàn (đứng sát tường), frame đó không cho ô trống nào.
 
 **Map dựng như thế nào:**
 - Lưới 5cm (bằng độ phân giải của MV), cộng dồn bằng log-odds.
-- Điểm cao 8cm–0,6m là **vật cản** (`--max-obstacle-height`). Điểm cao dưới 5cm là **sàn**.
-- **Ô chỉ được coi là trống khi nhìn thấy sàn ở ô đó**, không dùng dò tia. Dò tia sẽ xoá mất vật thấp
-  và mọi thứ trong vùng mù dưới 0,6m. Ô chưa từng thấy sàn thì là "chưa biết".
+- Astra chỉ đóng góp **vật cản**: điểm cao 8cm–0,6m (`--max-obstacle-height`). Astra **không còn đánh dấu
+  trống**: dải "sàn" cũ của nó thực ra là chân tủ và một ống kim loại nằm trên sàn.
+- **Ô trống chỉ lấy từ sàn Depth Anything thấy được**, không dùng dò tia. Dò tia sẽ xoá mất vật thấp và
+  mọi thứ trong vùng mù dưới 0,6m. Ô có vật cản Astra trong cùng lần chụp không bao giờ được tính trống.
+- Mỗi lần chụp, Depth Anything chạy một lần, nên mang trọng số bằng cả lần chụp: một lần là đủ để ô
+  thành trống hoặc có vật, và một lần chụp trái ngược kéo ô về "chưa biết".
+- YOLO: khung vật không bao giờ là sàn trống. Nhãn được gắn ở bề mặt vật theo Astra; nếu trong khung
+  không có depth Astra thì gắn ở các điểm chạm sàn dưới khung.
 - Tường là các đường thẳng dài ≥1m, tìm bằng Hough và gộp theo cùng một đường. Phải tìm tường trước,
   vì tường nối nhau ở góc phòng thành một vành khép kín.
 - Vật là các cụm ô vật cản còn lại. Nhãn lấy theo lớp YOLO có nhiều phiếu nhất trên các ô của cụm.
@@ -65,7 +94,15 @@ biết. Ảnh IR `captures/ir_pattern.png` cho thấy lưới chấm vẫn in l�
 
 **Giới hạn đã biết:**
 - Pose do người nhập, không được kiểm tra lại.
-- Vật cao dưới 8cm (dây điện, ngưỡng cửa) không thấy được.
+- Vật thấp chỉ thấy được qua Depth Anything (Astra cần ≥8cm). Ống 3cm bị bắt; dây điện 1cm thì thường
+  bị coi là sàn.
+- Vật thấp bị đặt **gần hơn tới ~13cm** so với thực tế (phía an toàn). Trên gạch bóng, ảnh phản chiếu
+  của vật bị cả Depth Anything lẫn Astra coi là thân vật.
+- Pitch sai 1° làm sàn ở 3m lệch khoảng ±0,3m. Pitch chỉ đo được khi có vật cao chạm sàn trong hình thang.
+- Hố sâu nhìn từ 24cm thường chỉ thấy thành xa của hố, nên nó thành vật cản ở mép hố thay vì chỗ hụt.
+  Cả hai đều chặn vùng trống.
+- Depth Anything trên CPU laptop mất khoảng 3,5s mỗi ảnh (518px), 0,8s ở 308px nhưng kém hơn. Trên Jetson
+  nên chạy GPU (fp16), sau này chuyển sang TensorRT.
 - Cạnh thẳng dài ≥1m của vật lớn như sofa hay giường có thể bị nhận thành tường.
 - Chưa có cửa (door).
 - Vật mới chỉ nhìn từ một phía thì polygon chỉ phủ phần đã thấy.
@@ -129,11 +166,15 @@ camera. Nếu hiện `--` thì depth ở đó quá thưa hoặc quá vụn để
 
 ## Cài đặt
 
-- Python có `opencv-python`, `numpy`, `openni` (binding OpenNI2), `ultralytics`, `torch`.
+- Python có `opencv-python`, `numpy`, `openni` (binding OpenNI2), `ultralytics`, `torch`, `transformers`
+  (đã thử 4.40.1).
 - **OpenNI2 runtime** (`OpenNI2.dll` hoặc `libOpenNI2.so`, cùng thư mục `Drivers/`) không commit vào repo.
   Trỏ biến môi trường `OPENNI2_REDIST` tới thư mục chứa nó. Trên Windows có fallback về bản SDK đã giải
   nén trong Downloads của laptop dev.
 - **Weights**: `models/yolo11n.pt` (gitignore). Nếu thiếu, ultralytics tự tải khi có mạng.
+- **Depth Anything V2 Small** (`depth-anything/Depth-Anything-V2-Small-hf`, 99MB, license Apache-2.0): lần
+  chạy đầu tải từ HuggingFace rồi lưu vào `models/depth-anything-v2-small/` (gitignore), từ lần sau chạy
+  offline. Không thay bằng bản Base/Large nếu dùng thương mại, vì hai bản đó dùng license CC-BY-NC.
 
 ### Lên Jetson
 
@@ -154,7 +195,9 @@ camera. Nếu hiện `--` thì depth ở đó quá thưa hoặc quá vụn để
 | `perception.py` | chương trình chính: vòng ≤6Hz, ghép cặp, detect, đo, vẽ, log, phím tắt |
 | `map_builder.py` | dựng map: chụp khi đứng yên, pose theo phím, ghi phiên, `--replay` |
 | `floor_geometry.py` | pixel depth → khung robot (độ cao so với sàn), fit mặt sàn để kiểm tra mount |
-| `occupancy_map.py` | lưới log-odds: vật cản theo dải độ cao, ô trống khi thấy sàn, phiếu nhãn |
+| `mono_depth.py` | Depth Anything V2 Small (transformers) + thread nền, frame mới nhất thắng |
+| `floor_segment.py` | sàn trống từ Depth Anything: hình thang, mặt sàn mỗi frame, độ dốc theo cột, điểm chạm, đo pitch |
+| `occupancy_map.py` | lưới log-odds: vật cản Astra theo dải độ cao, sàn trống + điểm chạm từ Depth Anything, phiếu nhãn |
 | `scene_export.py` | lưới → tường (Hough) + vật (polygon, nhãn/unknown, free_sides, near) → scene JSON |
 | `drawing.py` | vẽ khung nhìn camera và map từ trên xuống |
 | `test_mapping.py` | test map trên depth giả (dựng ảnh một căn phòng hộp) |

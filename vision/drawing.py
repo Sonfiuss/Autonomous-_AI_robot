@@ -62,18 +62,26 @@ def render_view(color, depth, results, status, info, show_overlay):
 
 
 # Keys are occupancy_map.PIXEL_* labels. BGR.
-PIXEL_COLORS = {1: (0, 200, 0), 2: (0, 220, 255), 3: (0, 0, 230), 4: (230, 120, 0), 5: (230, 0, 230)}
-PIXEL_NAMES = {1: "floor", 2: "gap 5-8cm", 3: "obstacle", 4: "above robot", 5: "below floor"}
+PIXEL_COLORS = {1: (0, 200, 0), 2: (0, 0, 230), 3: (230, 120, 0), 4: (230, 0, 230)}
+PIXEL_NAMES = {1: "free floor (DA)", 2: "obstacle", 3: "above robot", 4: "drop (DA)"}
 PIXEL_ALPHA = 0.45
+TRAPEZOID_COLOR = (255, 255, 255)
+CONTACT_COLOR = (255, 255, 255)
 
 
-def floor_view(background, labels):
-    """What the map sees in this frame: floor green, obstacle red, above-the-robot blue, the ignored
-    band just above the floor yellow; pixels with no usable depth are left as they are, dimmed."""
+def floor_view(background, labels, trapezoid=None, contacts=None):
+    """What the map gets from this frame: free floor green, obstacle red, above-the-robot blue, a drop
+    magenta, the rest dimmed. White: the outline of the floor trapezoid Depth Anything searched, and
+    the contacts - where each of its columns met the first obstacle."""
     canvas = (background * 0.6).astype(np.uint8)
     for label, color in PIXEL_COLORS.items():
         mask = labels == label
         canvas[mask] = ((1 - PIXEL_ALPHA) * background[mask] + PIXEL_ALPHA * np.array(color)).astype(np.uint8)
+    if trapezoid is not None and trapezoid.any():
+        outlines, _ = cv2.findContours(trapezoid.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(canvas, outlines, -1, TRAPEZOID_COLOR, 1)
+    if contacts is not None and len(contacts):
+        canvas[contacts[:, 1], contacts[:, 0]] = CONTACT_COLOR
     total = labels.size
     y = FRAME_H - 8
     for label, name in reversed(list(PIXEL_NAMES.items())):
