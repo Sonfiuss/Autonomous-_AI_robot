@@ -33,7 +33,7 @@ from depth_source import DepthSource, resolve_redist_path
 from detector import DEFAULT_CONF, DEFAULT_IMGSZ, DEFAULT_MODEL, Detector, select_device
 from drawing import format_range, render_view
 from frame_grabber import pair_frames
-from object_distance import intrinsics_from_fov, load_intrinsics, measure_object
+from object_distance import intrinsics_from_fov, load_intrinsics, measure_object, result_records
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CAPTURES_DIR = os.path.join(BASE_DIR, "captures")
@@ -54,17 +54,6 @@ def _summary(results):
     return ", ".join(f"{d.name} {d.conf:.2f} {format_range(r)}" for d, r in results)
 
 
-def _records(results):
-    return [{
-        "class": d.name, "class_id": d.class_id, "confidence": round(d.conf, 3),
-        "box": [round(v, 1) for v in d.box],
-        "range_m": round(r.range_m, 3) if r else None,
-        "z_m": round(r.z_m, 3) if r else None,
-        "xyz_cam": [round(v, 3) for v in r.xyz] if r else None,
-        "valid_fraction": round(r.valid_fraction, 3) if r else None,
-    } for d, r in results]
-
-
 def _save(color, depth, canvas, results):
     os.makedirs(CAPTURES_DIR, exist_ok=True)
     stem = os.path.join(CAPTURES_DIR, datetime.now().strftime("%Y%m%d_%H%M%S"))
@@ -72,7 +61,7 @@ def _save(color, depth, canvas, results):
     cv2.imwrite(stem + "_depth_mm.png", depth.data)   # 16-bit PNG, registered, raw millimeters
     cv2.imwrite(stem + "_annotated.png", canvas)
     with open(stem + "_detections.json", "w", encoding="utf-8") as f:
-        json.dump(_records(results), f, indent=2)
+        json.dump(result_records(results), f, indent=2)
     logger.info("saved %s_* | %s", stem, _summary(results))
 
 

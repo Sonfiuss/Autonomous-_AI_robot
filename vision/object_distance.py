@@ -24,6 +24,10 @@ CLUSTER_GAP_MIN_MM = 100       # a jump larger than max(this, CLUSTER_GAP_REL * 
 CLUSTER_GAP_REL = 0.05
 OBJECT_BAND_MIN_MM = 150       # object_mask: within max(this, OBJECT_BAND_REL * depth) of the surface
 OBJECT_BAND_REL = 0.10
+RECORD_DIGITS = 3              # result_records: metres and confidences (mm, 0.001)
+BOX_DIGITS = 1                 # result_records: bbox pixels
+RANGE_FROM_DEPTH = "depth"
+RANGE_FROM_FLOOR = "floor"
 
 Intrinsics = collections.namedtuple("Intrinsics", "fx fy cx cy")
 # range_m: Euclidean camera->object distance. z_m: depth along the optical axis.
@@ -108,3 +112,17 @@ def object_mask(depth_mm, box, surface_z_m):
     roi = depth_mm[v0:v1, u0:u1].astype(np.float64)
     mask[v0:v1, u0:u1] = (roi > 0) & (np.abs(roi - surface_mm) <= band)
     return mask
+
+
+def result_records(results):
+    """JSON-ready rows for (Detection, ObjectRange | None) pairs. range_source: "depth" (measured),
+    "floor" (estimated from where the box meets the floor: valid_fraction None) or None."""
+    return [{
+        "class": d.name, "class_id": d.class_id, "confidence": round(d.conf, RECORD_DIGITS),
+        "box": [round(v, BOX_DIGITS) for v in d.box],
+        "range_m": round(r.range_m, RECORD_DIGITS) if r else None,
+        "z_m": round(r.z_m, RECORD_DIGITS) if r else None,
+        "xyz_cam": [round(v, RECORD_DIGITS) for v in r.xyz] if r else None,
+        "valid_fraction": round(r.valid_fraction, RECORD_DIGITS) if r and r.valid_fraction is not None else None,
+        "range_source": None if r is None else (RANGE_FROM_FLOOR if r.valid_fraction is None else RANGE_FROM_DEPTH),
+    } for d, r in results]

@@ -73,7 +73,9 @@ void StepDirDriver::apply(int wheel, const rm::StepCommand& command) {
     if (!ready_ || wheel < 0 || wheel >= rm::cfg::NUM_WHEELS) {
         return;
     }
-    gpio_set_level(dirPinOf(wheel), command.forward ? 1 : 0);
+    // XOR with the wiring flag: the level the driver needs, not the one IK names.
+    const bool forward = command.forward != cfg::DIR_INVERTED[wheel];
+    gpio_set_level(dirPinOf(wheel), forward ? 1 : 0);
 
     if (command.freqHz < cfg::STEP_MIN_HZ) {
         ledc_set_duty(STEP_MODE, channelOf(wheel), 0);

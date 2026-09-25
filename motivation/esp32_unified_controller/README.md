@@ -5,9 +5,10 @@ servo PWM, and report the robot's state back. Every piece of maths comes from
 `project/` (RM for kinematics, MC for the per-direction speed limit); this
 firmware only sequences it and drives the hardware.
 
-**Status: never built or flashed.** The machine this was written on has no
-ESP-IDF toolchain. What IS verified is `tests/test_motion` — the state machine
-and the RTOS port semantics, both built with a plain host compiler.
+**Status: built (ESP-IDF v5.1.7) and flashed 2026-09-25; wheels not yet run.**
+On the robot it boots, sends `READY`, then `O` at 10 Hz and `P` at 50 Hz. Pin
+map and wheel directions are unverified until a first drive. `tests/test_motion`
+covers the state machine and the RTOS port semantics on a host compiler.
 
 ## Tasks
 
@@ -85,7 +86,7 @@ and LINK compile straight from their source of truth.
 Host tests, no toolchain needed:
 
 ```bash
-tools/build_test_motion.sh && ./build/test_motion
+tools/build_test_motion.sh && ./build_host/test_motion
 ```
 
 ## Before this runs on real hardware

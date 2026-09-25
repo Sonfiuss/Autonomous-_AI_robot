@@ -12,17 +12,20 @@ Omni-directional robot (3-wheel) running on NVIDIA Jetson. Supports:
 |-----------|------|
 | NVIDIA Jetson | Main compute, runs all modules |
 | ESP32 (Unified Controller) | Motor driver + camera servo PWM over UART |
-| 3× Omni-wheels | At 150°, 270°, 30° from center |
+| 3× Omni-wheels | W1 0° (front), W2 120°, W3 240° from center, CCW from +x |
 | 2× USB cameras (left=0, right=1) | Stereo depth |
 | Laptop (WiFi) | Simulation UI + mission planning |
 
 ## Robot kinematics
-Source of truth: ESP32 firmware (`motivation/esp32_unified_controller/PinConfig.h`
-+ `OmniKinematics.h`). These values OVERRIDE any older chassis estimates.
+Source of truth: `project/config/constants.h` (RM), compiled into both the ESP32 firmware and the
+Jetson side. These values OVERRIDE any older chassis estimates.
 - Wheel radius r: **5.5 cm** (`WHEEL_RADIUS_M = 0.055`, ⌀11 cm wheel)
 - Robot radius L (center → wheel contact): **21 cm** (`ROBOT_RADIUS_M = 0.21`)
 - Steps per wheel revolution: **12800** (`STEPS_PER_REV`, 200 × 64 microstep)
-- Wheel angles α: W1=60°, W2=180°, W3=300°
+- Wheel angles α: W1=0° (STEP 12/DIR 13), W2=120° (4/5), W3=240° (26/27). +x (forward)
+  points at W1, the front wheel. Fixed on the robot 2026-09-25 from two drive tests
+  (60/180/300 and 120/240/0 were both wrong). Driving forward: W1 still, W2 negative,
+  W3 positive. Firmware `DIR_INVERTED` = false on all three.
 - Inverse kinematics: `ω_i = (-sin(α_i)·vx + cos(α_i)·vy + L·ω_z) / r`
 - Rotation is open-loop: `T <deg>` issues a fixed step count
   `steps/wheel = (L/r) · (deg/360) · STEPS_PER_REV ≈ 135.8 · deg`.

@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Builds the firmware's host-testable parts — the motion state machine and the
 # RTOS port — with a plain compiler, no ESP-IDF:
-#   tools/build_test_motion.sh   -> build/test_motion
+#   tools/build_test_motion.sh   -> build_host/test_motion
 # Everything else in this firmware (drivers, tasks, main) needs the real
 # toolchain and is NOT covered here.
 set -e
 cd "$(dirname "$0")/.."
 CXX="${CXX:-g++}"
 export PATH="$(dirname "$CXX"):$PATH"
-OUT=build
+# Not build/: that is idf.py's, and `idf.py set-target` refuses to clean a
+# build/ that CMake did not create.
+OUT=build_host
 mkdir -p "$OUT"
 # RM lives in the shared project/ tree; the firmware consumes it and nothing else.
 PROJECT=../../project

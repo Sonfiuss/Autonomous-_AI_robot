@@ -112,13 +112,14 @@ void testForwardMetre() {
     expectNear(g_steps[res.step_len - 1].x, res.end_x, EPS_TIGHT, "last step x is the end pose");
     expectNear(g_steps[res.step_len - 1].y, res.end_y, EPS_TIGHT, "last step y is the end pose");
     expectTrue(g_steps[0].x < g_steps[res.step_len / 2].x, "pose advances monotonically");
-    expectNear(g_steps[0].w[0], 0.0f, EPS_REST, "starts from rest");
-    expectNear(g_steps[res.step_len - 1].w[0], 0.0f, EPS_REST, "ends at rest");
+    // Wheel 2, not wheel 1: the front wheel never turns on this move, so it proves nothing.
+    expectNear(g_steps[0].w[1], 0.0f, EPS_REST, "starts from rest");
+    expectNear(g_steps[res.step_len - 1].w[1], 0.0f, EPS_REST, "ends at rest");
     checkLimits(res, "forward");
-    // Wheel 2 sits at 180 deg, so pure forward motion must leave it still.
+    // Wheel 1 sits at 0 deg (the front), so pure forward motion must leave it still.
     float peak = 0.0f;
-    for (int i = 0; i < res.step_len; ++i) peak = std::fmax(peak, std::fabs(g_steps[i].w[1]));
-    expectNear(peak, 0.0f, EPS_TIGHT, "wheel at 180 deg idle when driving forward");
+    for (int i = 0; i < res.step_len; ++i) peak = std::fmax(peak, std::fabs(g_steps[i].w[0]));
+    expectNear(peak, 0.0f, EPS_TIGHT, "front wheel at 0 deg idle when driving forward");
 }
 
 void testRotateQuarterTurn() {
@@ -161,7 +162,7 @@ void testSpeedCapPerDirection() {
     float forwardMax = 0.0f, forwardAccel = 0.0f, sideMax = 0.0f, sideAccel = 0.0f;
     expectTrue(mc_max_speed(1.0f, 0.0f, 0.0f, 0.0f, &forwardMax, &forwardAccel) == MC_OK, "forward limit ok");
     expectTrue(mc_max_speed(0.0f, 1.0f, 0.0f, 0.0f, &sideMax, &sideAccel) == MC_OK, "sideways limit ok");
-    // Wheel coefficients differ per direction: forward peaks at sin(60), sideways at cos(180).
+    // Wheel coefficients differ per direction: forward peaks at |sin(120)| = sin(60), sideways at cos(0).
     expectNear(forwardMax, rm::cfg::MAX_WHEEL_OMEGA_RAD_S * rm::cfg::WHEEL_RADIUS_M / std::sin(PI / 3.0f),
                EPS_TIGHT, "forward ceiling");
     expectNear(sideMax, rm::cfg::MAX_WHEEL_OMEGA_RAD_S * rm::cfg::WHEEL_RADIUS_M,

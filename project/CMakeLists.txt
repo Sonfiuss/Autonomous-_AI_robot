@@ -35,6 +35,9 @@ set(SEQ_SOURCES
 if(COMMAND idf_component_register)
     idf_component_register(SRCS ${RM_SOURCES} ${MV_SOURCES} ${MC_SOURCES} ${LINK_SOURCES}
                            INCLUDE_DIRS include config)
+    # C++14, like the PC build below. IDF's default is gnu++2b, whose <atomic>
+    # pulls in unistd.h, and its `int link()` collides with `namespace link`.
+    set_property(TARGET ${COMPONENT_LIB} PROPERTY CXX_STANDARD 14)
     return()
 endif()
 

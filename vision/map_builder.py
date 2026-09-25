@@ -385,7 +385,8 @@ def _parse_args():
     parser.add_argument("--replay", metavar="DIR", help="rebuild the map of a recorded session (no camera)")
     parser.add_argument("--cam-height", type=float, help=f"camera height above floor, m (default {DEFAULT_MOUNT.height_m})")
     parser.add_argument("--cam-pitch", type=float, help=f"camera pitch, deg DOWN (default {DEFAULT_MOUNT.pitch_deg})")
-    parser.add_argument("--cam-forward", type=float, help="camera offset ahead of the robot center, m (default 0)")
+    parser.add_argument("--cam-forward", type=float,
+                        help=f"camera offset ahead of the robot center, m (default {DEFAULT_MOUNT.forward_m})")
     parser.add_argument("--max-obstacle-height", type=float,
                         help=f"ignore points above this, m (default {DEFAULT_OBSTACLE_MAX_M}; the robot passes under)")
     parser.add_argument("--no-da", action="store_true",

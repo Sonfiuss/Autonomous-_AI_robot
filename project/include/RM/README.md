@@ -37,7 +37,7 @@ body [u v r] ──OmniKinematics──► wheel ω ──VelocityProfile──�
 | `Pose` | `x`, `y`, `theta` | World pose in m and rad. `theta` is wrapped to (-π, π]. |
 
 ### omni_kinematics.h — `OmniKinematics`
-- Builds the inverse-kinematics matrix from `cfg::WHEEL_ANGLE_RAD` (wheels at 60°, 180°, 300°)
+- Builds the inverse-kinematics matrix from `cfg::WHEEL_ANGLE_RAD` (wheels at 0°, 120°, 240°; W1 at the front)
   and keeps its exact 3×3 inverse for forward kinematics.
 - `inverse(BodyVel)` → `WheelSpeeds`. The map is linear, so it also converts a body
   displacement into wheel angles.
@@ -96,7 +96,7 @@ otherwise. On ESP32 stderr reaches the USB serial console.
 |---|---|
 | Wheel radius | 0.055 m |
 | Robot radius (centre → wheel contact) | 0.21 m |
-| Wheel angles | 60°, 180°, 300° |
+| Wheel angles | W1 0° (front), W2 120°, W3 240° |
 | Steps per revolution | 12800 |
 | Max pulse rate / max wheel ω | 20 kHz / ≈ 9.8 rad/s (≈ 0.54 m/s at the rim) |
 | Wheel accel / decel | 2 rad/s² |

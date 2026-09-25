@@ -144,10 +144,11 @@ Each stage lists what goes **in**, what it **does**, and exactly what comes **ou
 | **Why one leg at a time** | the Motion task pops a one-shot only while idle, so back-to-back legs pile into an 8-deep FIFO and the ninth is dropped as `E 4` |
 | **Cost of the MOVE decomposition** | the robot turns onto each bearing instead of crabbing. It reaches the same poses: a holonomic plan produces the same wire lines as its non-holonomic twin |
 
-### Stage 7 — RobotLink (Jetson) **[UNBUILT]**
+### Stage 7 — RobotLink (Jetson) — built on the Jetson, not yet run against the real firmware
 | | |
 |---|---|
 | **Where** | `motivation/jetson/` — `RobotLink`, `SerialPort` |
+| **Verified** | 2026-09-25: built on the Jetson (clean), and `--run-plan` driven end to end against a fake ESP32 on a pty: one leg per `K`, a mid-plan `READY` → REBOOTED, Ctrl-C → `S` |
 | **In** | `sendVelocity(vx,vy,omega)` / `sendForward(d,v)` / `sendTurn(rad,rate)` / `sendStop()` / `sendReset()` / `sendServo(pan,tilt)` |
 | **Does** | formats through the shared LINK library, writes to `/dev/ttyUSB0`, and **repeats the last velocity every 50 ms** so the firmware watchdog stays fed. Any one-shot command cancels the stream |
 | **Out (wire)** | `"M 0.150 -0.020 0.800\n"` etc. |
@@ -213,7 +214,7 @@ Each stage lists what goes **in**, what it **does**, and exactly what comes **ou
 | `Odometry::update` | `int32 counts[3]`, dt | `Pose {x, y, theta}`, mid-point integrated |
 
 Chassis constants (`project/config/constants.h`): wheel radius 0.055 m, robot radius 0.21 m, wheels at
-60°/180°/300°, 12800 steps/rev, `MAX_PULSE_HZ` 20000 (**a placeholder**).
+0°/120°/240° (W1 at the front, since 2026-09-25), 12800 steps/rev, `MAX_PULSE_HZ` 20000 (**a placeholder**).
 
 Measured ceilings: **0.62 m/s forward, 0.54 m/s sideways, 2.57 rad/s spinning.** The chassis is not
 equally fast in every direction, so an over-fast request is scaled **as a whole vector**, never
@@ -359,10 +360,12 @@ range check.
 | ~~the sequencer~~ | **closed 2026-09-24** — `project/src/SEQ` + `MissionRunner` + `robot_link --run-plan` |
 | ZMQ 5555/5556 **[MISSING]** | `interfaces.md` documents a bridge that no file implements |
 | `simulation/movement/app.py`, `/api/pathfind`, `/api/robot/*` **[MISSING]** | documented in `interfaces.md`, not in the repo |
-| real pin map | every pin in `fw/config.h` is invented; nothing will move until they are replaced |
+| ~~real pin map~~ | **filled 2026-09-25**: W1 STEP 12/DIR 13, W2 4/5, W3 26/27 — wheel order taken from the previous Arduino firmware's `PinConfig.h` (git `a96ff99^`), all DIR inverted (`DIR_INVERTED`). To confirm on the robot with `--forward 0.1`. Servos are on a PCA9685 (I2C 21/17) that `servo_driver.cpp` does not drive |
+| firmware never flashed | the board still runs the **old Arduino firmware** (`O x y θ` with 2 decimals, `READY\r\n`); its `F`/`T` give every wheel the same step count and drop a negative distance, so `robot_link --run-plan` against it will not drive straight. ESP-IDF not installed on the Jetson yet (needs `sudo apt` for gperf, python3-venv, ninja-build, ccache, dfu-util) |
 | `MAX_PULSE_HZ` unmeasured | 20 kHz is a guess; every speed ceiling derives from it |
 | no encoder | odometry integrates *commanded* steps and cannot see wheel slip |
-| perception / `communication/` | both empty directories |
+| perception | `vision/` is L1 (YOLO + Astra depth + map builder); not wired into CM yet |
+| `communication/` | **drive demo, 2026-09-25**: text → LLM/rules → validated steps → plan.txt → `robot_link --run-plan`, with `vision/record.py` filming to `vision/output/<run>/`. No map; see `communication/README.md` |
 
 Known defect, pre-existing and unrelated to the firmware work: `tests/test_rm.cpp`
 "accumulator carries fraction" fails under `-O2` with MinGW's x87 maths and passes without `-O2` or
@@ -377,7 +380,7 @@ with `-mfpmath=sse`. `StepAccumulator` feeds odometry and is more rounding-sensi
 cd project && bash tools/build_link.sh && ./build/link/test_link
 
 # firmware logic             — runs on any PC, no ESP-IDF
-cd motivation/esp32_unified_controller && bash tools/build_test_motion.sh && ./build/test_motion
+cd motivation/esp32_unified_controller && bash tools/build_test_motion.sh && ./build_host/test_motion
 
 # sequencer                  — runs on any PC, no robot
 cd project && bash tools/build_seq.sh && ./build/seq/test_seq

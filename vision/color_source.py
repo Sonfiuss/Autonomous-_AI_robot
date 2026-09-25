@@ -10,6 +10,7 @@ import cv2
 from frame_grabber import LatestFrameGrabber
 
 WIDTH, HEIGHT = 640, 480   # must match depth_source: D2C registers depth onto this exact grid
+MS_PER_S = 1000.0
 
 
 class ColorSource(LatestFrameGrabber):
@@ -37,6 +38,14 @@ class ColorSource(LatestFrameGrabber):
     def _read(self):
         ok, image = self._cap.read()
         return image if ok else None
+
+    def _sensor_time(self):
+        """V4L2's buffer timestamp, which OpenCV reports as the position in ms. It is on
+        CLOCK_MONOTONIC, the clock of time.monotonic(). DSHOW reports something else: none."""
+        if sys.platform == "win32":
+            return None
+        ms = self._cap.get(cv2.CAP_PROP_POS_MSEC)
+        return ms / MS_PER_S if ms > 0 else None
 
     def _close(self):
         cap, self._cap = self._cap, None

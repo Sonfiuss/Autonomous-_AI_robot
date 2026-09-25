@@ -2,8 +2,9 @@
 // All values are compile-time constants (constexpr) so the library has no
 // runtime initialisation and can be embedded on ESP32 without setup code.
 //
-// Chassis values follow agent/description/project_overview.md (ESP32 firmware
-// PinConfig.h / OmniKinematics.h). They OVERRIDE the assumed values listed in
+// Chassis values are the source of truth that agent/description/project_overview.md
+// quotes: r and L from the old firmware's PinConfig.h, the wheel angles checked on
+// the robot 2026-09-25. They OVERRIDE the assumed values listed in
 // documents/software/RM/omni3wheel.md.
 #ifndef RM_CONFIG_CONSTANTS_H
 #define RM_CONFIG_CONSTANTS_H
@@ -29,7 +30,11 @@ constexpr float ROBOT_RADIUS_M        = 0.21f;                        // L  (cen
 // Wheel mounting angle α_i measured CCW from the robot +x (forward) axis.
 // Drive direction of wheel i is the CCW tangent at α_i, so a positive ω_i
 // pushes the robot CCW around its centre.
-constexpr float WHEEL_ANGLE_DEG[NUM_WHEELS] = {60.0f, 180.0f, 300.0f};
+// W1 is the front wheel, +x points at it; W2 back-left, W3 back-right. Driving
+// forward leaves W1 still while W2 and W3 turn opposite ways. Fixed on the
+// robot 2026-09-25 from two drive tests: 60/180/300 drove towards W2, and
+// 120/240/0 drove 60 deg left of the front.
+constexpr float WHEEL_ANGLE_DEG[NUM_WHEELS] = {0.0f, 120.0f, 240.0f};
 constexpr float WHEEL_ANGLE_RAD[NUM_WHEELS] = {
     WHEEL_ANGLE_DEG[0] * DEG_TO_RAD,
     WHEEL_ANGLE_DEG[1] * DEG_TO_RAD,
@@ -37,8 +42,8 @@ constexpr float WHEEL_ANGLE_RAD[NUM_WHEELS] = {
 
 // Wheel contact positions (dx_i, dy_i) = L·(cos α_i, sin α_i), metres.
 // Kept explicit for documentation / firmware use; kinematics use the angles.
-constexpr float WHEEL_POS_X_M[NUM_WHEELS] = { 0.105000f, -0.210000f,  0.105000f};
-constexpr float WHEEL_POS_Y_M[NUM_WHEELS] = { 0.181865f,  0.000000f, -0.181865f};
+constexpr float WHEEL_POS_X_M[NUM_WHEELS] = { 0.210000f, -0.105000f, -0.105000f};
+constexpr float WHEEL_POS_Y_M[NUM_WHEELS] = { 0.000000f,  0.181865f, -0.181865f};
 
 // ---------------------------------------------------------------- stepper
 constexpr int32_t STEPPER_FULL_STEPS_PER_REV = 200;                                  // motor datasheet

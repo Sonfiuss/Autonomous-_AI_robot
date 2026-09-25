@@ -187,7 +187,12 @@ void testStopInterruptsLeg() {
     for (int i = 0; i < SETTLE_TICKS; ++i) {
         motion.tick(bodyVel(0.2f, 0.0f, 0.0f), DT, &tick);
     }
-    expectTrue(wheelOmega(tick, 0) != 0.0f, "a released stop follows velocity again");
+    // Any wheel: which one idles on a forward move depends on the wheel layout.
+    bool moving = false;
+    for (int wheel = 0; wheel < rm::cfg::NUM_WHEELS; ++wheel) {
+        moving = moving || wheelOmega(tick, wheel) != 0.0f;
+    }
+    expectTrue(moving, "a released stop follows velocity again");
 
     // A fresh explicit move is new operator intent, so it releases the latch too.
     fw::MotionState second;

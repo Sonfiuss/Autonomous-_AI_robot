@@ -28,9 +28,12 @@ import cv2
 import numpy as np
 
 from floor_geometry import MAX_RANGE_M
+from object_distance import ObjectRange
 from occupancy_map import PIXEL_DROP, PIXEL_FREE, PIXEL_NONE, PIXEL_OBSTACLE
 
 NEAR_M = 0.6                  # Astra minimum range; the bottom image row sees ~0.57 m (0.24 m high, level)
+BOX_BOTTOM_MARGIN_PX = 3      # a box this close to the image's bottom edge is cut off: its foot is not in view
+BOX_MAX_RANGE_M = 8.0         # beyond this a one-row error at the box bottom swings the estimate by metres
 DEFAULT_FAR_M = 3.0
 PLANE_TOL = 0.04              # |disparity - floor plane| / floor plane
 PLANE_SAMPLE = 4000           # trapezoid pixels kept for RANSAC
@@ -89,6 +92,26 @@ def floor_xy(us, vs, intrinsics, mount):
     forward, left, _ = floor_hit(us, vs, intrinsics, mount)
     keep = np.isfinite(forward)
     return np.column_stack((forward[keep], left[keep]))
+
+
+def box_floor_range(box, image_h, intrinsics, mount):
+    """ObjectRange of the point where a YOLO box meets the floor (bottom centre of the box), from the
+    camera height and pitch alone - no depth. valid_fraction None marks it as that estimate. None when
+    the box is cut off by the image's bottom edge (the object is closer than the bottom row sees,
+    ~NEAR_M), sits above the horizon, or lands beyond BOX_MAX_RANGE_M. Right for things standing on
+    the floor; a box whose bottom is not a foot (a hanging object, a table top) reads too far."""
+    x1, _, x2, y2 = box
+    if y2 >= image_h - BOX_BOTTOM_MARGIN_PX:
+        return None
+    u = 0.5 * (x1 + x2)
+    _, left, z = (float(a[0]) for a in floor_hit([u], [y2], intrinsics, mount))
+    if not math.isfinite(z) or z <= 0.0:
+        return None
+    xyz = (-left, z * (y2 - intrinsics.cy) / intrinsics.fy, z)   # camera frame: +x right, +y down
+    rng = math.sqrt(xyz[0] ** 2 + xyz[1] ** 2 + xyz[2] ** 2)
+    if rng > BOX_MAX_RANGE_M:
+        return None
+    return ObjectRange(range_m=rng, z_m=z, xyz=xyz, valid_fraction=None)
 
 
 def free_floor_xy(labels, intrinsics, mount, col_stride=1):

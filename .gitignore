@@ -1,5 +1,6 @@
 # Build output directories
 build/
+build_host/
 builds/
 out/
 bin/

@@ -1,0 +1,6 @@
+# Read by `idf.py set-target` / the first build (tools/esp32_flash.sh).
+# UART0 is the Jetson link (interfaces.md). An ESP_LOG line written by IDF at run
+# time would land between, or inside, protocol lines, so the app logs nothing.
+# The bootloader keeps its log: it runs before the protocol starts, and it is the
+# only witness of a boot failure (e.g. the GPIO 12 strapping pin, see fw/config.h).
+CONFIG_LOG_DEFAULT_LEVEL_NONE=y

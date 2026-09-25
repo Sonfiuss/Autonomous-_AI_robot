@@ -12,10 +12,34 @@ namespace fw {
 namespace cfg {
 
 // ---------------------------------------------------------------- pins
-// PLACEHOLDERS. The real map lives in the hardware's PinConfig.h, which is not
-// in this repository. Nothing will move correctly until these are replaced.
-constexpr int STEP_PIN[rm::cfg::NUM_WHEELS] = {25, 26, 27};
-constexpr int DIR_PIN[rm::cfg::NUM_WHEELS]  = {14, 12, 13};
+// Wiring given by the user, 2026-09-25: PUL+/DIR+ on 26/27, 12/13, 4/5, PUL-/DIR-
+// on the ESP32's GND (opto inputs). WHICH WHEEL each pair drives is taken from the
+// previous firmware's PinConfig.h (git a96ff99^, the Arduino build still on the
+// board), the one configuration known to have turned the wheels correctly:
+//   W1   0 deg  STEP 12 / DIR 13  (front)   W2 120 deg  STEP 4 / DIR 5  (back-left)
+//   W3 240 deg  STEP 26 / DIR 27  (back-right)
+// (Listing the pairs in the user's table order, 26/27 first, would rotate every
+// motion by 120 deg.) Check on the robot: on a forward move W1 stands still and
+// the robot drives towards it.
+// Also on this board, so never to be used here: INMP441 mic SD 33 / WS 25 /
+// SCK 32, PCA9685 I2C SDA 21 / SCL 17, MAX98357 on 5V.
+// GPIO 12 is a strapping pin (flash voltage): it must be LOW at reset. The
+// DM556 opto input only sinks current, so it cannot pull it high; if the board
+// ever fails to boot with the drivers powered, this pin is the first suspect.
+constexpr int STEP_PIN[rm::cfg::NUM_WHEELS] = {12, 4, 26};
+constexpr int DIR_PIN[rm::cfg::NUM_WHEELS]  = {13, 5, 27};
+// true flips a wheel's DIR level: cheaper than rewiring a driver. None are
+// flipped on this robot. All three were true at first (the previous firmware
+// drove DIR low for a positive IK roll), but both drive tests of 2026-09-25 only
+// fit the wheel layout above with every wheel's sign reversed. Verify:
+// `robot_link --forward 0.1` must move the robot towards W1 and
+// `robot_link --turn 90` must turn it left; if both are reversed, set all three
+// back to true.
+constexpr bool DIR_INVERTED[rm::cfg::NUM_WHEELS] = {false, false, false};
+// NOT the real servo wiring: the camera servos hang off a PCA9685 over I2C
+// (SDA 21, SCL 17), which servo_driver.cpp does not speak. These two GPIOs are
+// unconnected on this board, so the LEDC servo output is harmless but moves
+// nothing. The drive demo does not use the servos.
 constexpr int SERVO_PAN_PIN                 = 18;
 constexpr int SERVO_TILT_PIN                = 19;
 constexpr int UART_TX_PIN                   = 1;

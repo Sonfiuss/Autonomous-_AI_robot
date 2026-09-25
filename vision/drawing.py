@@ -7,6 +7,7 @@ import numpy as np
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FRAME_W, FRAME_H = 640, 480
 OVERLAY_ALPHA = 0.4
+ESTIMATE_MARK = "~"          # prefixes a distance estimated from floor geometry rather than measured
 DEPTH_VIEW_MIN_MM, DEPTH_VIEW_MAX_MM = 600, 8000   # sensor range, documents/firmware/Orbbec.txt
 
 MAP_FREE, MAP_UNKNOWN, MAP_OCCUPIED = 255, 128, 0
@@ -28,7 +29,10 @@ def class_color(key):
 
 
 def format_range(rng):
-    return f"{rng.range_m:.2f} m" if rng is not None else "--"
+    """'1.23 m' measured by depth; '~1.23 m' estimated from floor geometry (valid_fraction None)."""
+    if rng is None:
+        return "--"
+    return f"{ESTIMATE_MARK if rng.valid_fraction is None else ''}{rng.range_m:.2f} m"
 
 
 def put_text(canvas, text, org, color, scale=0.5):
@@ -88,6 +92,19 @@ def floor_view(background, labels, trapezoid=None, contacts=None):
         text = f"{name} {100.0 * (labels == label).sum() / total:.0f}%"
         put_text(canvas, text, (6, y), PIXEL_COLORS[label])
         y -= 18
+    return canvas
+
+
+def blend_floor(background, labels, trapezoid=None):
+    """floor_view's colors over an undimmed image, no legend: for video, where the scene must stay
+    readable under the overlay. The trapezoid Depth Anything searched is outlined in white."""
+    canvas = background.copy()
+    for label, color in PIXEL_COLORS.items():
+        mask = labels == label
+        canvas[mask] = ((1 - PIXEL_ALPHA) * background[mask] + PIXEL_ALPHA * np.array(color)).astype(np.uint8)
+    if trapezoid is not None and trapezoid.any():
+        outlines, _ = cv2.findContours(trapezoid.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(canvas, outlines, -1, TRAPEZOID_COLOR, 1)
     return canvas
 
 

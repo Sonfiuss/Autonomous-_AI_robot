@@ -1,20 +1,29 @@
 """Unit tests that need neither the camera nor the model. Run: python test_vision.py
 
 Covers object_distance (the numbers), pair_frames (the sync gate), select_device (the CUDA
-option) and LatestFrameGrabber against fake sources that stall, fail and hang - the failure
-modes seen when the camera is moved fast.
+option), LatestFrameGrabber against fake sources that stall, fail and hang - the failure
+modes seen when the camera is moved fast - and the frame numbering the recorder's streams share
+(seq, the raw writer, the floor log).
 """
+import json
 import math
+import os
 import sys
+import tempfile
 import threading
 import time
 
+import cv2
 import numpy as np
 
 import frame_grabber
-from detector import select_device
-from frame_grabber import Frame, LatestFrameGrabber, pair_frames
-from object_distance import Intrinsics, intrinsics_from_fov, measure_object
+from detector import Detection, select_device
+from drawing import format_range
+from floor_geometry import CameraMount
+from floor_segment import FloorView, box_floor_range
+from frame_grabber import Frame, LatestFrameGrabber, capture_wall, pair_frames
+from object_distance import Intrinsics, intrinsics_from_fov, measure_object, result_records
+from raw_recorder import FILE_PATTERN, INDEX_NAME, RawFrameWriter
 
 H, W = 480, 640
 INTR = Intrinsics(fx=570.0, fy=570.0, cx=319.5, cy=239.5)
@@ -222,9 +231,141 @@ def check_grabber():
     return errors
 
 
+def check_frame_numbering():
+    """Every frame gets the next seq and a wall time; the listener sees every one of them, before
+    the ring does, and a listener that raises does not stop the camera."""
+    errors = []
+    source = _FakeSource(lambda n: "frame")
+    seen, early = [], []
+
+    def listener(frame):
+        latest = source.latest()
+        early.append(latest is None or latest.seq != frame.seq)
+        seen.append(frame)
+        if len(seen) == 3:
+            raise RuntimeError("scripted listener failure")
+
+    source.listener = listener
+    t_before = time.time()
+    _run_fake(source, 0.2)
+    ring = source.frames()
+    seqs = [f.seq for f in seen]
+    if len(seen) < 10 or seqs != list(range(len(seen))):
+        errors.append(f"listener must get every frame, seq 0,1,2,... without gaps: {seqs[:12]}")
+    if not all(early):
+        errors.append("the listener must see a frame before latest() can return it")
+    if [f.seq for f in ring] != seqs[-len(ring):]:
+        errors.append(f"ring seqs {[f.seq for f in ring]} must be the newest the listener saw")
+    if not all(t_before <= f.wall <= time.time() for f in seen):
+        errors.append("wall must be time.time() at arrival")
+    if Frame("c", 1.0).seq is not None:
+        errors.append("a Frame built by hand has no seq")
+    if any(f.t_sensor is not None for f in seen) or capture_wall(seen[0]) != seen[0].wall:
+        errors.append("a source without driver stamps: t_sensor None, capture time = arrival")
+
+    for offset_s, trusted in ((0.034, True), (-0.5, False), (5.0, False)):
+        stamped = _FakeSource(lambda n: "frame")
+        stamped._sensor_time = lambda: time.monotonic() - offset_s
+        _run_fake(stamped, 0.05)
+        frame = stamped.latest()
+        if (frame.t_sensor is not None) != trusted:
+            errors.append(f"driver stamp {offset_s:+.3f} s from arrival: trusted={frame.t_sensor is not None}")
+        elif trusted and abs(frame.wall - capture_wall(frame) - (frame.t - frame.t_sensor)) > 1e-6:   # ~2e-7 s: a double at 1.8e9 s
+            errors.append("capture_wall must move the driver stamp onto the wall clock")
+    return errors
+
+
+def check_raw_writer():
+    """A full queue drops frames and counts them; ensure() writes a dropped frame on the spot; the
+    index holds exactly the frames on disk, with the grabber's timestamps."""
+    errors = []
+    # Arrival 34 ms after the driver stamp, as measured on the Astra RGB; frame 1 has no stamp.
+    lag = {k: 0.034 for k in range(5)}
+    lag[1] = None
+    frames = [Frame(np.full((H, W, 3), 40 * k, np.uint8), 100.0 + k / 30.0, k, 1790000000.0 + k / 30.0,
+                    None if lag[k] is None else 100.0 + k / 30.0 - lag[k]) for k in range(5)]
+    with tempfile.TemporaryDirectory() as out:
+        writer = RawFrameWriter(out, queue_frames=2)
+        for frame in frames:                 # not started: the queue takes 0 and 1, drops 2, 3, 4
+            writer.offer(frame)
+        writer.ensure(frames[3])             # a frame YOLO used: written now
+        writer.ensure(frames[0])             # still queued: left to the thread
+        writer.start()
+        writer.close()
+        with open(os.path.join(writer.dir, INDEX_NAME), encoding="utf-8") as f:
+            index = sorted((json.loads(line) for line in f), key=lambda r: r["seq"])
+        if [r["seq"] for r in index] != [0, 1, 3]:
+            errors.append(f"index seqs {[r['seq'] for r in index]}, expected [0, 1, 3]")
+        if (writer.written, writer.dropped, writer.rescued) != (3, 2, 1):
+            errors.append(f"written/dropped/rescued {writer.written}/{writer.dropped}/{writer.rescued}, expected 3/2/1")
+        for r in index:
+            frame = frames[r["seq"]]
+            image = cv2.imread(os.path.join(writer.dir, r["file"]))
+            if r["file"] != FILE_PATTERN.format(seq=r["seq"]) or image is None or image.shape != frame.data.shape:
+                errors.append(f"seq {r['seq']}: file {r['file']} missing or wrong")
+            elif abs(float(image.mean()) - float(frame.data.mean())) > 2.0:
+                errors.append(f"seq {r['seq']}: image content changed on disk")
+            stamped = lag[r["seq"]] is not None
+            if (abs(r["t_capture"] - (frame.wall - (lag[r["seq"]] or 0.0))) > 1e-4
+                    or (r["t_sensor"] is not None) != stamped
+                    or (stamped and abs(r["t_sensor"] - frame.t_sensor) > 1e-4)
+                    or abs(r["t_arrival"] - frame.t) > 1e-4):
+                errors.append(f"seq {r['seq']}: timestamps {r['t_capture']}/{r['t_sensor']}/{r['t_arrival']} must be "
+                              f"the driver stamp on the wall clock / on monotonic / the arrival")
+    return errors
+
+
+def check_floor_log():
+    """floor/<seq>.png round-trips the labels; the index line names the analysed frame."""
+    import record                            # the recorder's own module: YOLO / DA load only in main()
+    errors = []
+    labels = np.zeros((H, W), np.uint8)
+    labels[300:, :] = 1
+    labels[350:360, 100:200] = 2
+    view = FloorView(labels, labels > 0, np.array([[150, 359]]), np.array([True]), None, (0.1, 0.0, -20.0))
+    result = record.FloorResult(view, 70.0, 5.0, 1.234, 0.0, 42, 1790000000.12345)
+    with tempfile.TemporaryDirectory() as out:
+        log = record.FloorLog(out)
+        log.write(result, [(100.0, 200.0, 200.0, 360.0)])
+        log.close()
+        with open(os.path.join(log.dir, INDEX_NAME), encoding="utf-8") as f:
+            line = json.loads(f.readline())
+        back = cv2.imread(os.path.join(log.dir, line["labels"]), cv2.IMREAD_UNCHANGED)
+        if line["seq"] != 42 or line["labels"] != record.FLOOR_LABELS_PATTERN.format(seq=42):
+            errors.append(f"index line must name seq 42: {line['seq']} {line['labels']}")
+        if back is None or not np.array_equal(back, labels):
+            errors.append("labels PNG must round-trip exactly")
+        if abs(line["t_capture"] - 1790000000.1235) > 1e-6 or line["contacts"] != [[150, 359]]:
+            errors.append(f"t_capture / contacts: {line['t_capture']} {line['contacts']}")
+    return errors
+
+
+def check_box_floor_range():
+    """A box standing on the floor, straight ahead, level camera: its bottom row v sees the floor at
+    z = h * fy / (v - cy). Cut-off boxes and boxes above the horizon give no estimate."""
+    errors = []
+    mount = CameraMount(height_m=0.24, pitch_deg=0.0, forward_m=0.0)
+    v = INTR.cy + 114.0                                       # 0.24 * 570 / 114 = 1.2 m ahead
+    r = box_floor_range((INTR.cx - 20, 100.0, INTR.cx + 20, v), H, INTR, mount)
+    expected = math.hypot(1.2, 0.24)                          # camera -> contact point, Euclidean
+    if r is None or abs(r.z_m - 1.2) > TOL or abs(r.range_m - expected) > TOL or r.valid_fraction is not None:
+        errors.append(f"box bottom 114 px below the axis -> z 1.2 m, range {expected:.4f}; got {r}")
+    if format_range(r) != f"~{expected:.2f} m":
+        errors.append(f"an estimate must print with '~': {format_range(r)!r}")
+    if box_floor_range((100.0, 100.0, 200.0, H - 1.0), H, INTR, mount) is not None:
+        errors.append("a box cut off by the bottom edge has no visible foot")
+    if box_floor_range((100.0, 50.0, 200.0, INTR.cy - 10), H, INTR, mount) is not None:
+        errors.append("a box ending above the horizon cannot touch the floor")
+    rows = result_records([(Detection(56, "chair", 0.9, (0.0, 0.0, 1.0, 1.0)), r)])
+    if rows[0]["range_source"] != "floor" or rows[0]["valid_fraction"] is not None:
+        errors.append(f"record of an estimate: {rows[0]}")
+    return errors
+
+
 def main():
     failed = 0
-    for check in (check_object_distance, check_pair_frames, check_select_device, check_grabber):
+    for check in (check_object_distance, check_box_floor_range, check_pair_frames, check_select_device,
+                  check_grabber, check_frame_numbering, check_raw_writer, check_floor_log):
         errors = check()
         print(f"{'PASS' if not errors else 'FAIL'} {check.__name__}")
         for e in errors:

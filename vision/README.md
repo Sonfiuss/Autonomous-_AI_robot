@@ -107,6 +107,27 @@ từ Depth Anything V2 Small chạy trên ảnh màu** (task `2026-09-25_vision-
 - Chưa có cửa (door).
 - Vật mới chỉ nhìn từ một phía thì polygon chỉ phủ phần đã thấy.
 
+## Quay video khi robot chạy (`record.py`)
+
+```bash
+python3 vision/record.py --out vision/output/test                      # thường do demo_drive.py gọi
+python3 vision/record.py --out DIR --no-depth --no-floor --max-seconds 20
+```
+
+Trên mỗi frame video có:
+
+- **Sàn trống (Depth Anything):** dùng cùng `floor_segment.analyze_floor()` như map_builder. Sàn trống tô
+  xanh, vật cản đỏ, hố/bậc xuống tím, hình thang vùng tìm sàn viền trắng. Thanh dưới hiện % sàn trống, %
+  vật cản, **clear ahead** (khoảng trống trong hành lang rộng ±0,25m trước robot, tính tới điểm chạm gần
+  nhất) và độ trễ của DA. DA chạy ở thread riêng cùng phần phân tích sàn: khoảng 0,3s + 0,15s mỗi lần trên
+  Orin, nên overlay trễ một lần suy luận. YOLO vẫn chạy mỗi frame.
+- **Khoảng cách mỗi vật:** nếu có depth Astra thì là số đo, hiện `1.23 m`. Nếu không có depth, hoặc depth
+  quá thưa, thì ước lượng theo hình học sàn, hiện `~1.23 m`: đáy bbox là chỗ vật chạm sàn, cộng với độ cao
+  và pitch của camera (`--cam-height`, `--cam-pitch`). Cách này đúng với vật đứng trên sàn. Vật treo hoặc
+  đặt trên bàn sẽ bị đọc xa hơn thực tế. Bbox chạm mép dưới ảnh thì hiện `--`, vì vật gần hơn khoảng 0,6m.
+  Trong `detections.jsonl`, trường `range_source` là `depth` hoặc `floor`.
+- Hiện Jetson chưa có SDK Orbbec nên depth Astra chưa mở được, và mọi khoảng cách đang là ước lượng `~`.
+
 ## Chạy
 
 ```powershell
@@ -185,7 +206,13 @@ camera. Nếu hiện `--` thì depth ở đó quá thưa hoặc quá vụn để
    không che mất một bộ CUDA hỏng.
 3. Camera RGB là một `/dev/videoN` (backend V4L2). Nếu không phải index 0 thì dùng `--color-index`.
    Sai index thì chương trình báo ngay, vì registration cần đúng 640×480.
-4. (Tuỳ chọn, chưa thử) Tăng tốc bằng TensorRT: `yolo export model=yolo11n.pt format=engine half=True`,
+4. **Đã làm trên Jetson Orin (JetPack 5, Python 3.8), 2026-09-25:** `pip3 install --user --no-deps ultralytics`,
+   sau đó `tqdm py-cpuinfo ultralytics-thop` (cũng `--no-deps`). Nếu cài không có `--no-deps`, pip sẽ thay torch
+   của NVIDIA. Bản `torchvision` 0.16.0 cài qua pip lỗi ABI (`_C.so: undefined symbol`), khiến NMS của YOLO
+   crash. Cần build v0.16.1 từ source với `FORCE_CUDA=1 TORCH_CUDA_ARCH_LIST=8.7` (mất khoảng 30 phút);
+   wheel đã build nằm ở `~/wheels/`. YOLO11n fp16 chạy khoảng 40ms/frame. Depth: OpenNI2 hệ thống
+   (`/usr/lib`, driver PS1080) **không** thấy Astra, vẫn cần SDK Orbbec ARM64 như bước 1.
+5. (Tuỳ chọn, chưa thử) Tăng tốc bằng TensorRT: `yolo export model=yolo11n.pt format=engine half=True`,
    rồi chạy với `--model yolo11n.engine`.
 
 ## File
@@ -193,6 +220,7 @@ camera. Nếu hiện `--` thì depth ở đó quá thưa hoặc quá vụn để
 | File | Vai trò |
 |---|---|
 | `perception.py` | chương trình chính: vòng ≤6Hz, ghép cặp, detect, đo, vẽ, log, phím tắt |
+| `record.py` | quay video không cần màn hình cho demo `communication/demo_drive.py`: khung YOLO, khoảng cách mỗi vật, sàn trống từ Depth Anything, bước đang chạy. Ra `detections.mp4` (10fps, khớp thời gian thực) và `detections.jsonl` (xem mục bên dưới) |
 | `map_builder.py` | dựng map: chụp khi đứng yên, pose theo phím, ghi phiên, `--replay` |
 | `floor_geometry.py` | pixel depth → khung robot (độ cao so với sàn), fit mặt sàn để kiểm tra mount |
 | `mono_depth.py` | Depth Anything V2 Small (transformers) + thread nền, frame mới nhất thắng |

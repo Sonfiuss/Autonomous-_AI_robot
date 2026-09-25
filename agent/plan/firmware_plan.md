@@ -35,7 +35,11 @@ duplicate *code*: both call RM, so they cannot drift apart.
 
 ## Pending
 - [ ] Real pin map — every pin in `include/fw/config.h` is a placeholder.
-- [ ] Build with ESP-IDF and flash. Nothing here has ever run on hardware.
+- [x] 2026-09-25 Build with ESP-IDF v5.1.7 on the Jetson and flash (`tools/esp32_flash.sh`). Boots,
+      `READY`, `O` 10 Hz / `P` 50 Hz. Two build fixes: host test output moved to `build_host/`
+      (idf.py owns `build/`); `project/` component forced to C++14 (IDF's gnu++2b pulls
+      `int link()` from unistd.h into every TU and it collides with `namespace link`).
+- [ ] First drive on hardware: `robot_link --forward 0.1`, `--turn 90` — checks pin map + DIR_INVERTED.
 - [ ] Build the Jetson side on the Jetson (needs POSIX termios; it does not build on Windows).
 - [ ] Measure `MAX_PULSE_HZ` and the accel limits; tune `constants.h`.
 - [ ] Wire the plan runner to CM (an `/api/run` over `/api/plan` output) and to the ZMQ bridge on

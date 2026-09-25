@@ -13,8 +13,10 @@ import numpy as np
 
 CameraMount = collections.namedtuple("CameraMount", "height_m pitch_deg forward_m")
 # 24 cm high (user). Pitch 0: first given as "5 deg", but on a real frame 5 deg down put the feet of
-# furniture below the floor and 0 put them on it; user set 0 (2026-09-25). forward_m not measured yet.
-DEFAULT_MOUNT = CameraMount(height_m=0.24, pitch_deg=0.0, forward_m=0.0)
+# furniture below the floor and 0 put them on it; user set 0 (2026-09-25). forward_m: the camera sits
+# 18 cm from the robot center (user, 2026-09-25), taken as straight ahead on +x. It is what makes an
+# in-place turn swing the camera along an arc instead of spinning it on the spot.
+DEFAULT_MOUNT = CameraMount(height_m=0.24, pitch_deg=0.0, forward_m=0.18)
 MAX_RANGE_M = 3.5            # Astra depth noise grows ~quadratically; farther points blur floor vs obstacle
 
 FLOOR_FIT_BAND_M = 0.35      # floor candidates: this close to the ASSUMED floor
