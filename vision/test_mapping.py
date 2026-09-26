@@ -18,7 +18,7 @@ import numpy as np
 
 from detector import Detection
 from floor_geometry import CameraMount, backproject, camera_to_body, fit_floor, pixel_heights
-from floor_segment import analyze_floor, floor_hit, floor_xy
+from floor_segment import analyze_floor, box_floor_range, floor_hit, floor_project, floor_xy
 from map_builder import integrate_capture
 from object_distance import intrinsics_from_fov, object_mask
 from occupancy_map import PIXEL_DROP, PIXEL_FREE, PIXEL_NONE, PIXEL_OBSTACLE, OccupancyMap, classify_heights
@@ -64,10 +64,11 @@ def _trace(pose, boxes, mount):
     v, u = np.mgrid[0:H, 0:W].astype(np.float64)
     dx, dy = (u - INTR.cx) / INTR.fx, (v - INTR.cy) / INTR.fy   # camera ray with z = 1 -> t is the depth
     p = math.radians(mount.pitch_deg)
-    fwd, left, up = math.cos(p) + dy * math.sin(p), -dx, -math.sin(p) - dy * math.cos(p)
+    fwd, left, up = math.cos(p) - dy * math.sin(p), -dx, -math.sin(p) - dy * math.cos(p)
     x, y, th = pose
     wx, wy, wz = math.cos(th) * fwd - math.sin(th) * left, math.sin(th) * fwd + math.cos(th) * left, up
-    ox, oy, oz = x + mount.forward_m * math.cos(th), y + mount.forward_m * math.sin(th), mount.height_m
+    ox = x + mount.forward_m * math.cos(th) - mount.left_m * math.sin(th)
+    oy, oz = y + mount.forward_m * math.sin(th) + mount.left_m * math.cos(th), mount.height_m
     t = np.full((H, W), np.inf)
     hit = np.full((H, W), -1)
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -100,6 +101,34 @@ def _dist_to_segment(p, a, b):
 
 def check_geometry():
     errors = []
+    # Checked by angles, not by a rotation matrix: _trace and the code under test once shared the same
+    # wrong one (forward = cos p + dy sin p), so a matrix-built truth could not catch it. A floor pixel
+    # on the centre column sits p + atan(dy) below horizontal, so it lies h / tan of that ahead.
+    for pitch in (-0.92, 5.0, 12.0):
+        mount = MOUNT._replace(pitch_deg=pitch)
+        for v in (300.0, 380.0, 470.0):
+            dy = (v - INTR.cy) / INTR.fy
+            truth = mount.height_m / math.tan(math.radians(pitch) + math.atan(dy))
+            forward, _, _ = floor_hit([INTR.cx], [v], INTR, mount)
+            if abs(forward[0] - truth) > 1e-6:
+                errors.append(f"floor_hit pitch {pitch} row {v}: {forward[0]:.4f} m, by angles {truth:.4f} m")
+        # floor_project must invert floor_hit exactly, forward_m and left_m included.
+        shifted = mount._replace(forward_m=0.18, left_m=0.062)
+        us, vs = floor_project([0.9, 2.0, 3.1], [0.0, 0.35, -0.6], INTR, shifted)
+        forward, left, _ = floor_hit(us, vs, INTR, shifted)
+        if np.abs(forward - [0.9, 2.0, 3.1]).max() > 1e-9 or np.abs(left - [0.0, 0.35, -0.6]).max() > 1e-9:
+            errors.append(f"floor_project -> floor_hit at pitch {pitch}: {forward} {left}")
+        # Absolute, not a round trip: the centre column is the lens' own line of sight, left_m to the
+        # robot's left, and a point 0.3 m right of the lens sits right of the centre column.
+        _, left, z = floor_hit([INTR.cx, INTR.cx], [300.0, 400.0], INTR, shifted)
+        if np.abs(left - shifted.left_m).max() > 1e-9:
+            errors.append(f"centre column at pitch {pitch}: left {left}, lens is at {shifted.left_m}")
+        us, _ = floor_project([1.5], [shifted.left_m - 0.3], INTR, shifted)
+        if not us[0] > INTR.cx:
+            errors.append(f"0.3 m right of the lens projects to u {us[0]:.1f}, left of the centre column {INTR.cx}")
+        rng = box_floor_range((INTR.cx - 10, 200.0, INTR.cx + 10, 400.0), H, INTR, shifted)
+        if rng is None or abs(rng.xyz[0]) > 1e-9:
+            errors.append(f"box on the centre column: camera x {None if rng is None else rng.xyz[0]}, must be 0")
     depth, _ = render((0.0, 0.0, 0.0), boxes=[])   # floor only
     heights = camera_to_body(backproject(depth, INTR, 2), MOUNT)[:, 2]
     if heights.size == 0 or np.abs(heights).max() > 0.01:

@@ -91,17 +91,19 @@ class OccupancyMap:
         np.clip(self.log_odds, LOG_MIN, LOG_MAX, out=self.log_odds)
         return occupied
 
-    def integrate_floor(self, free_xy, contact_xy, pose, blocked=()):
+    def integrate_floor(self, free_xy, contact_xy, pose, blocked=(), weight=1.0):
         """One floor segmentation: (N, 2) body-frame floor points seen free and (M, 2) obstacle contacts.
         A cell holding any contact, or in `blocked` (flat ids the Astra marked in this capture), is never
-        marked free. Returns (occupied, free) cell counts."""
+        marked free. weight scales the evidence: 1 = one map_builder capture; a drive recording, many
+        frames of the same view, uses less so that one frame cannot decide a cell. Returns (occupied,
+        free) cell counts."""
         contact_ids, counts = np.unique(self._cell_ids(body_to_world(contact_xy, pose)), return_counts=True)
         occupied = contact_ids[counts >= MIN_HITS_PER_CELL]
         free = np.setdiff1d(np.unique(self._cell_ids(body_to_world(free_xy, pose))),
                             np.union1d(contact_ids, np.asarray(blocked, np.int64)))
         flat = self.log_odds.reshape(-1)
-        flat[occupied] += LOG_HIT_CONTACT
-        flat[free] += LOG_FREE_FLOOR
+        flat[occupied] += weight * LOG_HIT_CONTACT
+        flat[free] += weight * LOG_FREE_FLOOR
         np.clip(self.log_odds, LOG_MIN, LOG_MAX, out=self.log_odds)
         return occupied.size, free.size
 

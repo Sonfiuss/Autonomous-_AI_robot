@@ -14,6 +14,7 @@ Camera frame: +x right, +y down, +z forward along the optical axis (OpenCV conve
 import collections
 import json
 import math
+import os
 
 import numpy as np
 
@@ -28,6 +29,11 @@ RECORD_DIGITS = 3              # result_records: metres and confidences (mm, 0.0
 BOX_DIGITS = 1                 # result_records: bbox pixels
 RANGE_FROM_DEPTH = "depth"
 RANGE_FROM_FLOOR = "floor"
+# Written by calib_floor.py when its marks pin fx down; the default --intrinsics of the recorder.
+CAMERA_RGB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "camera_rgb.json")
+# RGB intrinsics when nothing better is known: the FOV OpenNI2 reported for this camera on the dev
+# laptop (vision/README.md, fx ~ fy ~ 570 at 640x480).
+FALLBACK_FOV_DEG = (58.59, 45.64)
 
 Intrinsics = collections.namedtuple("Intrinsics", "fx fy cx cy")
 # range_m: Euclidean camera->object distance. z_m: depth along the optical axis.
@@ -40,11 +46,21 @@ def intrinsics_from_fov(width, height, hfov_rad, vfov_rad):
                       cx=(width - 1) / 2.0, cy=(height - 1) / 2.0)
 
 
+def fallback_intrinsics(width, height):
+    """Intrinsics from FALLBACK_FOV_DEG, principal point at the image centre."""
+    return intrinsics_from_fov(width, height, *(math.radians(a) for a in FALLBACK_FOV_DEG))
+
+
 def load_intrinsics(path):
     """JSON {"fx": .., "fy": .., "cx": .., "cy": ..} for the RGB camera at 640x480."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
     return Intrinsics(float(data["fx"]), float(data["fy"]), float(data["cx"]), float(data["cy"]))
+
+
+def default_intrinsics_file():
+    """CAMERA_RGB_FILE when calib_floor.py has written it, else None."""
+    return CAMERA_RGB_FILE if os.path.exists(CAMERA_RGB_FILE) else None
 
 
 def _core_bounds(lo, hi, limit):

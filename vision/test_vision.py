@@ -2,8 +2,8 @@
 
 Covers object_distance (the numbers), pair_frames (the sync gate), select_device (the CUDA
 option), LatestFrameGrabber against fake sources that stall, fail and hang - the failure
-modes seen when the camera is moved fast - and the frame numbering the recorder's streams share
-(seq, the raw writer, the floor log).
+modes seen when the camera is moved fast - the frame numbering the recorder's streams share
+(seq, the raw writer, the floor log), the light check, and the calib_floor fit.
 """
 import json
 import math
@@ -16,12 +16,14 @@ import time
 import cv2
 import numpy as np
 
+import calib_floor
 import frame_grabber
 from detector import Detection, select_device
 from drawing import format_range
 from floor_geometry import CameraMount
-from floor_segment import FloorView, box_floor_range
+from floor_segment import FloorView, box_floor_range, floor_project
 from frame_grabber import Frame, LatestFrameGrabber, capture_wall, pair_frames
+from light_check import LightCheck
 from object_distance import Intrinsics, intrinsics_from_fov, measure_object, result_records
 from raw_recorder import FILE_PATTERN, INDEX_NAME, RawFrameWriter
 
@@ -362,10 +364,72 @@ def check_box_floor_range():
     return errors
 
 
+def check_light():
+    """A dark flat frame fails the light check, a lit textured one passes; frames before the skip and
+    after the check is done are not measured."""
+    errors = []
+    rng = np.random.default_rng(0)
+    lit = cv2.resize(rng.integers(40, 220, (H // 8, W // 8, 3), dtype=np.uint8), (W, H),
+                     interpolation=cv2.INTER_NEAREST)        # 8 px blocks: plenty of ORB corners
+    dark = np.full((H, W, 3), 4, dtype=np.uint8)
+    for image, other, ok in ((lit, dark, True), (dark, lit, False)):
+        check = LightCheck(frames=1, skip=5)
+        check.add(other, seq=4)                              # before the skip: must not count
+        check.add(image, seq=5)                              # the one measured frame
+        check.add(other, seq=6)                              # after done: must not count
+        r = check.result()
+        if r is None or r["ok"] != ok or r["frames"] != 1:
+            errors.append(f"{'lit' if ok else 'dark'} frame: expected ok={ok} from 1 frame, got {r}")
+    if LightCheck(frames=3, skip=5).result() is not None:
+        errors.append("no frame measured yet must give None")
+    return errors
+
+
+def check_calib_fit():
+    """calib_floor on marks seen by a camera with known fx / cx / pitch, fitted from the fallback start:
+    the default layout recovers all three; distance-only marks recover the pitch and leave fx alone; a
+    held-out check mark clicked 30 px off moves nothing."""
+    errors = []
+    truth_k = INTR._replace(fx=600.0, fy=600.0, cx=330.0)
+    truth_m = CameraMount(height_m=0.24, pitch_deg=3.0, forward_m=0.0)
+    start_k, start_m = INTR, truth_m._replace(pitch_deg=-0.92)
+    marks = calib_floor.load_marks(calib_floor.DEFAULT_MARKS)
+    us, vs = floor_project([m.x for m in marks], [m.y or 0.0 for m in marks], truth_k, truth_m)
+    points = [(u, v + (30.0 if m.check else 0.0)) for m, u, v in zip(marks, us, vs)]
+    if not calib_floor.lens_is_observable(marks, points):
+        errors.append("the default marks must make fx observable")
+    fit = calib_floor.fit(marks, points, start_k, start_m, fit_lens=True)
+    if (fit is None or abs(fit.intrinsics.fx - 600.0) > 0.01 or abs(fit.intrinsics.cx - 330.0) > 0.01
+            or abs(fit.mount.pitch_deg - 3.0) > 1e-3):
+        errors.append(f"default marks: expected fx 600, cx 330, pitch 3.0, got {fit}")
+    else:
+        rows = calib_floor.mark_errors(marks, points, fit.intrinsics, fit.mount)
+        if not calib_floor.passes(rows) or not any(r["check"] and r["floor_err_m"] > 0.05 for r in rows):
+            errors.append(f"exact marks must pass and the 30 px check mark must show its error: {rows}")
+    far = [calib_floor.Mark(str(x), x, None, False) for x in (0.9, 1.6, 2.1, 2.9)]
+    us, vs = floor_project([m.x for m in far], [0.0] * len(far), truth_k, truth_m)
+    points = list(zip(us, vs))
+    if calib_floor.lens_is_observable(far, points):
+        errors.append("distance-only marks cannot make fx observable")
+    fit = calib_floor.fit(far, points, truth_k, start_m, fit_lens=False)
+    if fit is None or abs(fit.mount.pitch_deg - 3.0) > 1e-3 or fit.intrinsics.fx != 600.0:
+        errors.append(f"distance-only marks: expected pitch 3.0 with fx kept at 600, got {fit}")
+    # The click window has a bar on top: its first image row starts BAR_H display rows down.
+    for scale in (1, 2, 3):
+        u, v = calib_floor.display_to_image(0, calib_floor.BAR_H, scale)
+        if round(u) != 0 or round(v) != 0:
+            errors.append(f"scale {scale}: the top-left image pixel must be under display (0, BAR_H), got {u, v}")
+        back = calib_floor.image_to_display(*calib_floor.display_to_image(37, 211, scale), scale)
+        if abs(back[0] - 37) > TOL or abs(back[1] - 211) > TOL:
+            errors.append(f"scale {scale}: display -> image -> display gave {back}")
+    return errors
+
+
 def main():
     failed = 0
     for check in (check_object_distance, check_box_floor_range, check_pair_frames, check_select_device,
-                  check_grabber, check_frame_numbering, check_raw_writer, check_floor_log):
+                  check_grabber, check_frame_numbering, check_raw_writer, check_floor_log, check_light,
+                  check_calib_fit):
         errors = check()
         print(f"{'PASS' if not errors else 'FAIL'} {check.__name__}")
         for e in errors:

@@ -176,7 +176,8 @@ def _resolve_mount(args, saved=None):
     saved = saved or DEFAULT_MOUNT._asdict()
     return CameraMount(args.cam_height if args.cam_height is not None else saved["height_m"],
                        args.cam_pitch if args.cam_pitch is not None else saved["pitch_deg"],
-                       args.cam_forward if args.cam_forward is not None else saved["forward_m"])
+                       args.cam_forward if args.cam_forward is not None else saved["forward_m"],
+                       args.cam_left if args.cam_left is not None else saved.get("left_m", 0.0))
 
 
 def _resolve_floor(args, saved=None):
@@ -387,6 +388,8 @@ def _parse_args():
     parser.add_argument("--cam-pitch", type=float, help=f"camera pitch, deg DOWN (default {DEFAULT_MOUNT.pitch_deg})")
     parser.add_argument("--cam-forward", type=float,
                         help=f"camera offset ahead of the robot center, m (default {DEFAULT_MOUNT.forward_m})")
+    parser.add_argument("--cam-left", type=float,
+                        help=f"camera offset left of the robot center, m (default {DEFAULT_MOUNT.left_m})")
     parser.add_argument("--max-obstacle-height", type=float,
                         help=f"ignore points above this, m (default {DEFAULT_OBSTACLE_MAX_M}; the robot passes under)")
     parser.add_argument("--no-da", action="store_true",

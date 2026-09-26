@@ -1,0 +1,11 @@
+{
+  "_doc": "Floor marks for calib_floor.py, in metres from O = the floor point under the RGB lens (plumb line). x ahead along the robot's +x (through the front wheel W1 and the midpoint of W2-W3), y to the LEFT. Click them in this order. y null = distance-only mark: x is its distance straight ahead along +x, not the diagonal (its image row only). check true = held out of the fit, its error reported.",
+  "marks": [
+    {"name": "1", "x": 0.80, "y": 0.0},
+    {"name": "2", "x": 1.20, "y": 0.0},
+    {"name": "3", "x": 2.00, "y": 0.0},
+    {"name": "4", "x": 1.20, "y": 0.40},
+    {"name": "5", "x": 1.20, "y": -0.40},
+    {"name": "check", "x": 1.60, "y": -0.20, "check": true}
+  ]
+}

@@ -60,6 +60,7 @@ TALL_SPREAD_REL = 0.03        # depth may vary this much up the face: a vertical
 MIN_PITCH_CONTACTS = 30       # columns
 MAX_PITCH_SPREAD_DEG = 2.0    # interquartile range of the per-column estimates
 MAX_PITCH_CORRECTION_DEG = 10.0
+MIN_PROJECT_DEPTH_M = 1e-9    # floor_project: a point this close to the camera plane (or behind) has no pixel
 FREE_SUBSTEPS = 4             # floor points per row step between vertically adjacent free pixels: one row
                               # spans 6.6 cm of floor at 3 m (12 cm at 4 m) - more than a 5 cm map cell, and
                               # sampled per pixel the far free floor came out striped
@@ -84,7 +85,20 @@ def floor_hit(us, vs, intrinsics, mount):
     down = math.sin(pitch) + dy * math.cos(pitch)   # ray's downward component per unit z
     with np.errstate(divide="ignore", invalid="ignore"):
         z = np.where(down > 1e-9, mount.height_m / down, np.nan)
-    return z * (math.cos(pitch) + dy * math.sin(pitch)) + mount.forward_m, -z * dx, z
+    return z * (math.cos(pitch) - dy * math.sin(pitch)) + mount.forward_m, mount.left_m - z * dx, z
+
+
+def floor_project(forward, left, intrinsics, mount):
+    """(u, v) pixels of body-frame floor points - the exact inverse of floor_hit. NaN for points at or
+    behind the camera plane."""
+    pitch = math.radians(mount.pitch_deg)
+    ahead = np.asarray(forward, np.float64) - mount.forward_m
+    z = ahead * math.cos(pitch) + mount.height_m * math.sin(pitch)      # depth along the optical axis
+    y = mount.height_m * math.cos(pitch) - ahead * math.sin(pitch)      # camera +y, down
+    with np.errstate(divide="ignore", invalid="ignore"):
+        z = np.where(z > MIN_PROJECT_DEPTH_M, z, np.nan)
+        return (intrinsics.cx - intrinsics.fx * (np.asarray(left, np.float64) - mount.left_m) / z,
+                intrinsics.cy + intrinsics.fy * y / z)
 
 
 def floor_xy(us, vs, intrinsics, mount):
@@ -107,7 +121,7 @@ def box_floor_range(box, image_h, intrinsics, mount):
     _, left, z = (float(a[0]) for a in floor_hit([u], [y2], intrinsics, mount))
     if not math.isfinite(z) or z <= 0.0:
         return None
-    xyz = (-left, z * (y2 - intrinsics.cy) / intrinsics.fy, z)   # camera frame: +x right, +y down
+    xyz = (mount.left_m - left, z * (y2 - intrinsics.cy) / intrinsics.fy, z)   # camera frame: +x right, +y down
     rng = math.sqrt(xyz[0] ** 2 + xyz[1] ** 2 + xyz[2] ** 2)
     if rng > BOX_MAX_RANGE_M:
         return None
@@ -135,7 +149,7 @@ def floor_trapezoid(shape, intrinsics, mount, far_m=DEFAULT_FAR_M, half_width_m=
     with np.errstate(invalid="ignore"):   # NaN above the horizon compares False
         keep = (ahead >= NEAR_M) & (ahead <= far_m)
         if half_width_m is not None:
-            keep &= np.abs(left) <= half_width_m
+            keep &= np.abs(left - mount.left_m) <= half_width_m
     return keep
 
 

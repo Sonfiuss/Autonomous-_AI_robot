@@ -1,0 +1,7 @@
+{
+  "fx": 570.0,
+  "fy": 570.0,
+  "cx": 319.5,
+  "cy": 239.5,
+  "source": "user decision 2026-09-26: use fx 570 (the Astra FOV figure, not measured on this camera); review later with calib_floor.py lateral marks or the 540 deg spin"
+}

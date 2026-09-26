@@ -31,7 +31,8 @@ Written to --out:
                      (with the seq and t_capture of the frame Depth Anything ran on: the overlay lags).
   floor/             <seq>.png (occupancy_map.PIXEL_* per pixel) + index.jsonl (seq, t_capture, t_done,
                      plane, pitch, the YOLO boxes used as vetoes, contacts, summary): every floor analysis.
-  recording.json     mount, intrinsics, floor config, stream settings; rewritten at the end with counts.
+  recording.json     mount, intrinsics, floor config, stream settings; rewritten at the end with counts
+                     and light (light_check.py: brightness + ORB keypoints; a dark run is warned about).
   recorder.ready     created once the first frame is in the video; the orchestrator waits on it.
 Hershey fonts are ASCII only, so the status file must be too. Depth and floor are both optional:
 without the OpenNI2 binding / redist / device the recorder runs RGB ONLY, without transformers or the
@@ -41,7 +42,6 @@ import argparse
 import collections
 import json
 import logging
-import math
 import os
 import signal
 import sys
@@ -56,11 +56,13 @@ import numpy as np
 from color_source import ColorSource
 from detector import DEFAULT_CONF, DEFAULT_IMGSZ, DEFAULT_MODEL, Detector, select_device
 from drawing import FRAME_H, FRAME_W, blend_floor, put_text, render_view
-from floor_geometry import DEFAULT_MOUNT, CameraMount
+from floor_geometry import CameraMount, default_mount
 from floor_segment import DEFAULT_FAR_M, FloorConfig, analyze_floor, box_floor_range, floor_hit
 from frame_grabber import capture_wall, pair_frames
+from light_check import LightCheck
 from mono_depth import DEFAULT_INPUT_SIZE           # the module defers transformers to MonoDepth()
-from object_distance import intrinsics_from_fov, load_intrinsics, measure_object, result_records
+from object_distance import (default_intrinsics_file, fallback_intrinsics, intrinsics_from_fov, load_intrinsics,
+                             measure_object, result_records)
 from occupancy_map import PIXEL_FREE, PIXEL_OBSTACLE
 from raw_recorder import CAPTURE_TIME_DIGITS, DEFAULT_JPEG_QUALITY, INDEX_NAME, RAW_DIR, RawFrameWriter
 
@@ -97,9 +99,6 @@ FLOOR_NOT_IN_VIEW_TEXT = "floor not in view"
 MS_PER_S = 1000.0
 LOG_INTERVAL_S = 5.0
 EXIT_NO_FRAME = 1                  # nothing was ever recorded
-# RGB intrinsics when neither --intrinsics nor the Astra's own FOV is available: the FOV OpenNI2
-# reported for this camera on the dev laptop (vision/README.md, fx ~ fy ~ 570 at 640x480).
-FALLBACK_FOV_DEG = (58.59, 45.64)
 CORRIDOR_HALF_WIDTH_M = 0.25       # robot hull radius (~0.225, CM's MV_DEFAULT_ROBOT_RADIUS_M) + margin
 FLOOR_MAX_AGE_S = 2.0              # an older floor analysis is not drawn: it no longer shows where we are
 PCT = 100.0
@@ -115,7 +114,8 @@ logger = logging.getLogger(__name__)
 def clear_ahead_m(view, intrinsics, mount, far_m):
     """Distance ahead of the camera to the nearest contact inside the robot's corridor; far_m when
     the corridor is free as far as the trapezoid reaches; None when the trapezoid was not floor (no
-    plane). From the camera, like far_m: it sits near the robot's front, 18 cm ahead of its center."""
+    plane). From the camera, like far_m: it sits near the robot's front, ~18.5 cm ahead of its center.
+    The corridor is the robot's, centred on its center line, not on the camera (mount.left_m to the side)."""
     if view.plane is None:
         return None
     if not len(view.contacts):
@@ -310,7 +310,7 @@ class Pipeline:
     floor_worker: object
     raw_writer: object
     mount: CameraMount
-    intrinsics: object                   # Intrinsics; FALLBACK_FOV_DEG until something better is known
+    intrinsics: object                   # Intrinsics; fallback_intrinsics until something better is known
     intrinsics_fixed: bool               # from --intrinsics: never replaced by the Astra's FOV
 
     def close(self):
@@ -333,6 +333,7 @@ class DetectionRecorder:
         self.pipeline = pipeline
         self.sink = sink
         self.status_file = status_file
+        self.light = LightCheck()
         self._motion = ""
         self._last_state = None
 
@@ -370,6 +371,7 @@ class DetectionRecorder:
         self._log_state(status)
         if p.raw_writer is not None:
             p.raw_writer.ensure(color)   # this frame's outputs are about to be recorded: its image must exist
+        self.light.add(color.data, color.seq)
 
         t_infer = time.monotonic()
         detections = p.detector.detect(color.data)
@@ -490,8 +492,9 @@ def _open_floor(enabled, device, da_size, mount, floor_cfg, out_dir):
     return worker
 
 
-def _write_recording(out_dir, args, pipeline, floor_cfg, sink=None):
-    """recording.json: what the streams were recorded with; with sink (at the end) also how much of each."""
+def _write_recording(out_dir, args, pipeline, floor_cfg, sink=None, light=None):
+    """recording.json: what the streams were recorded with; with sink (at the end) also how much of each,
+    and light (LightCheck.result()) how well the scene was lit."""
     p = pipeline
     meta = {"created": datetime.now().isoformat(timespec="seconds"),
             "frame_size": [FRAME_W, FRAME_H], "color_index": args.color_index,
@@ -509,6 +512,7 @@ def _write_recording(out_dir, args, pipeline, floor_cfg, sink=None):
                           "floor_analyses": 0 if p.floor_worker is None else p.floor_worker.analyses,
                           "raw_written": None if p.raw_writer is None else p.raw_writer.written,
                           "raw_dropped": None if p.raw_writer is None else p.raw_writer.dropped}
+        meta["light"] = light            # None: the run ended before the check had its frames
     path = os.path.join(out_dir, RECORDING_NAME)
     with open(path + ".tmp", "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)
@@ -516,6 +520,7 @@ def _write_recording(out_dir, args, pipeline, floor_cfg, sink=None):
 
 
 def _parse_args():
+    mount = default_mount()              # vision/camera_mount.json when calib_floor.py has written it
     parser = argparse.ArgumentParser(description="Record YOLO detections, distances and free floor to a video.")
     parser.add_argument("--out", required=True, help="output folder, created if missing")
     parser.add_argument("--status-file", help=f"text drawn on every frame (default: OUT/{STATUS_NAME})")
@@ -527,16 +532,19 @@ def _parse_args():
     parser.add_argument("--conf", type=float, default=DEFAULT_CONF, help="min detection confidence")
     parser.add_argument("--imgsz", type=int, default=DEFAULT_IMGSZ, help="YOLO input size")
     parser.add_argument("--color-index", type=int, default=0, help="OpenCV index of the Astra RGB camera")
-    parser.add_argument("--intrinsics", help="JSON {fx, fy, cx, cy} of the RGB camera at 640x480")
+    parser.add_argument("--intrinsics", default=default_intrinsics_file(),
+                        help="JSON {fx, fy, cx, cy} of the RGB camera at 640x480 (default: %(default)s)")
     parser.add_argument("--no-floor", action="store_true", help="no Depth Anything free-floor overlay")
     parser.add_argument("--da-size", type=int, default=DEFAULT_INPUT_SIZE,
                         help="Depth Anything input short side, multiple of 14 (default: %(default)s)")
     parser.add_argument("--floor-far", type=float, default=DEFAULT_FAR_M, help="how far to look for floor, m")
-    parser.add_argument("--cam-height", type=float, default=DEFAULT_MOUNT.height_m, help="camera height, m")
-    parser.add_argument("--cam-pitch", type=float, default=DEFAULT_MOUNT.pitch_deg,
-                        help="camera pitch, deg, + = tilted down")
-    parser.add_argument("--cam-forward", type=float, default=DEFAULT_MOUNT.forward_m,
+    parser.add_argument("--cam-height", type=float, default=mount.height_m, help="camera height, m (default: %(default)s)")
+    parser.add_argument("--cam-pitch", type=float, default=mount.pitch_deg,
+                        help="camera pitch, deg, + = tilted down (default: %(default)s)")
+    parser.add_argument("--cam-forward", type=float, default=mount.forward_m,
                         help="camera ahead of the robot center, m (default: %(default)s)")
+    parser.add_argument("--cam-left", type=float, default=mount.left_m,
+                        help="camera left of the robot center, m (default: %(default)s)")
     parser.add_argument("--no-raw", action="store_true", help=f"do not save the undrawn frames to OUT/{RAW_DIR}/")
     parser.add_argument("--raw-quality", type=int, default=DEFAULT_JPEG_QUALITY,
                         help="JPEG quality of the raw frames (default: %(default)s)")
@@ -560,8 +568,8 @@ def main():
     if args.intrinsics:
         intrinsics = load_intrinsics(args.intrinsics)
     else:
-        intrinsics = intrinsics_from_fov(FRAME_W, FRAME_H, *(math.radians(a) for a in FALLBACK_FOV_DEG))
-    mount = CameraMount(args.cam_height, args.cam_pitch, args.cam_forward)
+        intrinsics = fallback_intrinsics(FRAME_W, FRAME_H)
+    mount = CameraMount(args.cam_height, args.cam_pitch, args.cam_forward, args.cam_left)
     floor_cfg = FloorConfig(far_m=args.floor_far, half_width_m=None)
     detector = Detector(args.model, device, args.conf, args.imgsz)
     floor_worker = _open_floor(not args.no_floor, device, args.da_size, mount, floor_cfg, args.out)
@@ -583,7 +591,7 @@ def main():
     finally:
         sink.close()
         clean = pipeline.close()
-        _write_recording(args.out, args, pipeline, floor_cfg, sink)
+        _write_recording(args.out, args, pipeline, floor_cfg, sink, recorder.light.result())
     exit_code = 0 if sink.frames else EXIT_NO_FRAME
     if not clean:
         # A grabber is stuck inside a driver call; a normal interpreter exit could wait on it.

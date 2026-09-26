@@ -95,20 +95,44 @@ def floor_view(background, labels, trapezoid=None, contacts=None):
     return canvas
 
 
-def blend_floor(background, labels, trapezoid=None):
-    """floor_view's colors over an undimmed image, no legend: for video, where the scene must stay
-    readable under the overlay. The trapezoid Depth Anything searched is outlined in white."""
-    canvas = background.copy()
-    for label, color in PIXEL_COLORS.items():
-        mask = labels == label
-        canvas[mask] = ((1 - PIXEL_ALPHA) * background[mask] + PIXEL_ALPHA * np.array(color)).astype(np.uint8)
-    if trapezoid is not None and trapezoid.any():
-        outlines, _ = cv2.findContours(trapezoid.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(canvas, outlines, -1, TRAPEZOID_COLOR, 1)
+def floor_overlay(labels):
+    """(color, mask) of a label image: every labelled pixel's PIXEL_COLORS color, and where there is one.
+    Made once per floor analysis; blend_overlay lays it over each frame it is drawn on."""
+    color = np.zeros(labels.shape + (3,), np.uint8)
+    mask = np.zeros(labels.shape, np.uint8)
+    for label, bgr in PIXEL_COLORS.items():
+        hit = labels == label
+        color[hit] = bgr
+        mask[hit] = 1
+    return color, mask
+
+
+def trapezoid_outline(trapezoid):
+    """Contours of the floor trapezoid Depth Anything searched (boolean image), () when there is none."""
+    if trapezoid is None or not trapezoid.any():
+        return ()
+    outlines, _ = cv2.findContours(trapezoid.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return outlines
+
+
+def blend_overlay(background, overlay, outline=()):
+    """A floor_overlay blended PIXEL_ALPHA over the labelled pixels of background, the rest untouched,
+    and the trapezoid_outline in white. 2.5 ms at 640x480 on the Orin against 18 ms blending label by
+    label - which counts when one analysis is drawn over ~12 video frames."""
+    color, mask = overlay
+    canvas = cv2.copyTo(cv2.addWeighted(background, 1 - PIXEL_ALPHA, color, PIXEL_ALPHA, 0), mask, background.copy())
+    if len(outline):
+        cv2.drawContours(canvas, outline, -1, TRAPEZOID_COLOR, 1)
     return canvas
 
 
-def _view_window(occ_map, poses):
+def blend_floor(background, labels, trapezoid=None):
+    """floor_view's colors over an undimmed image, no legend: for video, where the scene must stay
+    readable under the overlay. The trapezoid Depth Anything searched is outlined in white."""
+    return blend_overlay(background, floor_overlay(labels), trapezoid_outline(trapezoid))
+
+
+def view_window(occ_map, poses):
     """World (x0, y0, span) of a square around every known cell and pose, plus a margin."""
     iy, ix = np.nonzero(occ_map.occupied() | occ_map.free())
     xs = [occ_map.origin[0] + ix.min() * occ_map.res, occ_map.origin[0] + (ix.max() + 1) * occ_map.res] if ix.size else []
@@ -122,11 +146,20 @@ def _view_window(occ_map, poses):
     return cx - span / 2, cy - span / 2, span
 
 
-def render_map(occ_map, regions, poses, current_pose, size_px, hfov_rad=None):
+def map_px(occ_map, points, size_px, window=None):
+    """World (x, y) -> map image pixel, for the view render_map picks around the known cells and
+    `points` (its poses + current pose + extent_points), so overlays land where it drew. window: the
+    (x0, y0, span) render_map was given instead, when it was."""
+    x0, y0, span = window or view_window(occ_map, points)
+    return lambda p: (int(round((p[0] - x0) / span * size_px)), int(round((y0 + span - p[1]) / span * size_px)))
+
+
+def render_map(occ_map, regions, poses, current_pose, size_px, hfov_rad=None, extent_points=(), window=None):
     """Top-down map, world y up: free white, occupied black, unknown gray. Walls red, objects outlined
     in their class color with labels (unknown in orange), capture poses green, the current pose
-    magenta with the camera's horizontal FOV."""
-    x0, y0, span = _view_window(occ_map, poses + ([current_pose] if current_pose else []))
+    magenta with the camera's horizontal FOV. extent_points: also kept in view, not drawn. window:
+    a fixed world (x0, y0, span) instead, as view_window returns - frames of a growing map stay put."""
+    x0, y0, span = window or view_window(occ_map, poses + ([current_pose] if current_pose else []) + list(extent_points))
     centers = (np.arange(size_px) + 0.5) / size_px * span
     ix = np.floor((x0 + centers - occ_map.origin[0]) / occ_map.res).astype(int)
     iy = np.floor((y0 + span - centers - occ_map.origin[1]) / occ_map.res).astype(int)   # row 0 = top = max y
@@ -137,9 +170,7 @@ def render_map(occ_map, regions, poses, current_pose, size_px, hfov_rad=None):
     gray = np.where(inside, grid[np.clip(iy, 0, occ_map.n - 1)[:, None], np.clip(ix, 0, occ_map.n - 1)[None, :]],
                     MAP_UNKNOWN).astype(np.uint8)
     img = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-
-    def px(p):
-        return (int(round((p[0] - x0) / span * size_px)), int(round((y0 + span - p[1]) / span * size_px)))
+    px = map_px(occ_map, poses + ([current_pose] if current_pose else []) + list(extent_points), size_px, window)
 
     for r in regions:
         if r.kind == "wall":

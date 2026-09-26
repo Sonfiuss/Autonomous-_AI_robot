@@ -3,20 +3,31 @@
 Frames:
   camera: +x right, +y down, +z forward along the optical axis (OpenCV), meters.
   body:   +x forward, +y left, +z up, origin on the floor under the robot center.
-The camera sits `height_m` above the floor and `forward_m` ahead of the robot center, pitched DOWN
-by `pitch_deg` (negative = up). No roll, no yaw - a pan servo would add a yaw term here.
+The camera sits `height_m` above the floor, `forward_m` ahead of the robot center and `left_m` to its
+left, pitched DOWN by `pitch_deg` (negative = up). No roll, no yaw - a pan servo would add a yaw term here.
 """
 import collections
+import json
 import math
+import os
 
 import numpy as np
 
-CameraMount = collections.namedtuple("CameraMount", "height_m pitch_deg forward_m")
-# 24 cm high (user). Pitch 0: first given as "5 deg", but on a real frame 5 deg down put the feet of
-# furniture below the floor and 0 put them on it; user set 0 (2026-09-25). forward_m: the camera sits
-# 18 cm from the robot center (user, 2026-09-25), taken as straight ahead on +x. It is what makes an
-# in-place turn swing the camera along an arc instead of spinning it on the spot.
-DEFAULT_MOUNT = CameraMount(height_m=0.24, pitch_deg=0.0, forward_m=0.18)
+# left_m defaults to 0: mounts recorded before it existed (recording.json of runs up to 2026-09-26
+# 17:39, camera_mount.json) load unchanged.
+CameraMount = collections.namedtuple("CameraMount", "height_m pitch_deg forward_m left_m", defaults=(0.0,))
+# 24 cm high (user, measured). Pitch -0.92 (tilted UP, user's choice): fitted to 5 objects the user
+# placed at measured ranges 0.91-2.94 m, fx 570 (2026-09-26, vision/output/calib_20260926_objects/);
+# refitted with the corrected camera_to_body it reads -0.90, RMS 2.0 % - under 1 cm apart at 3 m. The
+# mount is not rigid - the same check read -2.44 before the camera was touched - so re-measure after
+# any touch. forward_m / left_m: the user measured the Astra's three lenses 19.5, 18.5 and 19.5 cm from
+# the robot center (2026-09-26): the middle one on +x at 18.5 cm, the outer ones sqrt(19.5^2 - 18.5^2)
+# = 6.2 cm to either side. The RGB lens is the LEFT one: an in-place turn in the images pivots 6.1-7.0 cm
+# to the right of it, the same for left and right turns (drive_map's rotation_axis, run 20260926_173930).
+# The offset is what makes an in-place turn swing the camera along an arc instead of spinning it.
+DEFAULT_MOUNT = CameraMount(height_m=0.24, pitch_deg=-0.92, forward_m=0.185, left_m=0.062)
+# Written by calib_floor.py; when present it replaces DEFAULT_MOUNT (command-line flags still win).
+CAMERA_MOUNT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "camera_mount.json")
 MAX_RANGE_M = 3.5            # Astra depth noise grows ~quadratically; farther points blur floor vs obstacle
 
 FLOOR_FIT_BAND_M = 0.35      # floor candidates: this close to the ASSUMED floor
@@ -32,6 +43,19 @@ FLOOR_FIT_CELL_M = 0.05      # floor points sharing such a cell with anything st
 FLOOR_FIT_STANDING_M = 0.05  # ... this far above the RANSAC floor line are dropped (feet of walls)
 
 FloorFit = collections.namedtuple("FloorFit", "height_m pitch_deg points")
+
+
+def load_mount(path):
+    """CameraMount from JSON {"height_m", "pitch_deg", "forward_m", "left_m" (optional, 0)}."""
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return CameraMount(float(data["height_m"]), float(data["pitch_deg"]), float(data["forward_m"]),
+                       float(data.get("left_m", 0.0)))
+
+
+def default_mount():
+    """The calibrated mount (CAMERA_MOUNT_FILE) when there is one, else DEFAULT_MOUNT."""
+    return load_mount(CAMERA_MOUNT_FILE) if os.path.exists(CAMERA_MOUNT_FILE) else DEFAULT_MOUNT
 
 
 def backproject(depth_mm, intrinsics, stride=1, mask=None):
@@ -60,12 +84,15 @@ def pixel_heights(depth_mm, intrinsics, mount):
 
 
 def camera_to_body(points_cam, mount):
-    """(N, 3) camera-frame points -> (N, 3) body frame: forward, left, height above the floor."""
+    """(N, 3) camera-frame points -> (N, 3) body frame: forward, left, height above the floor.
+    Pitching down by p turns the optical axis to (cos p, -sin p) and the image's down axis to
+    (-sin p, -cos p) in (forward, up): a proper rotation. Until 2026-09-26 forward had +y sin p, which
+    only pitch 0 hid; at 10 deg it put a floor point at 2.94 m 9.5 cm short."""
     pitch = math.radians(mount.pitch_deg)
     x, y, z = points_cam[:, 0], points_cam[:, 1], points_cam[:, 2]
-    forward = z * math.cos(pitch) + y * math.sin(pitch) + mount.forward_m
+    forward = z * math.cos(pitch) - y * math.sin(pitch) + mount.forward_m
     height = mount.height_m - z * math.sin(pitch) - y * math.cos(pitch)
-    return np.column_stack((forward, -x, height))
+    return np.column_stack((forward, mount.left_m - x, height))
 
 
 def fit_floor(points_body, mount):
@@ -86,7 +113,7 @@ def fit_floor(points_body, mount):
     dist = points_body[:, 0] - mount.forward_m
     height = points_body[:, 2]
     ahead = (dist > 0) & (dist < FLOOR_FIT_MAX_DIST_M)
-    dist, height, left = dist[ahead], height[ahead], points_body[ahead, 1]
+    dist, height, left = dist[ahead], height[ahead], points_body[ahead, 1] - mount.left_m
     keep = np.abs(height) < FLOOR_FIT_BAND_M
     if keep.sum() < FLOOR_FIT_MIN_POINTS:
         return None
@@ -115,6 +142,6 @@ def fit_floor(points_body, mount):
         return None
     slope, intercept = np.polyfit(dist[inliers], height[inliers], 1)
     phi = -math.atan(slope)                  # assumed pitch minus true pitch
-    # Exact for a rotated plane: intercept = h_assumed - h_true * cos(2 phi) / cos(phi).
-    true_height = (mount.height_m - intercept) * math.cos(phi) / math.cos(2 * phi)
+    # Exact for a rotated plane: height = h_assumed - h_true / cos(phi) - d * tan(phi).
+    true_height = (mount.height_m - intercept) * math.cos(phi)
     return FloorFit(true_height, mount.pitch_deg - math.degrees(phi), int(inliers.sum()))
