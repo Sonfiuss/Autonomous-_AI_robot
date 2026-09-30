@@ -94,11 +94,11 @@ otherwise. On ESP32 stderr reaches the USB serial console.
 ## Key chassis constants (`config/constants.h`)
 | Constant | Value |
 |---|---|
-| Wheel radius | 0.055 m |
-| Robot radius (centre → wheel contact) | 0.21 m |
+| Wheel radius | 0.040 m (⌀8 cm, measured 2026-09-27) |
+| Robot radius (centre → wheel contact) | 0.2217 m (wheel triangle side 38.4 cm, 2026-09-29) |
 | Wheel angles | W1 0° (front), W2 120°, W3 240° |
 | Steps per revolution | 12800 |
-| Max pulse rate / max wheel ω | 20 kHz / ≈ 9.8 rad/s (≈ 0.54 m/s at the rim) |
+| Max pulse rate / max wheel ω | 20 kHz / ≈ 9.8 rad/s (≈ 0.39 m/s at the rim) |
 | Wheel accel / decel | 2 rad/s² |
 
 ## Example

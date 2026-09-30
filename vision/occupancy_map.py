@@ -34,6 +34,9 @@ LOG_MIN, LOG_MAX = -2.0, 3.5  # clamped so a cell can still change its mind (peo
 OCC_THRESHOLD = 1.2           # > one frame's hit: needs repeated evidence
 FREE_THRESHOLD = -0.6
 
+# known_grid() cells: what a planner on the real room may trust (realroom/planner.py).
+KNOWN_OCCUPIED, KNOWN_FREE, KNOWN_UNSEEN = 1, 0, -1
+
 # Per-pixel labels shared by floor_segment, the camera overlay (drawing.floor_view) and the map.
 PIXEL_NONE, PIXEL_FREE, PIXEL_OBSTACLE, PIXEL_ABOVE, PIXEL_DROP = 0, 1, 2, 3, 4
 
@@ -64,10 +67,14 @@ class OccupancyMap:
         self.log_odds = np.zeros((self.n, self.n), np.float32)
         self.votes = {}   # class name -> grid of summed detection confidence
 
-    def _cell_ids(self, xy):
+    def cell_index(self, xy):
+        """(iy, ix, inside) of world points (N, 2): their cells, and which of those lie in the grid."""
         ix = np.floor((xy[:, 0] - self.origin[0]) / self.res).astype(np.int64)
         iy = np.floor((xy[:, 1] - self.origin[1]) / self.res).astype(np.int64)
-        inside = (ix >= 0) & (ix < self.n) & (iy >= 0) & (iy < self.n)
+        return iy, ix, (ix >= 0) & (ix < self.n) & (iy >= 0) & (iy < self.n)
+
+    def _cell_ids(self, xy):
+        iy, ix, inside = self.cell_index(xy)
         return iy[inside] * self.n + ix[inside]
 
     def cell_to_world(self, ix, iy):
@@ -114,6 +121,37 @@ class OccupancyMap:
             return
         grid = self.votes.setdefault(name, np.zeros((self.n, self.n), np.float32))
         grid.reshape(-1)[ids] += weight
+
+    def copy(self):
+        """An independent copy: grid, votes and settings."""
+        twin = OccupancyMap(self.max_obstacle_height, self.res, self.n * self.res)
+        twin.log_odds = self.log_odds.copy()
+        twin.votes = {name: grid.copy() for name, grid in self.votes.items()}
+        return twin
+
+    def integrate_footprint(self, poses, radius):
+        """The floor the robot's own body covered: a disc of `radius` around every (x, y, theta) of `poses`.
+        Free for certain - the robot stood there - so set fully free (LOG_MIN), over whatever the camera
+        said: it never sees under or behind the robot. Returns the number of cells set."""
+        reach = int(math.ceil(radius / self.res))
+        dy, dx = np.mgrid[-reach:reach + 1, -reach:reach + 1]
+        disc = (np.hypot(dx, dy) * self.res <= radius)
+        dx, dy = dx[disc], dy[disc]
+        xy = np.asarray(poses, np.float64)[:, :2]
+        centers = np.unique(np.floor((xy - self.origin) / self.res).astype(np.int64), axis=0)
+        ix = (centers[:, 0:1] + dx[None, :]).ravel()
+        iy = (centers[:, 1:2] + dy[None, :]).ravel()
+        inside = (ix >= 0) & (ix < self.n) & (iy >= 0) & (iy < self.n)
+        ids = np.unique(iy[inside] * self.n + ix[inside])
+        self.log_odds.reshape(-1)[ids] = LOG_MIN
+        return int(ids.size)
+
+    def known_grid(self):
+        """int8 [iy, ix]: KNOWN_OCCUPIED, KNOWN_FREE or KNOWN_UNSEEN per cell - what a planner may trust."""
+        grid = np.full(self.log_odds.shape, KNOWN_UNSEEN, np.int8)
+        grid[self.free()] = KNOWN_FREE
+        grid[self.occupied()] = KNOWN_OCCUPIED
+        return grid
 
     def occupied(self):
         return self.log_odds > OCC_THRESHOLD

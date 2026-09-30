@@ -213,10 +213,11 @@ Each stage lists what goes **in**, what it **does**, and exactly what comes **ou
 | `StepAccumulator::accumulate` | `StepCommand`, dt | whole steps this tick, fraction carried |
 | `Odometry::update` | `int32 counts[3]`, dt | `Pose {x, y, theta}`, mid-point integrated |
 
-Chassis constants (`project/config/constants.h`): wheel radius 0.055 m, robot radius 0.21 m, wheels at
-0°/120°/240° (W1 at the front, since 2026-09-25), 12800 steps/rev, `MAX_PULSE_HZ` 20000 (**a placeholder**).
+Chassis constants (`project/config/constants.h`): wheel radius 0.040 m (⌀8 cm, measured 2026-09-27;
+0.055 before), robot radius 0.2217 m (0.21 before 2026-09-29), wheels at 0°/120°/240° (W1 at the front, since 2026-09-25),
+12800 steps/rev, `MAX_PULSE_HZ` 20000 (**a placeholder**).
 
-Measured ceilings: **0.62 m/s forward, 0.54 m/s sideways, 2.57 rad/s spinning.** The chassis is not
+Measured ceilings: **0.45 m/s forward, 0.39 m/s sideways, 1.77 rad/s spinning.** The chassis is not
 equally fast in every direction, so an over-fast request is scaled **as a whole vector**, never
 clipped per wheel — clipping one wheel bends the robot off the planned line.
 

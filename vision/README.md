@@ -81,8 +81,10 @@ từ Depth Anything V2 Small chạy trên ảnh màu** (task `2026-09-25_vision-
   không có depth Astra thì gắn ở các điểm chạm sàn dưới khung.
 - Tường là các đường thẳng dài ≥1m, tìm bằng Hough và gộp theo cùng một đường. Phải tìm tường trước,
   vì tường nối nhau ở góc phòng thành một vành khép kín.
-- Vật là các cụm ô vật cản còn lại. Nhãn lấy theo lớp YOLO có nhiều phiếu nhất trên các ô của cụm.
-  Nếu không đủ phiếu thì nhãn là `unknown`, nhưng cụm vẫn là vật cản.
+- Vật là các cụm ô vật cản còn lại. Nhãn lấy theo lớp YOLO có nhiều phiếu nhất trên các ô của cụm và trong
+  vòng 2 ô quanh nó, nếu gần nó hơn mọi vật khác (chân hộp thường rơi ngay trước vật). Nếu không đủ phiếu thì nhãn là `unknown`, nhưng cụm
+  vẫn là vật cản. Một đường ≥ 1 m có ≥ 10 phiếu của một lớp là cạnh vật (mép giường), không phải tường
+  (drive_map, 2026-09-30: xem `realroom/README.md` "Nhãn vật lớn").
 
 **Output, trong thư mục phiên:**
 - `map.png`: trắng là trống, đen là vật cản, xám là chưa biết, đường đỏ là tường.

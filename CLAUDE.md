@@ -18,7 +18,8 @@ Do NOT skip this. The context loader hook also injects a summary automatically.
 | `motivation/` | C++ | Omni-wheel motion control via ESP32 UART |
 | `stereo-camera/` | C++ | Stereo depth capture + 3D point-cloud builder |
 | `simulation/` | Python/Flask | Browser path planner + ZMQ bridge to Jetson |
-| `communication/` | TBD | Voice / LLM robot control |
+| `communication/` | Python | Text / LLM (Gemini) robot control: relative moves, places on the real map |
+| `realroom/` | Python/Flask | The real room's map (Scene JSON v2.0) + robot pose + path planning on it |
 
 ## Task lifecycle protocol (FOLLOW THIS FOR EVERY NEW TASK)
 

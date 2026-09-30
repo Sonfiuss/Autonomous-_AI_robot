@@ -1,0 +1,470 @@
+{
+ "note": "Natural driving commands and what they must become (task 2026-09-28_natural-command). steps: [action, amount] after the validator - metres for forward/backward, degrees for turns. asks: true when the robot must ask instead of moving. goal: a place to go to - the words the parser must hand the map (the map resolves them). turns: a dialogue, the robot's questions answered in order. rules: false when only the LLM is expected to read it (free phrasing). intent: the step after which a purpose clause ('de tro ve ...') is met, null when none meets it. Used by test_drive.py (rules, offline) and test_live_parser.py (the configured LLM).",
+ "cases": [
+  {
+   "text": "tại chỗ quay trái 180 độ. rồi quay phải 360 độ rồi quay phải 180 độ để trở về vị trí ban đâu. sau đó đi thẳng 90 cm rôi quay lại 180 độ",
+   "steps": [
+    [
+     "turn_left",
+     180
+    ],
+    [
+     "turn_right",
+     360
+    ],
+    [
+     "turn_right",
+     180
+    ],
+    [
+     "forward",
+     0.9
+    ],
+    [
+     "turn_around",
+     180
+    ]
+   ],
+   "intent": 3
+  },
+  {
+   "text": "self rotating 180 degree by the left then selt rotating 360 degree by the right and self rotating 180 to back the base angel. After this, go straight 90cm and self rotating 180 degree",
+   "steps": [
+    [
+     "turn_left",
+     180
+    ],
+    [
+     "turn_right",
+     360
+    ],
+    [
+     "turn_left",
+     180
+    ],
+    [
+     "forward",
+     0.9
+    ],
+    [
+     "turn_left",
+     180
+    ]
+   ],
+   "intent": 3
+  },
+  {
+   "text": "tai cho quay trai 180 do roi quay phai 360 do",
+   "steps": [
+    [
+     "turn_left",
+     180
+    ],
+    [
+     "turn_right",
+     360
+    ]
+   ]
+  },
+  {
+   "text": "đi thẳng 30 cm. sau đó rẽ trái, đi tiếp 60 cm",
+   "steps": [
+    [
+     "forward",
+     0.3
+    ],
+    [
+     "turn_left",
+     90
+    ],
+    [
+     "forward",
+     0.6
+    ]
+   ]
+  },
+  {
+   "text": "lùi 0,5 mét rồi quay phải 45 độ",
+   "steps": [
+    [
+     "backward",
+     0.5
+    ],
+    [
+     "turn_right",
+     45
+    ]
+   ]
+  },
+  {
+   "text": "quay 90 độ sang trái rồi tiến 1 m",
+   "steps": [
+    [
+     "turn_left",
+     90
+    ],
+    [
+     "forward",
+     1.0
+    ]
+   ]
+  },
+  {
+   "text": "xoay tròn một vòng",
+   "steps": [
+    [
+     "turn_left",
+     360
+    ]
+   ]
+  },
+  {
+   "text": "quay nửa vòng ngược chiều kim đồng hồ",
+   "steps": [
+    [
+     "turn_left",
+     180
+    ]
+   ]
+  },
+  {
+   "text": "quay 90 độ theo chiều kim đồng hồ",
+   "steps": [
+    [
+     "turn_right",
+     90
+    ]
+   ]
+  },
+  {
+   "text": "quay đầu rồi đi thẳng 2 m",
+   "steps": [
+    [
+     "turn_around",
+     180
+    ],
+    [
+     "forward",
+     2.0
+    ]
+   ]
+  },
+  {
+   "text": "đi thẳng 30 cm rồi 40 cm nữa",
+   "steps": [
+    [
+     "forward",
+     0.3
+    ],
+    [
+     "forward",
+     0.4
+    ]
+   ]
+  },
+  {
+   "text": "quay trái 90 độ rồi 45 độ nữa",
+   "steps": [
+    [
+     "turn_left",
+     90
+    ],
+    [
+     "turn_left",
+     45
+    ]
+   ]
+  },
+  {
+   "text": "rotate 90 degrees to the right then move forward 50 cm",
+   "steps": [
+    [
+     "turn_right",
+     90
+    ],
+    [
+     "forward",
+     0.5
+    ]
+   ]
+  },
+  {
+   "text": "turn left, go straight 1.5 m, turn around",
+   "steps": [
+    [
+     "turn_left",
+     90
+    ],
+    [
+     "forward",
+     1.5
+    ],
+    [
+     "turn_around",
+     180
+    ]
+   ]
+  },
+  {
+   "text": "spin one full turn clockwise",
+   "steps": [
+    [
+     "turn_right",
+     360
+    ]
+   ]
+  },
+  {
+   "text": "back up 20 cm",
+   "steps": [
+    [
+     "backward",
+     0.2
+    ]
+   ]
+  },
+  {
+   "text": "rẽ phải 30 độ, lùi lại 10 cm",
+   "steps": [
+    [
+     "turn_right",
+     30
+    ],
+    [
+     "backward",
+     0.1
+    ]
+   ]
+  },
+  {
+   "text": "đi thẳng một mét rồi quay trái",
+   "steps": [
+    [
+     "forward",
+     1.0
+    ],
+    [
+     "turn_left",
+     90
+    ]
+   ]
+  },
+  {
+   "text": "tien 50cm roi re phai 90 do",
+   "steps": [
+    [
+     "forward",
+     0.5
+    ],
+    [
+     "turn_right",
+     90
+    ]
+   ]
+  },
+  {
+   "text": "go forward 30 cm then turn right 90 degrees and go forward 30 cm",
+   "steps": [
+    [
+     "forward",
+     0.3
+    ],
+    [
+     "turn_right",
+     90
+    ],
+    [
+     "forward",
+     0.3
+    ]
+   ]
+  },
+  {
+   "text": "u-turn then go back 20 cm",
+   "steps": [
+    [
+     "turn_around",
+     180
+    ],
+    [
+     "backward",
+     0.2
+    ]
+   ]
+  },
+  {
+   "text": "quay tại chỗ 360 độ",
+   "steps": [
+    [
+     "turn_left",
+     360
+    ]
+   ]
+  },
+  {
+   "text": "turn 45 degrees counterclockwise",
+   "steps": [
+    [
+     "turn_left",
+     45
+    ]
+   ]
+  },
+  {
+   "text": "đi lùi khoảng 15 phân",
+   "steps": [
+    [
+     "backward",
+     0.15
+    ]
+   ]
+  },
+  {
+   "text": "tiến lên khoảng nửa mét giúp mình nhé",
+   "steps": [
+    [
+     "forward",
+     0.5
+    ]
+   ]
+  },
+  {
+   "text": "quay phải 90 độ rồi đi thẳng 50 cm để về lại chỗ xuất phát",
+   "steps": [
+    [
+     "turn_right",
+     90
+    ],
+    [
+     "forward",
+     0.5
+    ]
+   ],
+   "intent": null
+  },
+  {
+   "text": "hãy xoay người sang bên trái một góc 90 độ",
+   "rules": false,
+   "steps": [
+    [
+     "turn_left",
+     90
+    ]
+   ]
+  },
+  {
+   "text": "Robot ơi, làm ơn chạy lên phía trước chừng 40 phân rồi ngoảnh sang phải nhé",
+   "rules": false,
+   "steps": [
+    [
+     "forward",
+     0.4
+    ],
+    [
+     "turn_right",
+     90
+    ]
+   ]
+  },
+  {
+   "text": "xoay 2 vòng",
+   "asks": true
+  },
+  {
+   "text": "quay 90 độ",
+   "asks": true
+  },
+  {
+   "text": "quay lại vị trí ban đầu",
+   "asks": true
+  },
+  {
+   "text": "đi thẳng rồi rẽ phải",
+   "asks": true
+  },
+  {
+   "text": "go to the kitchen",
+   "goal": "kitchen"
+  },
+  {
+   "text": "đi tới cái ghế",
+   "goal": "ghế"
+  },
+  {
+   "text": "đến cạnh cái bàn nhé",
+   "goal": "bàn"
+  },
+  {
+   "text": "go next to the suitcase",
+   "goal": "suitcase"
+  },
+  {
+   "text": "chạy lại gần cái vali giúp mình",
+   "goal": "vali"
+  },
+  {
+   "turns": [
+    "quay 90 độ rồi đi thẳng 30 cm",
+    "trái"
+   ],
+   "steps": [
+    [
+     "turn_left",
+     90
+    ],
+    [
+     "forward",
+     0.3
+    ]
+   ]
+  },
+  {
+   "turns": [
+    "đi thẳng rồi rẽ trái",
+    "40 cm"
+   ],
+   "steps": [
+    [
+     "forward",
+     0.4
+    ],
+    [
+     "turn_left",
+     90
+    ]
+   ]
+  },
+  {
+   "turns": [
+    "rẽ phải rồi lùi lại",
+    "nửa mét"
+   ],
+   "steps": [
+    [
+     "turn_right",
+     90
+    ],
+    [
+     "backward",
+     0.5
+    ]
+   ]
+  },
+  {
+   "text": "di chuyển tới bên cạnh cái ghế màu xanh",
+   "goal": "cái ghế màu xanh"
+  },
+  {
+   "text": "tới cạnh cái giường",
+   "goal": "cái giường"
+  },
+  {
+   "text": "di chuyển đến bên trái cái bàn",
+   "goal": "bên trái cái bàn"
+  },
+  {
+   "text": "đi tới cạnh ghế xanh",
+   "goal": "ghế xanh"
+  }
+ ]
+}

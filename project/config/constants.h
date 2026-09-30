@@ -3,8 +3,8 @@
 // runtime initialisation and can be embedded on ESP32 without setup code.
 //
 // Chassis values are the source of truth that agent/description/project_overview.md
-// quotes: r and L from the old firmware's PinConfig.h, the wheel angles checked on
-// the robot 2026-09-25. They OVERRIDE the assumed values listed in
+// quotes: r and L measured on the robot by the user 2026-09-27, the wheel angles
+// checked on the robot 2026-09-25. They OVERRIDE the assumed values listed in
 // documents/software/RM/omni3wheel.md.
 #ifndef RM_CONFIG_CONSTANTS_H
 #define RM_CONFIG_CONSTANTS_H
@@ -22,10 +22,16 @@ constexpr float DEG_TO_RAD = PI / 180.0f;
 constexpr float RAD_TO_DEG = 180.0f / PI;
 
 // ---------------------------------------------------------------- chassis
-constexpr float WHEEL_RADIUS_M        = 0.055f;                       // a  (⌀11 cm wheel)
+// a: ⌀8 cm wheel (user, 2026-09-27). Until then this was 0.055 m, copied from the old
+// firmware's PinConfig.h, so every commanded distance and turn came out × 0.727 — the
+// "r_eff 4.03 cm slip" of 2026-06-29 was this constant, not slip.
+constexpr float WHEEL_RADIUS_M        = 0.040f;                       // a  (⌀8 cm wheel)
 constexpr float WHEEL_DIAMETER_M      = 2.0f * WHEEL_RADIUS_M;        // d
-constexpr float WHEEL_CIRCUMFERENCE_M = TWO_PI * WHEEL_RADIUS_M;      // C ≈ 0.3456 m
-constexpr float ROBOT_RADIUS_M        = 0.21f;                        // L  (centre → wheel contact)
+constexpr float WHEEL_CIRCUMFERENCE_M = TWO_PI * WHEEL_RADIUS_M;      // C ≈ 0.2513 m
+// L: the three wheel contacts form an equilateral triangle of side 38.4 cm (user, 2026-09-29), so
+// L = 0.384 / √3. Until then this was 0.21 m (centre → outer wheel face 21.5 cm minus half the wheel
+// width, 2026-09-27): every commanded turn came out × 0.947 before slip.
+constexpr float ROBOT_RADIUS_M        = 0.2217f;                      // L  (centre → wheel contact)
 
 // Wheel mounting angle α_i measured CCW from the robot +x (forward) axis.
 // Drive direction of wheel i is the CCW tangent at α_i, so a positive ω_i
@@ -42,8 +48,8 @@ constexpr float WHEEL_ANGLE_RAD[NUM_WHEELS] = {
 
 // Wheel contact positions (dx_i, dy_i) = L·(cos α_i, sin α_i), metres.
 // Kept explicit for documentation / firmware use; kinematics use the angles.
-constexpr float WHEEL_POS_X_M[NUM_WHEELS] = { 0.210000f, -0.105000f, -0.105000f};
-constexpr float WHEEL_POS_Y_M[NUM_WHEELS] = { 0.000000f,  0.181865f, -0.181865f};
+constexpr float WHEEL_POS_X_M[NUM_WHEELS] = { 0.221700f, -0.110850f, -0.110850f};
+constexpr float WHEEL_POS_Y_M[NUM_WHEELS] = { 0.000000f,  0.191998f, -0.191998f};
 
 // ---------------------------------------------------------------- stepper
 constexpr int32_t STEPPER_FULL_STEPS_PER_REV = 200;                                  // motor datasheet
@@ -54,7 +60,7 @@ constexpr float   STEPS_PER_RAD              = static_cast<float>(STEPS_PER_REV)
 constexpr float   METERS_PER_STEP            = WHEEL_CIRCUMFERENCE_M / static_cast<float>(STEPS_PER_REV);
 
 // Highest pulse rate the driver/motor is trusted to follow. Placeholder —
-// measure on hardware and tune. 20 kHz → 1.56 rev/s → 0.54 m/s wheel rim speed.
+// measure on hardware and tune. 20 kHz → 1.56 rev/s → 0.39 m/s wheel rim speed.
 constexpr float MAX_PULSE_HZ         = 20000.0f;
 constexpr float MAX_WHEEL_OMEGA_RAD_S = TWO_PI * MAX_PULSE_HZ / static_cast<float>(STEPS_PER_REV);
 // Below this |ω| the driver outputs 0 Hz (avoids sub-Hz pulse trains / jitter).
@@ -70,7 +76,7 @@ constexpr int32_t ODOM_COUNTS_PER_REV     = STEPS_PER_REV;
 constexpr float   RAD_PER_ODOM_COUNT      = TWO_PI / static_cast<float>(ODOM_COUNTS_PER_REV);
 
 // ---------------------------------------------------------------- velocity profile
-// Angular acceleration limits per wheel (rad/s²). 2 rad/s² ≈ 0.11 m/s² at the rim:
+// Angular acceleration limits per wheel (rad/s²). 2 rad/s² = 0.08 m/s² at the rim:
 // conservative to avoid stepper skipping; raise after testing on hardware.
 constexpr float WHEEL_ACCEL_RAD_S2 = 2.0f;
 constexpr float WHEEL_DECEL_RAD_S2 = 2.0f;
@@ -135,7 +141,7 @@ constexpr int   MAX_PRIMITIVES = 2 * mv::cfg::MAX_PATH_CELLS + 8;
 
 // ---------------------------------------------------------------- commanded speed
 // Defaults when the caller passes 0. Both are well inside the wheel limit
-// (rm::cfg::MAX_WHEEL_OMEGA_RAD_S allows ~0.62 m/s forward, ~0.54 m/s sideways).
+// (rm::cfg::MAX_WHEEL_OMEGA_RAD_S allows ~0.45 m/s forward, ~0.39 m/s sideways).
 constexpr float CRUISE_SPEED_M_S = 0.15f;
 constexpr float YAW_RATE_RAD_S   = 0.8f;
 

@@ -14,10 +14,20 @@ over far floor (1 px ~ 6 cm at 3 m) the way the image actually measures them.
 
 Motion (dx, dy, dtheta): the pose of the body at the second frame, in the body frame of the first:
 b_first = R(dtheta) b_second + (dx, dy).
+
+The translation carries the mount's error: a floor point's range goes with the camera height and, steeply,
+with the pitch (0.75 deg ~ 5 % at this height). vo_scale() is the tape measure's correction for one
+mount (VO_SCALE_FILE).
+Rotations carry an error too, though the rotation of a rigid floor fit should need none: turned by hand one
+full turn back onto tape marks (2026-09-29, task multi-stop-map-test), the robot read 398.4 deg for 359.5.
+The camera's roll (~1.25 deg, not in the model) and its fx explain only a sixth of that; the rest is not
+understood yet. vo_turn_scale() is that measured correction, for the same mount.
 """
 import collections
+import json
 import logging
 import math
+import os
 
 import cv2
 import numpy as np
@@ -40,11 +50,49 @@ MIN_INLIERS = 12
 MIN_PAIR_GAP_M = 0.15         # the two points of a RANSAC sample: closer than this pin the angle badly
 REFINE_ITERS = 10
 REFINE_STEP = (1e-5, 1e-5, 1e-6)   # numeric Jacobian steps for dx, dy (m) and dtheta (rad)
+# Tape vs VO of measured legs, and the mount they were measured with (task 2026-09-27_explore-map step E).
+VO_SCALE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vo_scale.json")
+MOUNT_MATCH_TOL = 1e-6
 
 # Motion: see the module docstring; inliers / tracks: point counts; rms_px over the inliers.
 Motion = collections.namedtuple("Motion", "dx dy dtheta inliers tracks rms_px")
 
 logger = logging.getLogger(__name__)
+
+
+def _scale_data(mount, path):
+    """VO_SCALE_FILE's content when it was measured with `mount`, else None (no file, or another mount: a
+    refit, a --cam-pitch)."""
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    measured_with = data["mount"]
+    if any(abs(getattr(mount, name) - float(value)) > MOUNT_MATCH_TOL for name, value in measured_with.items()):
+        logger.info("VO scales in %s are for mount %s, not %s: using 1.0", path, measured_with, dict(mount._asdict()))
+        return None
+    return data
+
+
+def vo_scale(mount, path=VO_SCALE_FILE):
+    """Real metres per VO metre for `mount`: sum(tape) / sum(VO) over the legs in `path`, when they were
+    measured with this mount; 1.0 otherwise."""
+    data = _scale_data(mount, path)
+    if data is None:
+        return 1.0
+    tape = sum(abs(leg["tape_m"]) for leg in data["legs"])
+    vo = sum(abs(leg["vo_m"]) for leg in data["legs"])
+    return tape / vo if vo > 0.0 else 1.0
+
+
+def vo_turn_scale(mount, path=VO_SCALE_FILE):
+    """Real turn per VO turn for `mount`: sum(truth) / sum(VO) over the turns in `path`, when they were
+    measured with this mount; 1.0 otherwise (and for a file that has no turns)."""
+    data = _scale_data(mount, path)
+    turns = [] if data is None else data.get("turns", [])
+    truth = sum(abs(turn["truth_deg"]) for turn in turns)
+    vo = sum(abs(turn["vo_deg"]) for turn in turns)
+    return truth / vo if vo > 0.0 else 1.0
 
 
 def floor_rows(intrinsics, mount, image_h, max_range_m=FLOOR_MAX_RANGE_M):

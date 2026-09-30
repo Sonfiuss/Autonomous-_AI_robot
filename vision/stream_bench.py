@@ -39,6 +39,7 @@ import numpy as np
 
 import drive_map
 import drive_timeline
+import leg_odometry
 from drawing import floor_overlay, render_map
 from frame_motion import estimate_motion, floor_rows, track
 from occupancy_map import OccupancyMap
@@ -56,9 +57,9 @@ TIMED_FRAMES = 60              # frames sampled for the per-frame stages
 TIMED_RENDERS = 20
 FLOOR_ANALYSES_PER_SPOT = 2    # drive_map.FLOOR_WEIGHT 0.5: a cell needs two agreeing analyses
 DISPLAY_FPS = 10.0             # record.VIDEO_FPS: the live view's rate, and the loop's ceiling
-# Turn rates to size the stages for, rad/s at the wheels' command; the images turn the run's measured
-# ratio of it (0.79 on 2026-09-26).
-COMMANDED_TURNS = (("demo cmd", 0.3), ("chassis max", 2.57))   # mc_max_speed: ~2.57 rad/s spinning
+# Turn rates to size the stages for, rad/s at the wheels' command under today's constants.h; the images
+# turn the run's measured ratio of it, rescaled to those constants (0.79 of the old ones on 2026-09-26).
+COMMANDED_TURNS = (("demo cmd", 0.3), ("chassis max", 1.77))   # mc_max_speed: 1.77 rad/s spinning (r 0.040, L 0.2217 m)
 PERCENTILES = (50, 95)
 PCT = 100.0
 STREAM_YOLO, STREAM_FLOOR = "YOLO", "DA floor"
@@ -94,7 +95,7 @@ def live_streams(dm):
              f"{dropped} frames dropped by the camera in {int(gaps.sum())} gaps (interval > {GAP_FACTOR} x median)"]
     if arrival:
         lines.append("         driver stamp -> Python: median %.0f ms, p95 %.0f ms" % tuple(MS_PER_S * v for v in pct(arrival)))
-    rows = drive_map.load_jsonl(os.path.join(dm.run_dir, drive_map.DETECTIONS_FILE))
+    rows = leg_odometry.load_jsonl(os.path.join(dm.run_dir, drive_map.DETECTIONS_FILE))
     if len(rows) > 1:
         t = np.array([r["t"] for r in rows])
         infer = pct([r["infer_ms"] for r in rows])
@@ -126,14 +127,14 @@ def _timed(fn, *args):
 
 
 def raw_path(dm, k):
-    return os.path.join(dm.run_dir, drive_map.RAW_DIR, drive_map.RAW_PATTERN.format(seq=dm.frames[k]["seq"]))
+    return os.path.join(dm.run_dir, leg_odometry.RAW_DIR, leg_odometry.RAW_PATTERN.format(seq=dm.frames[k]["seq"]))
 
 
 def turn_rate(dm):
     """(N,) turn rate the images measured, rad/s, smoothed over SMOOTH_FRAMES."""
     dt = np.diff(dm.times, prepend=dm.times[0])
     dt[0] = np.inf
-    rate = np.where(dm.motion[:, drive_map.COL_OK] > 0, dm.motion[:, drive_map.COL_DTHETA], 0.0) / dt
+    rate = np.where(dm.motion[:, leg_odometry.COL_OK] > 0, dm.motion[:, leg_odometry.COL_DTHETA], 0.0) / dt
     return np.convolve(rate, np.ones(SMOOTH_FRAMES) / SMOOTH_FRAMES, mode="same")
 
 
@@ -158,7 +159,7 @@ def vo_sweep(dm):
         total = reference = 0.0
         measured, seconds, steps = 0, [], []
         for first, last in spans:
-            sign = math.copysign(1.0, dm.motion[first:last, drive_map.COL_DTHETA].sum())
+            sign = math.copysign(1.0, dm.motion[first:last, leg_odometry.COL_DTHETA].sum())
             keys = list(range(first, last, stride))
             prev = cv2.imread(raw_path(dm, keys[0]), cv2.IMREAD_GRAYSCALE)
             for k0, k1 in zip(keys, keys[1:]):
@@ -169,7 +170,7 @@ def vo_sweep(dm):
                     continue
                 motion, sec = _timed(measure, prev, cur)
                 prev = cur
-                step = float(dm.motion[k0 + 1:k1 + 1, drive_map.COL_DTHETA].sum())
+                step = float(dm.motion[k0 + 1:k1 + 1, leg_odometry.COL_DTHETA].sum())
                 seconds.append(sec)
                 steps.append(abs(step))
                 reference += sign * step
@@ -214,7 +215,7 @@ def time_stages(dm, window):
     render = [_timed(render_map, dm.occ_map, [], [], None, video.map_size, None, (), window)[1]
               for _ in range(TIMED_RENDERS)]
 
-    detections = {r["seq"]: r for r in drive_map.load_jsonl(os.path.join(dm.run_dir, drive_map.DETECTIONS_FILE))}
+    detections = {r["seq"]: r for r in leg_odometry.load_jsonl(os.path.join(dm.run_dir, drive_map.DETECTIONS_FILE))}
     floor = None                         # the overlay every timed frame gets: the first readable analysis
     for line in drive_map.floor_lines(dm.run_dir):
         labels = drive_map.floor_labels(dm.run_dir, line)
@@ -247,9 +248,10 @@ def time_stages(dm, window):
         (STAGE_CAMERA, camera), (STAGE_MAP, board), (STAGE_ENCODE, encode))}
 
 
-def realtime_table(stages, sweep, hfov, live, turn_ratio, cruise_speed):
+def realtime_table(stages, sweep, hfov, live, turn_ratio, forward_speed):
     """Lines of the needed-vs-reached table. live: live_streams' {stream: (rate /s, p95 latency s)};
-    cruise_speed: the run's forward speed, m/s, at the wheels' command."""
+    turn_ratio: image turn / command under today's constants.h; forward_speed: the run's forward speed as
+    the wheels rolled it, m/s."""
     good = largest_good_step(sweep[0]) if sweep else None
     lines = []
     if good is None:
@@ -276,11 +278,10 @@ def realtime_table(stages, sweep, hfov, live, turn_ratio, cruise_speed):
             verdict.append(f"floor frames skipped (> {drive_map.MAX_TURN_RATE} rad/s)")
         lines.append(f"{name + f' {omega:.2f} rad/s':26s} {need_vo:5.1f} Hz {VO_MARGIN * need_vo:5.1f} Hz "
                      f"{need_floor:5.2f} Hz {need_yolo:5.2f} Hz   " + ", ".join(verdict))
-    speed = cruise_speed * drive_map.DEFAULT_DISTANCE_SCALE
     omega = turns[0][1] if turns else 0.0         # this run's peak turn, else the demo's
     for stream, (_, latency) in live.items():
-        lines.append(f"{stream} p95 latency {MS_PER_S * latency:.0f} ms: the robot moves {PCT * speed * latency:.1f} cm "
-                     f"at {speed:.2f} m/s, turns {math.degrees(omega * latency):.0f} deg at {omega:.2f} rad/s "
+        lines.append(f"{stream} p95 latency {MS_PER_S * latency:.0f} ms: the robot moves {PCT * forward_speed * latency:.1f} cm "
+                     f"at {forward_speed:.2f} m/s, turns {math.degrees(omega * latency):.0f} deg at {omega:.2f} rad/s "
                      "before the result arrives")
     frame_ms = sum(stages[name] for name in VIEW_STAGES if not math.isnan(stages[name]))
     lines.append(f"live view: decode + panels + encode = {frame_ms:.0f} ms a frame -> up to {MS_PER_S / frame_ms:.0f} fps "
@@ -329,8 +330,10 @@ def main():
                   "  stride  step_deg  max_step  ms/pair  measured  total/drive_map"]
         lines += [f"  {r.stride:6d}  {r.step_deg:8.2f}  {r.max_step_deg:8.2f}  {r.ms:7.1f}  {PCT * r.measured:7.0f} %  "
                   f"{r.total_ratio:14.3f}" for r in rows]
+    # A run commanded with the old wheel radius turned turn_ratio of its command; today's constants
+    # command the same wheel angle for 1 / distance_scale of that turn.
     lines += ["", "REALTIME (needed vs reached)"] + ["  " + line for line in realtime_table(
-        stages, sweep, hfov, live_rates, turn_ratio, dm.run.cruise_speed)]
+        stages, sweep, hfov, live_rates, turn_ratio / dm.distance_scale, dm.run.cruise_speed * dm.distance_scale)]
     path = os.path.join(run_dir, drive_map.MAP_DIR, STREAM_FILE)
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

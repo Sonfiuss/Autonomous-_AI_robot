@@ -7,14 +7,21 @@ single room-sized "object".
 Objects: each 8-connected group of the occupied cells left once the walls are removed. Polygon =
 convex hull when that has <= 6 vertices, else the minimum-area rectangle. Both COVER every
 occupied cell: an obstacle polygon may come out too big, never too small.
-Known limit: a straight edge >= 1 m on a big object (sofa, bed side) can be taken for a wall.
-An object's class is the detector class holding most of the votes on its cells. Without enough
+Known limit: a straight edge >= 1 m on a big object (sofa, bed side) can be taken for a wall - unless the
+detector keeps naming what stands there (>= WALL_OBJECT_MIN_VOTES): then it is that object's side, and
+stays with the objects (a person lying on a bed, whose front the camera saw as a 1.1 m line, 2026-09-29).
+An object's class is the detector class holding most of the votes on its cells and on those within
+LABEL_REACH_CELLS nearer to it than to any other object (a box's foot lands on the floor just in front of
+its object; a vote counts for one object). Without enough
 detector evidence it is "unknown" - an object the detector has no class for is still an obstacle
-in the map, the label is annotation only.
+in the map, the label is annotation only. Its color is object_color's vote over its cells (the camera
+pixels standing on them), "unknown" without enough of them.
+The robot carries the real robot's outline (robot_shape), in the simulator's fields.
 The scene frame shifts the map so the box around everything observed starts at (0, 0); the shift
 is kept as "map_offset" (scene = map - offset).
 """
 import collections
+import logging
 import math
 import os
 import sys
@@ -26,8 +33,10 @@ import numpy as np
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(BASE_DIR), "simulation", "room"))
 from room_generator import (  # noqa: E402  (path inserted above, same pattern as project/src/CM)
-    MAX_POLYGON_VERTICES, NEAR_COUNT, ROBOT_RADIUS_M, ROUND_DIGITS, SCHEMA_VERSION, SIDE_NAMES, polygon_center,
+    MAX_POLYGON_VERTICES, NEAR_COUNT, ROBOT_CHASSIS_M, ROBOT_FOOTPRINT_BODY, ROBOT_RADIUS_M, ROBOT_WHEEL_ANGLES_DEG,
+    ROUND_DIGITS, SCHEMA_VERSION, SIDE_NAMES, polygon_center, robot_wheels_body,
 )
+from object_color import UNKNOWN_COLOR  # noqa: E402
 
 MIN_REGION_CELLS = 3           # smaller occupied groups are treated as noise
 WALL_MIN_LENGTH_M = 1.0
@@ -38,14 +47,27 @@ WALL_MERGE_DIST_CELLS = 3.0    # ... and this close to one line are the same wal
 WALL_MASK_CELLS = 5            # width of the band removed around a wall before objects are extracted
 LABEL_MIN_VOTES = 2.0          # summed detector confidence over a region's cells before it takes a class
 LABEL_MIN_SHARE = 0.5          # ... and the winning class must hold this share of the region's votes
+LABEL_REACH_CELLS = 2          # votes this close to a region count for it (pose / calibration error: 5-10 cm)
+REACH_MASK_SIZE = 5            # distance transform mask: exact enough within LABEL_REACH_CELLS
+NO_OWNER = -1                  # a cell no object's votes may claim
+WALL_OBJECT_MIN_VOTES = 10.0   # a wall line with this much of one class around it is an object's side
 SIDE_CLEARANCE_M = 0.05        # gap between an object and the robot disc tested beside it
 SIDE_MIN_FREE_FRACTION = 0.5   # share of that disc that must be SEEN free; the rest may be unknown
 SOURCE = "astra_map"
+UNKNOWN_CLASS = "unknown"      # a region no detector class holds enough votes for
+SHARE_DIGITS = 2               # confidence and color_share: shares, to the percent
+# The real robot's outline is the simulator's (user drawing, 2026-09-11) turned half a turn: the simulator
+# has its wheels at 60/180/300 deg, the real front (+x, where the camera looks) is a wheel - W1 at 0 deg,
+# W2 / W3 at +-120 (project_overview; user, 2026-09-29).
+REAL_ROBOT_TURN_DEG = 180
+FULL_TURN_DEG = 360
 
 # kind: "wall" | "object". polygon: object -> CCW world vertices, wall -> [p1, p2].
 # size: (long, short) meters; yaw: direction of the long side, radians in [0, pi).
 # confidence: labelled object -> vote share of its class; otherwise mean occupancy probability.
 Region = collections.namedtuple("Region", "kind mask center size yaw polygon label confidence")
+
+logger = logging.getLogger(__name__)
 
 
 def _ccw(poly):
@@ -71,14 +93,38 @@ def _rect_axes(rect):
     return max(l0, l1), min(l0, l1), math.atan2(float(edge[1]), float(edge[0])) % math.pi, box
 
 
-def _label(occ_map, mask, prob):
-    totals = {name: float(grid[mask].sum()) for name, grid in occ_map.votes.items()}
+def _near_cells(mask):
+    """The cells within LABEL_REACH_CELLS of `mask` - the same distance _vote_areas measures."""
+    return cv2.distanceTransform((~mask).astype(np.uint8), cv2.DIST_L2, REACH_MASK_SIZE) <= LABEL_REACH_CELLS
+
+
+def _vote_areas(masks):
+    """Per object mask, the cells whose votes count for it: its own, and those within LABEL_REACH_CELLS
+    that lie nearer to it than to any other object - a vote between two objects counts for one of them."""
+    if not masks:
+        return []
+    owner = np.full(masks[0].shape, NO_OWNER, np.int32)
+    for k, mask in enumerate(masks):
+        owner[mask] = k
+    owned = owner != NO_OWNER
+    dist, nearest_px = cv2.distanceTransformWithLabels((~owned).astype(np.uint8), cv2.DIST_L2, REACH_MASK_SIZE,
+                                                       labelType=cv2.DIST_LABEL_PIXEL)
+    lut = np.full(int(nearest_px.max()) + 1, NO_OWNER, np.int32)     # label of an owned cell -> its object
+    lut[nearest_px[owned]] = owner[owned]
+    nearest = np.where(dist <= LABEL_REACH_CELLS, lut[nearest_px], NO_OWNER)
+    return [nearest == k for k in range(len(masks))]
+
+
+def _label(occ_map, votes_at, mask, prob, min_votes=LABEL_MIN_VOTES):
+    """(class, vote share) of the region `mask` from the votes on the cells `votes_at`, or
+    (UNKNOWN_CLASS, its mean occupancy probability) when no class holds min_votes and LABEL_MIN_SHARE."""
+    totals = {name: float(grid[votes_at].sum()) for name, grid in occ_map.votes.items()}
     total = sum(totals.values())
     if total > 0:
         name = max(totals, key=totals.get)
-        if totals[name] >= LABEL_MIN_VOTES and totals[name] >= LABEL_MIN_SHARE * total:
+        if totals[name] >= min_votes and totals[name] >= LABEL_MIN_SHARE * total:
             return name, totals[name] / total
-    return "unknown", float(prob[mask].mean())
+    return UNKNOWN_CLASS, float(prob[mask].mean()) if mask.any() else 0.0
 
 
 def _merge_segments(segments):
@@ -105,43 +151,60 @@ def _merge_segments(segments):
     return merged
 
 
+def _object_region(occ_map, mask, votes_at, prob):
+    """The object Region of the occupied cells `mask`, labelled by the votes on `votes_at`."""
+    corners = _cell_corners(occ_map, mask)
+    long, short, yaw, box = _rect_axes(cv2.minAreaRect(corners))
+    hull = cv2.convexHull(corners)[:, 0, :]
+    poly = _ccw([(float(x), float(y)) for x, y in (hull if len(hull) <= MAX_POLYGON_VERTICES else box)])
+    label, confidence = _label(occ_map, votes_at, mask, prob)
+    return Region("object", mask, polygon_center(poly), (long, short), yaw, poly, label, confidence)
+
+
 def _walls(occ_map, occupied, prob):
-    """Wall regions and the band of cells they claim."""
+    """(walls, sides, band): the wall regions, the masks of the lines that are an object's side, and the band
+    of cells both claim. A line the detector names an object (WALL_OBJECT_MIN_VOTES) is no wall but that
+    object's side: an object of the line's own cells - not joined to what stands in front of it (a bottle
+    before the bed a person lies on)."""
     min_cells = int(round(WALL_MIN_LENGTH_M / occ_map.res))
     lines = cv2.HoughLinesP(occupied.astype(np.uint8) * 255, 1, np.pi / 180, WALL_HOUGH_VOTES,
                             minLineLength=min_cells, maxLineGap=WALL_MAX_GAP_CELLS)
     segments = [] if lines is None else [tuple(float(v) for v in line[0]) for line in lines]
     band = np.zeros(occupied.shape, np.uint8)
-    walls = []
+    walls, sides = [], []
     for (c1, r1), (c2, r2) in _merge_segments(segments):
         line = np.zeros(occupied.shape, np.uint8)
         cv2.line(line, (int(round(c1)), int(round(r1))), (int(round(c2)), int(round(r2))), 1, WALL_MASK_CELLS)
-        band |= line
         mask = occupied & (line > 0)
         p1, p2 = occ_map.cell_to_world(c1, r1), occ_map.cell_to_world(c2, r2)
+        band |= line
+        name, _ = _label(occ_map, _near_cells(mask), mask, prob, WALL_OBJECT_MIN_VOTES)
+        if name != UNKNOWN_CLASS:
+            logger.debug("line %s-%s is a %s's side, not a wall", p1, p2, name)
+            sides.append(mask)
+            continue
         center = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
         walls.append(Region("wall", mask, center, (math.dist(p1, p2), WALL_MASK_CELLS * occ_map.res),
                             math.atan2(p2[1] - p1[1], p2[0] - p1[0]) % math.pi, [p1, p2], "wall",
                             float(prob[mask].mean()) if mask.any() else 0.0))
-    return walls, band > 0
+    return walls, sides, band > 0
 
 
 def extract_regions(occ_map):
+    """The wall and object Regions of occ_map: walls first, then the objects - the lines that are an object's
+    side and the groups of occupied cells outside the walls' band - labelled over their _vote_areas."""
     occupied = occ_map.occupied()
     prob = occ_map.probability()
-    regions, wall_band = _walls(occ_map, occupied, prob)
+    walls, object_masks, wall_band = _walls(occ_map, occupied, prob)
+    sides = len(object_masks)
     count, labels = cv2.connectedComponents((occupied & ~wall_band).astype(np.uint8), connectivity=8)
     for k in range(1, count):
         mask = labels == k
-        if mask.sum() < MIN_REGION_CELLS:
-            continue
-        corners = _cell_corners(occ_map, mask)
-        long, short, yaw, box = _rect_axes(cv2.minAreaRect(corners))
-        hull = cv2.convexHull(corners)[:, 0, :]
-        poly = _ccw([(float(x), float(y)) for x, y in (hull if len(hull) <= MAX_POLYGON_VERTICES else box)])
-        label, confidence = _label(occ_map, mask, prob)
-        regions.append(Region("object", mask, polygon_center(poly), (long, short), yaw, poly, label, confidence))
-    return regions
+        if mask.sum() >= MIN_REGION_CELLS:
+            object_masks.append(mask)
+    logger.debug("%d walls, %d objects (%d of them an object's side)", len(walls), len(object_masks), sides)
+    return walls + [_object_region(occ_map, mask, votes_at, prob)
+                    for mask, votes_at in zip(object_masks, _vote_areas(object_masks))]
 
 
 def _disc_is_free(occ_map, x, y, occupied, free):
@@ -172,7 +235,24 @@ def free_sides(occ_map, region, occupied, free):
     return sides
 
 
-def to_scene(occ_map, regions, robot_pose):
+def robot_shape():
+    """The real robot's Scene JSON v2.0 outline, body frame (+x forward): {chassis, wheels [{angle_deg,
+    polygon}] from W1 at 0 deg, footprint (convex hull of both)}."""
+    c, s = math.cos(math.radians(REAL_ROBOT_TURN_DEG)), math.sin(math.radians(REAL_ROBOT_TURN_DEG))
+
+    def pt(p):
+        return {"x": round(c * p[0] - s * p[1], ROUND_DIGITS), "y": round(s * p[0] + c * p[1], ROUND_DIGITS)}
+
+    wheels = sorted(((deg + REAL_ROBOT_TURN_DEG) % FULL_TURN_DEG, poly)
+                    for deg, poly in zip(ROBOT_WHEEL_ANGLES_DEG, robot_wheels_body()))
+    return {"chassis": [pt(p) for p in ROBOT_CHASSIS_M],
+            "wheels": [{"angle_deg": deg, "polygon": [pt(p) for p in poly]} for deg, poly in wheels],
+            "footprint": [pt(p) for p in ROBOT_FOOTPRINT_BODY]}
+
+
+def to_scene(occ_map, regions, robot_pose, colors=None):
+    """Scene JSON v2.0 of the regions. colors: object_color.ColorVotes on occ_map's cells (None: every
+    object's color unknown)."""
     occupied, free = occ_map.occupied(), occ_map.free()
     iy, ix = np.nonzero(occupied | free)
     if ix.size:
@@ -190,9 +270,11 @@ def to_scene(occ_map, regions, robot_pose):
     out_objects = []
     for k, r in enumerate(objects):
         others = sorted((math.dist(r.center, o.center), ids[j]) for j, o in enumerate(objects) if j != k)
+        color = colors.of(r.mask) if colors is not None else None
         out_objects.append({
-            "id": ids[k], "class": r.label, "confidence": round(r.confidence, 2),
-            "color": "unknown",   # not measured yet; CM prints this field
+            "id": ids[k], "class": r.label, "confidence": round(r.confidence, SHARE_DIGITS),
+            "color": color.name if color else UNKNOWN_COLOR, "color_rgb": color.rgb if color else None,
+            "color_share": round(color.share, SHARE_DIGITS) if color and color.rgb else None,
             "center": pt(r.center), "yaw": round(r.yaw, ROUND_DIGITS),
             "polygon": [pt(p) for p in r.polygon],
             "free_sides": free_sides(occ_map, r, occupied, free),
@@ -207,7 +289,8 @@ def to_scene(occ_map, regions, robot_pose):
                   for k, w in enumerate(walls)],
         "doors": [],
         "robot": {"x": round(x - x_min, ROUND_DIGITS), "y": round(y - y_min, ROUND_DIGITS),
-                  "theta": round(theta % (2 * math.pi), ROUND_DIGITS), "radius": round(ROBOT_RADIUS_M, ROUND_DIGITS)},
+                  "theta": round(theta % (2 * math.pi), ROUND_DIGITS), "radius": round(ROBOT_RADIUS_M, ROUND_DIGITS),
+                  **robot_shape()},
         "objects": out_objects,
         "map_offset": {"x": round(x_min, ROUND_DIGITS), "y": round(y_min, ROUND_DIGITS)},
     }

@@ -16,7 +16,7 @@ import math
 from dataclasses import dataclass
 
 import drive_config as cfg
-from cmd_parser import ACTION_BACKWARD, ACTION_FORWARD, ACTION_TURN_AROUND, ACTION_TURN_LEFT, ACTION_TURN_RIGHT
+from cmd_parser import LINEAR_SIGN, TURN_SIGN
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,6 @@ STOP = "STOP"
 WIRE_STOP = "S"
 PRIMITIVE_DIGITS = 6             # plan-file precision; the wire rounds to WIRE_DECIMALS anyway
 JSON_DIGITS = 3                  # seconds in run.json (ms)
-LINEAR_SIGN = {ACTION_FORWARD: 1.0, ACTION_BACKWARD: -1.0}
-TURN_SIGN = {ACTION_TURN_LEFT: 1.0, ACTION_TURN_RIGHT: -1.0, ACTION_TURN_AROUND: 1.0}   # CCW +; a U-turn goes left
 
 
 class PlanError(RuntimeError):
@@ -72,6 +70,8 @@ class MotionPlan:
     legs: tuple           # one per primitive, closing STOP included
     cruise_speed: float
     yaw_rate: float
+    wheel_radius_m: float  # the r MC and the firmware turn metres into steps with (vision/drive_map
+                           # scales the commanded distance of an older run by real r / this)
 
     @property
     def duration_s(self):
@@ -86,7 +86,7 @@ class MotionPlan:
     def to_dict(self):
         return {"steps": [s.to_dict() for s in self.steps], "legs": [leg.to_dict() for leg in self.legs],
                 "cruise_speed": self.cruise_speed, "yaw_rate": self.yaw_rate,
-                "duration_s": round(self.duration_s, JSON_DIGITS)}
+                "wheel_radius_m": self.wheel_radius_m, "duration_s": round(self.duration_s, JSON_DIGITS)}
 
 
 def _primitives(steps):
@@ -124,25 +124,53 @@ def _wheel_legs(result):
     return tuple(wheels)
 
 
-def build_plan(steps, cruise_speed=cfg.CRUISE_SPEED_M_S, yaw_rate=cfg.YAW_RATE_RAD_S):
-    """MotionSteps -> MotionPlan. Raises PlanError when MC is missing or refuses a leg."""
+def _mc_client():
+    """CM's mc_client with libmc loaded. Raises PlanError when either is missing."""
     cfg.add_cm_to_path()
     try:
         import mc_client                         # CM's ctypes bridge to libmc.so
         mc_client.load_library()
     except (ImportError, RuntimeError) as exc:   # McError is a RuntimeError
         raise PlanError(f"MC unavailable ({exc}); build it: bash project/tools/build_mc.sh") from exc
+    return mc_client
 
-    legs = []
-    for step_index, kind, value in _primitives(steps):
-        wire = _wire_line(kind, value, cruise_speed, yaw_rate)
-        if kind == STOP:
-            legs.append(Leg(step_index, kind, value, wire, 0.0, ()))
-            continue
-        result = mc_client.run([{"type": kind, "a": value, "b": 0.0}],
-                               cruise_speed=cruise_speed, yaw_rate=yaw_rate)
-        if not result["ok"] or not result["steps"]:
-            raise PlanError(f"MC refused {kind} {value:g}: {result.get('reason', 'no ticks')}")
-        legs.append(Leg(step_index, kind, value, wire, result["duration_s"], _wheel_legs(result)))
-        logger.debug("leg %s %.4f -> %s, %.2f s", kind, value, wire, result["duration_s"])
-    return MotionPlan(tuple(steps), tuple(legs), cruise_speed, yaw_rate)
+
+def plan_leg(step_index, kind, value, cruise_speed=cfg.CRUISE_SPEED_M_S, yaw_rate=cfg.YAW_RATE_RAD_S):
+    """One primitive -> Leg (wire line, MC duration, wheels). Raises PlanError when MC is missing or
+    refuses it. A leg executor plans its compensation legs with this too."""
+    wire = _wire_line(kind, value, cruise_speed, yaw_rate)
+    if kind == STOP:
+        return Leg(step_index, kind, value, wire, 0.0, ())
+    result = _mc_client().run([{"type": kind, "a": value, "b": 0.0}], cruise_speed=cruise_speed, yaw_rate=yaw_rate)
+    if not result["ok"] or not result["steps"]:
+        raise PlanError(f"MC refused {kind} {value:g}: {result.get('reason', 'no ticks')}")
+    logger.debug("leg %s %.4f -> %s, %.2f s", kind, value, wire, result["duration_s"])
+    return Leg(step_index, kind, value, wire, result["duration_s"], _wheel_legs(result))
+
+
+def plan_from_legs(legs, cruise_speed=cfg.CRUISE_SPEED_M_S, yaw_rate=cfg.YAW_RATE_RAD_S):
+    """A planner's legs [(ROTATE rad | FORWARD m)] -> MotionPlan with no steps (realroom's route to a place).
+    Turns are cut below TURN_CHUNK_MAX_DEG like a command's; the closing STOP is added."""
+    mc_client = _mc_client()
+    try:
+        wheel_radius_m = mc_client.chassis()["wheel_radius_m"]
+    except RuntimeError as exc:                  # McError: constants.h unreadable
+        raise PlanError(f"chassis constants unavailable ({exc})") from exc
+    primitives = []
+    for kind, value in legs:
+        chunks = math.ceil(abs(math.degrees(value)) / cfg.TURN_CHUNK_MAX_DEG) if kind == ROTATE else 1
+        primitives += [(-1, kind, value / chunks)] * chunks
+    primitives.append((-1, STOP, 0.0))
+    return MotionPlan((), tuple(plan_leg(i, kind, value, cruise_speed, yaw_rate) for i, kind, value in primitives),
+                      cruise_speed, yaw_rate, wheel_radius_m)
+
+
+def build_plan(steps, cruise_speed=cfg.CRUISE_SPEED_M_S, yaw_rate=cfg.YAW_RATE_RAD_S):
+    """MotionSteps -> MotionPlan. Raises PlanError when MC is missing or refuses a leg."""
+    mc_client = _mc_client()                     # its PlanError is a RuntimeError: keep it out of the try
+    try:
+        wheel_radius_m = mc_client.chassis()["wheel_radius_m"]
+    except RuntimeError as exc:                  # McError: constants.h unreadable
+        raise PlanError(f"chassis constants unavailable ({exc})") from exc
+    legs = [plan_leg(step_index, kind, value, cruise_speed, yaw_rate) for step_index, kind, value in _primitives(steps)]
+    return MotionPlan(tuple(steps), tuple(legs), cruise_speed, yaw_rate, wheel_radius_m)

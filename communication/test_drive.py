@@ -4,11 +4,13 @@ Run:  python3 communication/test_drive.py
 No API key, camera or robot needed. The motion-plan tests need libmc.so (project/tools/build_mc.sh)
 and are skipped without it.
 """
+import json
 import math
+import os
 import re
 
 import drive_config as cfg
-from cmd_parser import CommandParser, validate_steps
+from cmd_parser import ASKED_NOTE, CommandParser, Question, check_intents, fold, validate_steps
 from motion_plan import PlanError, build_plan
 
 cfg.add_cm_to_path()
@@ -16,7 +18,40 @@ from llm_client import FakeClient, LLMError  # noqa: E402  (CM module, path set 
 
 EXAMPLE = "đi thẳng 30 cm. sau đó rẽ trái, đi tiếp 60 cm"
 TOL = 1e-9
+PULSE_REL_TOL = 1e-3             # MC's summed pulses vs the closed form; a stale libmc is 27 % off
 PLAN_LINE_RE = re.compile(r"^\s*(ROTATE|FORWARD|MOVE|STOP)\b")   # what MissionRunner's reader accepts
+CORPUS_FILE = os.path.join(cfg.COMM_DIR, "natural_commands.json")
+AMOUNT_TOL = 1e-6
+
+
+def load_corpus():
+    """natural_commands.json's cases (shared with test_live_parser.py)."""
+    with open(CORPUS_FILE, encoding="utf-8") as f:
+        return json.load(f)["cases"]
+
+
+def run_case(parser, case):
+    """The case's text (or dialogue turns) through parser: (ParseResult of the last message, all text)."""
+    turns = case.get("turns") or [case["text"]]
+    result = None
+    for text in turns:
+        result = parser.parse(text)
+        if result.steps:
+            break
+    parser.reset()
+    return result, " / ".join(turns)
+
+
+def case_error(case, result):
+    """None when the parser's result is what the case expects, else what went wrong."""
+    got = [(s.action, round(s.amount, 6)) for s in result.steps]
+    if case.get("asks"):
+        return None if not result.steps and result.question else f"moved {got}, expected a question"
+    if "goal" in case:
+        ok = not result.steps and fold(case["goal"]) in fold(result.goal)
+        return None if ok else f"got {got or result.question or result.goal!r}, want the goal {case['goal']!r}"
+    want = [(a, round(v, 6)) for a, v in case["steps"]]
+    return None if got == want else f"got {got or result.question!r}, want {want}"
 
 
 def _summary(steps):
@@ -150,14 +185,19 @@ class FlakyClient:
         return self.replies.pop(0)
 
 
-def test_fallback_resets_the_exchange():
-    """After a fallback the LLM starts from nothing, so numbers from before must not count."""
-    stale = _reply(("forward", 30, "cm"))
-    parser = CommandParser("auto", client=FlakyClient([stale, stale]))   # asked, then re-asked once
-    first = parser.parse("đi thẳng rồi rẽ phải 30 độ")     # LLM down -> rules -> a question
-    assert first.provider == "rule" and first.question and parser.user_texts == [], first
-    second = parser.parse("lùi 20 cm")                       # the LLM invents the old 30
-    assert not second.steps and "does not appear" in str(second.question) + str(second.raw), second
+def test_fallback_finishes_the_exchange_with_rules():
+    """After a fallback the rules finish the exchange: the LLM is not asked again mid-command (its half of the
+    history is gone, so a number from before could not be checked against what it saw), the answer still
+    lands in the command it answers, and the next command goes to the LLM again."""
+    client = FlakyClient([_reply(("forward", 30, "cm"))])
+    parser = CommandParser("auto", client=client)
+    first = parser.parse("đi thẳng rồi rẽ phải 30 độ")     # LLM down -> rules -> "how far?"
+    assert first.provider == "rule" and first.question and client.calls == 1, first
+    second = parser.parse("40 cm")
+    assert second.provider == "rule" and client.calls == 1, second
+    assert [(s.action, s.amount) for s in second.steps] == [("forward", 0.4), ("turn_right", 30.0)], second
+    third = parser.parse("đi thẳng 30 cm")                  # a new command: the LLM again
+    assert third.provider == "injected" and client.calls == 2, third
 
 
 def test_llm_failure_fallback():
@@ -182,6 +222,19 @@ def test_motion_plan_example():
     assert plan.duration_s > 0 and plan.legs[-1].duration_s == 0
 
 
+def test_plan_matches_the_chassis_header():
+    """run.json's wheel_radius_m is read from constants.h, the pulses come from libmc: a libmc not
+    rebuilt after the header changed (the 2026-09-27 wheel-radius fix) would record the wrong r."""
+    import mc_client                              # importable once build_plan has put CM on the path
+    plan = build_plan(CommandParser("rule").parse("đi 30 cm").steps)
+    chassis = mc_client.chassis()
+    assert plan.wheel_radius_m == chassis["wheel_radius_m"]
+    # Driving +x, the back wheels at 120 / 240 deg roll sin(60 deg) of the distance.
+    expected = math.sin(math.radians(60.0)) * 0.3 / chassis["wheel_radius_m"] * chassis["steps_per_rev"] / (2 * math.pi)
+    assert abs(abs(plan.legs[0].wheels[1].steps) - expected) <= PULSE_REL_TOL * expected, (plan.legs[0].wheels[1].steps, expected)
+    assert plan.to_dict()["wheel_radius_m"] == chassis["wheel_radius_m"]
+
+
 def test_turn_chunks_keep_direction():
     """SEQ wraps into (-180, 180]: an unchunked 180 right would be driven as a left turn."""
     plan = build_plan(CommandParser("rule").parse("quay phải 180 độ, quay trái 360 độ, lùi 10 cm").steps)
@@ -199,6 +252,159 @@ def test_plan_file_is_readable_by_robot_link():
     assert primitives == [leg.plan_line() for leg in plan.legs], primitives
 
 
+def test_natural_corpus_rules():
+    """Every case the rules are meant to read (not "rules": false) comes out as natural_commands.json says."""
+    failures = []
+    for case in load_corpus():
+        if case.get("rules", True):
+            error = case_error(case, run_case(CommandParser("rule"), case)[0])
+            if error:
+                failures.append(f"{case.get('text') or case['turns']}: {error}")
+    assert not failures, "\n".join(failures)
+
+
+def test_intents():
+    """A purpose clause is checked against the steps: met after the step the corpus names, or not at all."""
+    for case in load_corpus():
+        if "intent" not in case:
+            continue
+        result, text = run_case(CommandParser("rule"), case)
+        report = check_intents(result.steps, text)
+        assert len(report) == 1, (text, report)
+        ok, number, _ = report[0]
+        assert (number if ok else None) == case["intent"], (text, report)
+
+
+def test_turn_validator():
+    """turn_around takes a stated angle; a sideless half / full turn goes left, any other angle is asked
+    (a Question naming its step); revolutions become degrees in code, a bare 'full circle' one turn."""
+    raw = {"steps": [{"action": "turn_around", "value": 90, "unit": "deg"},
+                     {"action": "turn", "value": 1, "unit": "rev"},
+                     {"action": "turn", "value": None, "unit": "rev"},
+                     {"action": "turn_left", "value": 0.5, "unit": "rev"}], "question": ""}
+    steps, error = validate_steps(raw, "quay lai 90 do, 1 vong, tron vong, nua vong", ordered=False)
+    assert error is None, error
+    assert [(s.action, s.amount, s.stated) for s in steps] == [
+        ("turn_around", 90.0, True), ("turn_left", 360.0, True), ("turn_left", 360.0, False),
+        ("turn_left", 180.0, True)], steps
+    raw = {"steps": [{"action": "forward", "value": 30, "unit": "cm"}, {"action": "turn", "value": 90, "unit": "deg"}],
+           "question": ""}
+    steps, error = validate_steps(raw, "di 30 cm roi quay 90 do")
+    assert steps is None and isinstance(error, Question) and error.step == 1, error
+    _, error = validate_steps({"steps": [{"action": "turn", "value": None, "unit": None}], "question": ""}, "quay")
+    assert isinstance(error, Question), error
+
+
+def test_llm_question_is_not_retried():
+    """An LLM reply that needs the user (which side?) is asked at once, not re-asked of the LLM, and the
+    question rides along in the history so the answer completes the same command."""
+    client = FakeClient([
+        {"steps": [{"action": "turn", "value": 90, "unit": "deg"}, {"action": "forward", "value": 30, "unit": "cm"}],
+         "question": ""},
+        {"steps": [{"action": "turn_left", "value": 90, "unit": "deg"}, {"action": "forward", "value": 30, "unit": "cm"}],
+         "question": ""}])
+    parser = CommandParser(client=client)
+    first = parser.parse("quay 90 do roi di thang 30 cm")
+    assert not first.steps and first.question and len(client.calls) == 1, (first, len(client.calls))
+    second = parser.parse("trai")
+    assert [(s.action, s.amount) for s in second.steps] == [("turn_left", 90.0), ("forward", 0.3)], second
+    asked = ASKED_NOTE.format(question=first.question)
+    _, messages = client.calls[1]
+    assert any(asked in m["content"] for m in messages if m["role"] == "assistant"), messages
+
+
+def test_llm_goal_is_copied_not_invented():
+    """A place the user named comes back as a goal; a goal with words the user never said is refused."""
+    parser = CommandParser(client=FakeClient([{"steps": [], "question": "", "goal": "cái ghế"}]))
+    result = parser.parse("đi tới cái ghế nhé")
+    assert result.goal == "cái ghế" and not result.steps and not result.question, result
+    invented = {"steps": [], "question": "", "goal": "cái bàn"}
+    parser = CommandParser(client=FakeClient([invented, invented]))
+    result = parser.parse("đi tới cái ghế nhé")
+    assert not result.goal and "do not appear" in result.question, result
+
+
+def test_goal_goes_alone():
+    """A place with anything else - a second place, a step, a move the rules cannot read - is asked to be said
+    apart (going to the place alone would drop the rest); after a goal the parser starts a new command."""
+    parser = CommandParser("rule")
+    for text in ("đi tới cái ghế rồi đi tới cái vali", "đi tới cái ghế rồi đi thẳng", "đi tới cái ghế rồi quay trái 90 độ"):
+        result = parser.parse(text)
+        assert not result.goal and not result.steps and result.question, (text, result)
+        parser.reset()
+    result = parser.parse("đi tới cái ghế nhé")
+    assert result.goal == "cái ghế" and parser.user_texts == [], (result, parser.user_texts)
+
+
+class AskThenFailClient:
+    """Asks a question on the first call, then the network goes down."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def complete(self, system, messages, schema):
+        self.calls += 1
+        if self.calls == 1:
+            return {"steps": [], "question": "Bao xa?", "goal": ""}
+        raise LLMError("network down")
+
+
+def test_fallback_replay_stops_at_a_complete_command():
+    """The LLM asked about a command the rules read whole; when it then fails, the rules' reading of that
+    first message stands - the answer is not parsed over it as a new command."""
+    parser = CommandParser("auto", client=AskThenFailClient())
+    assert parser.parse("đi thẳng 30 cm rồi rẽ trái").question
+    result = parser.parse("ừ")
+    assert [(s.action, s.amount) for s in result.steps] == [("forward", 0.3), ("turn_left", 90.0)], result
+
+
+def test_map_request():
+    """'lập bản đồ' and its kin are split off with the connectors around them; filler alone means the scan."""
+    from cmd_parser import MAP_SCAN, map_scan_steps, split_map_request
+    cases = {"lập bản đồ": (True, ""), "Hãy lập bản đồ nhé": (True, ""), "quét xung quanh": (True, ""),
+             "scan the room": (True, ""), "lập lại bản đồ mới": (True, ""),
+             "quay trái 360 độ rồi lập bản đồ": (True, "quay trái 360 độ"),
+             "quay trái 90 độ, lập bản đồ": (True, "quay trái 90 độ"),       # 'độ' is no connector
+             "đi 50 cm sau đó lập bản đồ": (True, "đi 50 cm"),
+             "lập bản đồ rồi đi tới cái ghế": (True, "đi tới cái ghế"),
+             "build a map then go forward 30 cm": (True, "go forward 30 cm"),
+             "đi tới cái vali": (False, "đi tới cái vali"), "đi thẳng 30 cm": (False, "đi thẳng 30 cm")}
+    for text, expected in cases.items():
+        assert split_map_request(text) == expected, (text, split_map_request(text))
+    steps = map_scan_steps()
+    assert [(s.action, s.amount) for s in steps] == list(MAP_SCAN) and not any(s.stated for s in steps), steps
+    parser = CommandParser("rule")
+    _, rest = split_map_request("quay trái 360 độ rồi lập bản đồ")
+    assert [(s.action, s.amount) for s in parser.parse(rest).steps] == [("turn_left", 360.0)]
+
+
+def _two_chair_scene():
+    """A 3 x 2 m room, the robot at its left, two chairs and a suitcase (realroom scene shape)."""
+    def box(oid, cls, x, y):
+        return {"id": oid, "class": cls, "confidence": 0.9, "color": "unknown", "center": {"x": x, "y": y}, "yaw": 0.0,
+                "polygon": [{"x": x - 0.2, "y": y - 0.2}, {"x": x + 0.2, "y": y - 0.2}, {"x": x + 0.2, "y": y + 0.2},
+                            {"x": x - 0.2, "y": y + 0.2}], "free_sides": ["front", "back", "left", "right"], "near": []}
+    return {"version": "2.0", "room": {"width": 3.0, "length": 2.0}, "walls": [], "doors": [],
+            "robot": {"x": 0.4, "y": 1.0, "theta": 0.0, "radius": 0.225},
+            "objects": [box("obj_1", "chair", 1.5, 0.5), box("obj_2", "chair", 2.4, 1.5), box("obj_3", "suitcase", 1.5, 1.6)]}
+
+
+def test_rule_grounding():
+    """Without an LLM: the class a word names; with two, the user's number picks one; the spot nearest the
+    robot; a class the map lacks is said, with what it has."""
+    import goto
+    scene = _two_chair_scene()
+    spot, why = goto.ground_by_rules(scene, "cái vali", lambda q: "")
+    assert why is None and spot["target_id"] == "obj_3", (spot, why)
+    asked = []
+    spot, why = goto.ground_by_rules(scene, "cái ghế", lambda q: asked.append(q) or "2")
+    assert why is None and spot["target_id"] == "obj_2" and asked and "2 chair" in asked[0], (spot, why, asked)
+    nearest = min(math.hypot(s["x"] - 0.4, s["y"] - 1.0) for s in goto.build_candidates(scene) if s["target_id"] == "obj_2")
+    assert abs(math.hypot(spot["x"] - 0.4, spot["y"] - 1.0) - nearest) < 1e-9, spot
+    spot, why = goto.ground_by_rules(scene, "the kitchen", lambda q: "")
+    assert spot is None and "chair" in why and "suitcase" in why, why
+
+
 if __name__ == "__main__":
     test_rule_parser_example()
     test_rule_parser_variants()
@@ -212,10 +418,23 @@ if __name__ == "__main__":
     test_question_then_answer()
     test_number_words()
     test_llm_failure_fallback()
-    test_fallback_resets_the_exchange()
+    test_fallback_finishes_the_exchange_with_rules()
+    test_turn_validator()
+    test_llm_question_is_not_retried()
+    test_llm_goal_is_copied_not_invented()
+    test_goal_goes_alone()
+    test_fallback_replay_stops_at_a_complete_command()
     print("validator + LLM exchange ok")
+    test_rule_grounding()
+    print("grounding (rules) ok")
+    test_natural_corpus_rules()
+    test_intents()
+    print("natural commands (rules) ok")
+    test_map_request()
+    print("map request ok")
     try:
         test_motion_plan_example()
+        test_plan_matches_the_chassis_header()
         test_turn_chunks_keep_direction()
         test_plan_file_is_readable_by_robot_link()
         print("motion plan ok")

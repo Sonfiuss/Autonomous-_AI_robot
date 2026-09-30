@@ -24,7 +24,7 @@ ROUND_DIGITS = 3
 # ---- LLM (L2)
 PROVIDER = os.environ.get("CM_PROVIDER", "gemini")             # gemini | openai | anthropic | fake
 OPENAI_MODEL = os.environ.get("CM_OPENAI_MODEL", "gpt-4o-mini")
-GEMINI_MODEL = os.environ.get("CM_GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.environ.get("CM_GEMINI_MODEL", "gemini-3.8-flash")   # 2.5 is closed to new API keys (404, 2026-09)
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"   # OpenAI-compatible endpoint
 GEMINI_MAX_TOKENS = 8192         # Gemini 2.5 bills thinking tokens against max_tokens -> keep headroom
 GEMINI_EXTRA_BODY = {"extra_body": {"google": {"thinking_config": {"thinking_budget": 0}}}}   # no thinking (Gemini compat nests it)

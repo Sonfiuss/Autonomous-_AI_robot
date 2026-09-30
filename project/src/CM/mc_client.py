@@ -13,6 +13,7 @@ Usage:
 import ctypes
 import logging
 import os
+import re
 
 import config
 
@@ -28,6 +29,10 @@ MC_ERR_BUFFER = 4
 # MV primitive names in the order MC expects them (MvPrimitive.type == index).
 PRIMITIVE_CODES = {"ROTATE": 0, "FORWARD": 1, "MOVE": 2, "STOP": 3}
 NUM_WHEELS = 3
+
+# The chassis header libmc and the ESP32 firmware are both compiled from; no C API exposes its values.
+CONSTANTS_HEADER = os.path.join(config.PROJECT_DIR, "config", "constants.h")
+CONSTANT_PATTERN = r"constexpr\s+[\w:]+\s+{name}\s*=\s*([-+0-9.eE]+)f?\s*;"
 
 
 class McError(RuntimeError):
@@ -68,6 +73,29 @@ class McResult(ctypes.Structure):
 
 
 _lib = None                                        # cached handle; None until the first run()
+
+
+def constant(name):
+    """The value of `constexpr ... name = value;` in CONSTANTS_HEADER, as a float. Names are unique
+    across the header's namespaces, so the bare name is enough. Raises McError when the header or the
+    name is missing."""
+    try:
+        with open(CONSTANTS_HEADER, encoding="utf-8") as f:
+            header = f.read()
+    except OSError as exc:
+        raise McError("cannot read {}: {}".format(CONSTANTS_HEADER, exc))
+    match = re.search(CONSTANT_PATTERN.format(name=name), header)
+    if match is None:
+        raise McError("{} not found in {}".format(name, CONSTANTS_HEADER))
+    return float(match.group(1))
+
+
+def chassis():
+    """{wheel_radius_m, robot_radius_m, steps_per_rev} from CONSTANTS_HEADER - what libmc was built
+    with, as long as it was rebuilt after the header last changed (test_drive checks the two agree).
+    Raises McError when the header or one of the values is missing."""
+    return {"wheel_radius_m": constant("WHEEL_RADIUS_M"), "robot_radius_m": constant("ROBOT_RADIUS_M"),
+            "steps_per_rev": int(constant("STEPPER_FULL_STEPS_PER_REV") * constant("MICROSTEP"))}
 
 
 def library_candidates():

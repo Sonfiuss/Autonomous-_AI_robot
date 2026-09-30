@@ -126,7 +126,7 @@ and feed it through the same steps 1–4. Send `K` when `finished(t)`.
   robot CCW around its centre.
 - IK: `ω_i = (-sin α_i · u + cos α_i · v + L · r) / a`. FK is the exact 3x3 inverse.
 - `constants.h` chassis values come from `agent/description/project_overview.md`
-  (a = 0.055 m, L = 0.21 m, 12800 steps/rev). Tune `MAX_PULSE_HZ`,
+  (a = 0.040 m, L = 0.2217 m, 12800 steps/rev). Tune `MAX_PULSE_HZ`,
   `WHEEL_ACCEL_RAD_S2`, `WHEEL_DECEL_RAD_S2` on hardware.
 
 # MV — path planning
@@ -240,9 +240,9 @@ At the compiled limits:
 
 | Direction | Max speed | Max acceleration |
 |-----------|-----------|------------------|
-| Forward (body +x) | 0.62 m/s | 0.127 m/s² |
-| Sideways (body +y) | 0.54 m/s | 0.110 m/s² |
-| Spin | 2.57 rad/s | 0.524 rad/s² |
+| Forward (body +x) | 0.45 m/s | 0.092 m/s² |
+| Sideways (body +y) | 0.39 m/s | 0.080 m/s² |
+| Spin | 1.77 rad/s | 0.361 rad/s² |
 
 `MOVE` legs carry a world-frame delta, so the executor tracks the heading it has
 commanded and rotates the leg into the body frame before inverse kinematics.

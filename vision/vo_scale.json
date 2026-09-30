@@ -1,0 +1,13 @@
+{
+  "note": "Tape / floor-VO distance of straight legs (legs), and true / floor-VO turn (turns), for the camera mount below, with fx 570 (task 2026-09-27_explore-map step E: the user chose the tape factor over a calib_floor refit, 2026-09-28; turns: task 2026-09-29_multi-stop-map-test, user approved 2026-09-29). frame_motion.vo_scale / vo_turn_scale apply them only to that mount: a calib_floor refit changes the mount and turns both off. vo_m is drive_map's measured column at scale 1; vo_deg the odometry's whole turn at turn scale 1, truth_deg 360 x the whole turns plus the first / last frame closure.",
+  "mount": {"height_m": 0.24, "pitch_deg": -0.92, "forward_m": 0.185, "left_m": 0.062},
+  "legs": [
+    {"run": "20260928_221618", "command_m": 0.4, "tape_m": 0.38, "vo_m": 0.351},
+    {"run": "20260928_221725", "command_m": -0.4, "tape_m": 0.24, "vo_m": 0.228},
+    {"run": "20260928_222009", "command_m": 0.4, "tape_m": 0.37, "vo_m": 0.350},
+    {"run": "20260928_222125", "command_m": -0.4, "tape_m": 0.23, "vo_m": 0.219}
+  ],
+  "turns": [
+    {"run": "manual_360", "how": "turned left by hand one full turn back onto tape marks at the wheels, motors off", "truth_deg": 359.47, "vo_deg": 398.38}
+  ]
+}

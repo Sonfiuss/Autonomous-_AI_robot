@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real room</title>
+<style>
+  /* Page chrome follows the theme; the map itself keeps map_image.py's fixed palette (MAP below). */
+  :root { --bg: #f6f6f3; --ink: #1d1d1b; --muted: #6b6b66; --line: #d8d8d2; --link: #1f6feb;
+          --panel: #ffffff; --me: #dcebff; --bot: #efefea; --go: #1a7f37; --go-ink: #ffffff; --stop: #cf222e;
+          --stop-ink: #ffffff; --warn: #9a6700; --err: #cf222e; --ok: #1a7f37; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --ink: #ececea; --muted: #9a9a94; --line: #3a3a37; --link: #58a6ff;
+            --panel: #1f1f1d; --me: #1c3354; --bot: #2a2a27; --go: #2ea043; --go-ink: #ffffff; --stop: #f85149;
+            --stop-ink: #1d1d1b; --warn: #d29922; --err: #f85149; --ok: #3fb950; }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink);
+         display: flex; flex-direction: column; }
+  header { padding: 8px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  h1 { font-size: 17px; margin: 0; }
+  .muted { color: var(--muted); }
+  button, a.button { font: inherit; padding: 4px 10px; border-radius: 4px; }
+  a.button { color: var(--link); border: 1px solid var(--line); text-decoration: none; }
+  button:disabled { opacity: .45; }
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 3fr) minmax(380px, 2fr);
+         gap: 16px; padding: 0 16px 16px; }
+  #mapcol { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  canvas { background: #ffffff; border-radius: 4px; max-width: 100%; max-height: calc(100vh - 110px);
+           width: auto; height: auto; align-self: flex-start; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+  .sw { display: inline-block; width: 11px; height: 11px; vertical-align: -1px; margin-right: 4px;
+        border: 1px solid #6b6b66; }
+  .sw.unseen { background: repeating-linear-gradient(45deg, #6c6c66 0 1px, #84847e 1px 5px); }
+  #chatcol { min-height: 0; display: flex; flex-direction: column; background: var(--panel);
+             border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  #chatcol h2 { font-size: 15px; margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  #chatlog { flex: 1; min-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+             padding: 12px 14px; }
+  .msg { white-space: pre-wrap; padding: 8px 11px; border-radius: 10px; max-width: 88%; font-size: 15px; }
+  .msg.me { align-self: flex-end; background: var(--me); }
+  .msg.bot { align-self: flex-start; background: var(--bot); }
+  .msg.ask { border-left: 3px solid var(--link); }
+  .msg.ok { border-left: 3px solid var(--ok); }
+  .msg.error { border-left: 3px solid var(--err); }
+  .msg.wait { color: var(--muted); font-style: italic; }
+  #planbar { border-top: 1px solid var(--line); padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+  #planbar .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #plansum { font-weight: 600; }
+  #phase { font-size: 13px; }
+  button.go { background: var(--go); color: var(--go-ink); border: 0; padding: 7px 22px; font-weight: 600; }
+  .msg .inrun { display: block; margin-top: 8px; }
+  button.stop { background: transparent; color: var(--stop); border: 1px solid var(--stop); padding: 7px 18px; font-weight: 600; }
+  button.stop.live { background: var(--stop); color: var(--stop-ink); }
+  label.small { font-size: 12px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
+  #chatform { border-top: 1px solid var(--line); padding: 10px 14px; display: flex; gap: 8px; align-items: flex-end; }
+  #say { flex: 1; min-width: 0; font: 15px/1.4 system-ui, sans-serif; padding: 8px 10px; resize: none;
+         border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+  #send { padding: 8px 16px; }
+  .badge { font-size: 12px; border: 1px solid var(--warn); color: var(--warn); border-radius: 10px; padding: 1px 8px; }
+  details { font-size: 12px; }
+  details pre { white-space: pre-wrap; font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+                max-height: 180px; overflow: auto; margin: 4px 0 0; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    canvas { max-height: none; }
+    #chatcol { min-height: 70vh; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Phòng thật</h1>
+  <span id="summary" class="muted">đang tải…</span>
+  <button id="reload">Tải lại</button>
+  <a id="png" class="button" href="/api/map/latest.png" download="realroom_map.png">Tải PNG</a>
+  <span id="dryrun" class="badge" hidden>chạy thử: không robot, không camera</span>
+</header>
+<main>
+  <section id="mapcol">
+    <canvas id="map" width="900" height="620"></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:#f4f4f0"></span>sàn trống</span>
+      <span><span class="sw" style="background:#1c1c1c"></span>vật cản</span>
+      <span><span class="sw unseen"></span>chưa thấy</span>
+      <span><span class="sw" style="background:#fff;border:2px solid #d08a00"></span>vật</span>
+      <span><span class="sw" style="background:rgba(33,150,243,.5);border-color:#1565c0"></span>robot</span>
+      <span><span class="sw" style="background:#d1242f"></span>đường A* sẽ chạy</span>
+      <label class="small"><input type="checkbox" id="showspots"> hiện các điểm đến</label>
+    </div>
+  </section>
+  <section id="chatcol">
+    <h2>Ra lệnh cho robot</h2>
+    <div id="chatlog"></div>
+    <div id="planbar">
+      <div id="plansum" class="muted">Chưa có kế hoạch.</div>
+      <div class="row">
+        <button id="run" class="go" type="button" disabled>Chạy</button>
+        <button id="stop" class="stop" type="button" title="phím Esc" disabled>Dừng (Esc)</button>
+        <button id="forget" type="button">Huỷ lệnh</button>
+        <label class="small" title="demo_drive --compensate"><input type="checkbox" id="compensate" checked> đo bằng camera và bù lệch (VO)</label>
+      </div>
+      <div id="phase" class="muted">robot đứng yên</div>
+      <details><summary class="muted">nhật ký demo_drive</summary><pre id="runlog"></pre></details>
+    </div>
+    <form id="chatform">
+      <textarea id="say" rows="2" autocomplete="off" placeholder="Robot đi đâu? Ví dụ: đi tới cạnh cái ghế xanh · quay trái 90 độ"></textarea>
+      <button type="submit" id="send">Gửi</button>
+    </form>
+  </section>
+</main>
+<script>
+// Same palette and layout rules as realroom/map_image.py, so the page and the PNG read the same.
+const MAP = { paper: "#ffffff", free: "#f4f4f0", occupied: "#1c1c1c", unseen: "#84847e", hatch: "#6c6c66",
+              grid: "#d2d2cb", room: "#6b6b66", object: "#d08a00", ink: "#1d1d1b", muted: "#6b6b66",
+              robotFill: "rgba(33,150,243,0.5)", robotEdge: "#1565c0", wheel: "#333333", wheelEdge: "#111111",
+              trail: "#1f6feb", path: "#d1242f", spot: "#8250df", noColor: "#ffffff" };
+const MARGIN = { left: 48, right: 16, top: 16, bottom: 30 };
+const VIEW_PAD_M = 0.25, GRID_STEP_M = 0.5, ARROW_M = 0.3, HATCH_PX = 8, SPOT_R_PX = 4, DOT_PX = 3, GOAL_DOT_PX = 5;
+const MAX_CANVAS_W = 1100, MAX_CANVAS_H = 900, SWATCH_PX = 10, LABEL_PAD_PX = 3, LABEL_GAP_PX = 6, MAX_LABEL_TRIES = 12;
+const FONT = "12px system-ui, sans-serif";
+const TICK_PX = 4, TICK_LABEL_GAP_PX = 6, TICK_LABEL_LEFT_PX = 7, DASH = [6, 4];
+const ARROW_HEAD_PX = 10, ARROW_HEAD_RAD = 0.4, LABEL_H_PX = 16, LABEL_SPACING_PX = 2, SWATCH_TOP_PX = 3;
+const TEXT_RAISE_PX = 4, LABEL_BG = "rgba(255,255,255,0.85)", OBJECT_WASH_ALPHA = 0.25;
+const CHAT_PATH_PX = 3, POLL_RUN_MS = 1000, POLL_MAP_MS = 2000, NO_PLAN = "Chưa có kế hoạch.";
+const FLAG_R_PX = 9, FLAG_FONT = "bold 13px system-ui, sans-serif";
+// The page's own chat lines (drive_chat writes the rest).
+const SAY = { waiting: "đang tìm chỗ trên bản đồ…", goingTo: "Đang đi tới ", going: "Đang chạy", dry: " (chạy thử)",
+              measured: " (đo + bù lệch từng leg)", stopHint: ". Esc hoặc Dừng để dừng ngay.", to: "Tới ",
+              runButton: "Chạy", goOnWaiting: "đang lập đường đi tiếp…" };
+const WELCOME = "Nói chỗ robot cần tới, ví dụ \"đi tới cạnh cái ghế xanh\" hoặc \"đến bên trái cái giường\". " +
+                "Tôi tìm chỗ đó trên bản đồ và vẽ đường A*; bấm Chạy để robot đi. Lệnh ngắn như \"quay trái 90 độ\" " +
+                "hay \"đi thẳng 50 cm\" cũng được.";
+// demo_drive's status lines (status.txt): their beginnings, as demo_drive / leg_executor write them.
+const STATUS = { waiting: "waiting", leg: "leg ", measuring: "measuring", done: "done:" };
+const LEG_WORDS_SEP = "  ";   // "leg 2/5  T 90.000 0.800  (...)": the leg number ends at the first double space
+// drive_chat / demo_drive values the page reads: chat reply types, run states, run results.
+const REPLY = { ask: "ask", plan: "plan", busy: "busy", error: "error", run: "run" };
+const STATE = { idle: "idle", running: "running", stopping: "stopping", finished: "finished" };
+const RESULT = { complete: "complete", aborted: "aborted" };
+const RESULT_WORDS = { complete: "lần chạy trước: xong", aborted: "lần chạy trước: đã dừng giữa đường",
+                       failed: "lần chạy trước: lỗi", cancelled: "lần chạy trước: đã huỷ" };
+// chatPlan: drive_chat.preview of the plan Run would drive (its target: where a route ends).
+// mapVersion: latest.json's version when the map was last loaded (undefined: never asked yet).
+let data = null, spots = [], chatPlan = null, mapVersion, running = false, runTimer = null;
+let inlineRun = null;   // the Run button inside the chat bubble of the plan now pending (null: none)
+
+function bodyPoints(r, pts) {
+  const c = Math.cos(r.theta), s = Math.sin(r.theta);
+  return pts.map(p => [r.x + c * p.x - s * p.y, r.y + s * p.x + c * p.y]);
+}
+
+function view(canvas, scene) {
+  const r = scene.robot, xs = [0, scene.room.width], ys = [0, scene.room.length];
+  const extra = (scene.pose_history || []).map(h => [h.x, h.y]).concat(chatPlan ? chatPlan.path : [],
+    [[r.x - r.radius, r.y - r.radius], [r.x + r.radius, r.y + r.radius]]);
+  extra.forEach(([x, y]) => { xs.push(x); ys.push(y); });
+  const x0 = Math.min(...xs) - VIEW_PAD_M, x1 = Math.max(...xs) + VIEW_PAD_M;
+  const y0 = Math.min(...ys) - VIEW_PAD_M, y1 = Math.max(...ys) + VIEW_PAD_M;
+  const scale = Math.min((MAX_CANVAS_W - MARGIN.left - MARGIN.right) / (x1 - x0),
+                         (MAX_CANVAS_H - MARGIN.top - MARGIN.bottom) / (y1 - y0));
+  canvas.width = Math.ceil(MARGIN.left + MARGIN.right + (x1 - x0) * scale);
+  canvas.height = Math.ceil(MARGIN.top + MARGIN.bottom + (y1 - y0) * scale);
+  return { x0, y0, x1, y1, scale, w: (x1 - x0) * scale, h: (y1 - y0) * scale,
+           px: (x, y) => [MARGIN.left + (x - x0) * scale, MARGIN.top + (y1 - y) * scale] };
+}
+
+function hatchPattern(ctx) {
+  const tile = document.createElement("canvas");
+  tile.width = tile.height = HATCH_PX;
+  const t = tile.getContext("2d");
+  t.fillStyle = MAP.unseen; t.fillRect(0, 0, HATCH_PX, HATCH_PX);
+  t.strokeStyle = MAP.hatch; t.lineWidth = 1; t.beginPath();
+  t.moveTo(0, HATCH_PX); t.lineTo(HATCH_PX, 0); t.stroke();
+  return ctx.createPattern(tile, "repeat");
+}
+
+function cellRects(v, grid, symbol) {
+  const out = [], cell = grid.res * v.scale;
+  grid.rows.forEach((row, iy) => [...row].forEach((c, ix) => {
+    if (c !== symbol) return;
+    const [x, y] = v.px(grid.origin[0] + ix * grid.res, grid.origin[1] + (iy + 1) * grid.res);
+    const x0 = Math.floor(x), y0 = Math.floor(y);   // whole pixels: no hatch seams between cells
+    out.push([x0, y0, Math.ceil(x + cell) - x0, Math.ceil(y + cell) - y0]);
+  }));
+  return out;
+}
+
+function drawGrid(ctx, v, grid) {
+  ctx.fillStyle = hatchPattern(ctx);
+  ctx.fillRect(MARGIN.left, MARGIN.top, v.w, v.h);
+  const free = cellRects(v, grid, ".");
+  ctx.fillStyle = MAP.free;
+  free.forEach(r => ctx.fillRect(...r));
+  ctx.save(); ctx.beginPath(); free.forEach(r => ctx.rect(...r)); ctx.clip();   // grid lines on free floor only
+  ctx.strokeStyle = MAP.grid; ctx.lineWidth = 1; ctx.beginPath();
+  for (let k = Math.ceil(v.x0 / GRID_STEP_M); k * GRID_STEP_M <= v.x1; k++) {
+    const [x] = v.px(k * GRID_STEP_M, 0); ctx.moveTo(x, MARGIN.top); ctx.lineTo(x, MARGIN.top + v.h);
+  }
+  for (let k = Math.ceil(v.y0 / GRID_STEP_M); k * GRID_STEP_M <= v.y1; k++) {
+    const [, y] = v.px(0, k * GRID_STEP_M); ctx.moveTo(MARGIN.left, y); ctx.lineTo(MARGIN.left + v.w, y);
+  }
+  ctx.stroke(); ctx.restore();
+  ctx.fillStyle = MAP.occupied;
+  cellRects(v, grid, "o").forEach(r => ctx.fillRect(...r));
+}
+
+function drawAxes(ctx, v) {
+  ctx.fillStyle = MAP.muted; ctx.strokeStyle = MAP.muted; ctx.font = FONT; ctx.lineWidth = 1;
+  const bottom = MARGIN.top + v.h;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let k = Math.ceil(v.x0 / GRID_STEP_M); k * GRID_STEP_M <= v.x1; k++) {
+    const [x] = v.px(k * GRID_STEP_M, 0);
+    ctx.beginPath(); ctx.moveTo(x, bottom); ctx.lineTo(x, bottom + TICK_PX); ctx.stroke();
+    ctx.fillText(String(k * GRID_STEP_M), x, bottom + TICK_LABEL_GAP_PX);
+  }
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let k = Math.ceil(v.y0 / GRID_STEP_M); k * GRID_STEP_M <= v.y1; k++) {
+    const [, y] = v.px(0, k * GRID_STEP_M);
+    ctx.beginPath(); ctx.moveTo(MARGIN.left - TICK_PX, y); ctx.lineTo(MARGIN.left, y); ctx.stroke();
+    ctx.fillText(String(k * GRID_STEP_M), MARGIN.left - TICK_LABEL_LEFT_PX, y);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+}
+
+function polyPath(ctx, v, pts) {
+  ctx.beginPath();
+  pts.forEach(([x, y], k) => { const [u, w] = v.px(x, y); k ? ctx.lineTo(u, w) : ctx.moveTo(u, w); });
+  ctx.closePath();
+}
+
+function drawRobot(ctx, v, r) {
+  const [cx, cy] = v.px(r.x, r.y);
+  if (r.chassis) {
+    ctx.setLineDash(DASH); ctx.strokeStyle = MAP.robotEdge; ctx.lineWidth = 1;
+    polyPath(ctx, v, bodyPoints(r, r.footprint)); ctx.stroke(); ctx.setLineDash([]);
+    polyPath(ctx, v, bodyPoints(r, r.chassis));
+    ctx.fillStyle = MAP.robotFill; ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+    r.wheels.forEach(w => {
+      polyPath(ctx, v, bodyPoints(r, w.polygon));
+      ctx.fillStyle = MAP.wheel; ctx.fill(); ctx.strokeStyle = MAP.wheelEdge; ctx.lineWidth = 1; ctx.stroke();
+    });
+  } else {   // a map published before the scene carried the robot's outline
+    ctx.strokeStyle = MAP.robotEdge; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.arc(cx, cy, r.radius * v.scale, 0, 2 * Math.PI); ctx.stroke();
+  }
+  const [hx, hy] = v.px(r.x + ARROW_M * Math.cos(r.theta), r.y + ARROW_M * Math.sin(r.theta));
+  const a = Math.atan2(hy - cy, hx - cx), head = ARROW_HEAD_PX;
+  ctx.strokeStyle = MAP.robotEdge; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(cx, cy); ctx.lineTo(hx, hy);
+  ctx.moveTo(hx - head * Math.cos(a - ARROW_HEAD_RAD), hy - head * Math.sin(a - ARROW_HEAD_RAD)); ctx.lineTo(hx, hy);
+  ctx.lineTo(hx - head * Math.cos(a + ARROW_HEAD_RAD), hy - head * Math.sin(a + ARROW_HEAD_RAD)); ctx.stroke();
+  ctx.fillStyle = MAP.robotEdge; ctx.beginPath(); ctx.arc(cx, cy, DOT_PX, 0, 2 * Math.PI); ctx.fill();
+}
+
+function drawObjects(ctx, v, objects) {
+  ctx.font = FONT;
+  const polys = objects.map(o => o.polygon.map(p => [p.x, p.y]));
+  ctx.globalAlpha = OBJECT_WASH_ALPHA;   // a light wash of each object's own color
+  objects.forEach((o, k) => { if (o.color_rgb) { polyPath(ctx, v, polys[k]); ctx.fillStyle = o.color_rgb; ctx.fill(); } });
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = MAP.object; ctx.lineWidth = 2;
+  polys.forEach(p => { polyPath(ctx, v, p); ctx.stroke(); });
+  const taken = [], left = MARGIN.left, top = MARGIN.top, right = MARGIN.left + v.w, bottom = MARGIN.top + v.h;
+  const items = objects.map((o, k) => ({ o, px: polys[k].map(([x, y]) => v.px(x, y)) }))
+    .sort((a, b) => Math.min(...a.px.map(p => p[1])) - Math.min(...b.px.map(p => p[1])));
+  for (const { o, px } of items) {
+    const text = `${o.id} ${o.class} (${o.color || "unknown"})`;
+    const w = SWATCH_PX + 3 * LABEL_PAD_PX + ctx.measureText(text).width, h = LABEL_H_PX;
+    let x = Math.min(Math.max(Math.max(...px.map(p => p[0])) + LABEL_GAP_PX, left), right - w);
+    let y = Math.min(Math.max(Math.min(...px.map(p => p[1])), top), bottom - h);
+    for (let t = 0; t < MAX_LABEL_TRIES && taken.some(([tx, ty, tw, th]) =>
+         x < tx + tw && tx < x + w && y < ty + th && ty < y + h); t++) y = Math.min(y + h + LABEL_SPACING_PX, bottom - h);
+    taken.push([x, y, w, h]);
+    ctx.fillStyle = LABEL_BG; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = MAP.object; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    ctx.fillStyle = o.color_rgb || MAP.noColor; ctx.fillRect(x + LABEL_PAD_PX, y + SWATCH_TOP_PX, SWATCH_PX, SWATCH_PX);
+    ctx.strokeStyle = MAP.ink; ctx.strokeRect(x + LABEL_PAD_PX + 0.5, y + SWATCH_TOP_PX + 0.5, SWATCH_PX, SWATCH_PX);
+    ctx.fillStyle = MAP.ink; ctx.fillText(text, x + SWATCH_PX + 2 * LABEL_PAD_PX, y + h - TEXT_RAISE_PX);
+  }
+}
+
+function draw() {
+  const canvas = document.getElementById("map"), ctx = canvas.getContext("2d");
+  if (!data) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+  const { scene, grid } = data, v = view(canvas, scene);
+  ctx.fillStyle = MAP.paper; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawGrid(ctx, v, grid);
+  ctx.strokeStyle = MAP.room; ctx.lineWidth = 1;
+  polyPath(ctx, v, [[0, 0], [scene.room.width, 0], [scene.room.width, scene.room.length], [0, scene.room.length]]);
+  ctx.stroke();
+  drawAxes(ctx, v);
+  const trail = (scene.pose_history || []).map(h => v.px(h.x, h.y));
+  ctx.strokeStyle = MAP.trail; ctx.fillStyle = MAP.trail; ctx.lineWidth = 2;
+  if (trail.length > 1) {
+    ctx.setLineDash(DASH); ctx.beginPath();
+    trail.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); ctx.setLineDash([]);
+  }
+  trail.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, DOT_PX, 0, 2 * Math.PI); ctx.fill(); });
+  if ($("showspots").checked) {
+    ctx.fillStyle = MAP.spot;
+    for (const s of spots) {
+      const [x, y] = v.px(s.x, s.y);
+      ctx.beginPath(); ctx.arc(x, y, SPOT_R_PX, 0, 2 * Math.PI); ctx.fill();
+    }
+  }
+  if (chatPlan && chatPlan.path.length) {   // the plan Run drives: dashed, a dot where each leg ends
+    const pts = chatPlan.path.map(([x, y]) => v.px(x, y));
+    ctx.strokeStyle = MAP.path; ctx.lineWidth = CHAT_PATH_PX; ctx.setLineDash(DASH); ctx.beginPath();
+    pts.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = MAP.path;
+    pts.forEach(([x, y], k) => {
+      ctx.beginPath(); ctx.arc(x, y, k === pts.length - 1 ? GOAL_DOT_PX : DOT_PX, 0, 2 * Math.PI); ctx.fill();
+    });
+  }
+  drawObjects(ctx, v, scene.objects);
+  drawRobot(ctx, v, scene.robot);
+  if (chatPlan && chatPlan.target) drawTarget(ctx, v, chatPlan.target);
+}
+
+function drawTarget(ctx, v, t) {   // the spot the route ends at: a ring with the place's name
+  const [x, y] = v.px(t.x, t.y);
+  ctx.strokeStyle = MAP.path; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, FLAG_R_PX, 0, 2 * Math.PI); ctx.stroke();
+  ctx.fillStyle = MAP.path; ctx.beginPath(); ctx.arc(x, y, DOT_PX, 0, 2 * Math.PI); ctx.fill();
+  ctx.font = FLAG_FONT;
+  const w = ctx.measureText(t.name).width + 2 * LABEL_PAD_PX, h = LABEL_H_PX + 2;
+  const lx = Math.min(Math.max(x - w / 2, MARGIN.left), MARGIN.left + v.w - w);
+  const ly = Math.max(y - FLAG_R_PX - h - LABEL_GAP_PX, MARGIN.top);
+  ctx.fillStyle = MAP.path; ctx.fillRect(lx, ly, w, h);
+  ctx.fillStyle = MAP.paper; ctx.fillText(t.name, lx + LABEL_PAD_PX, ly + h - TEXT_RAISE_PX - 1);
+}
+
+async function load() {
+  const res = await fetch("/api/map/latest");
+  const body = await res.json();
+  const summary = document.getElementById("summary");
+  document.getElementById("png").href = "/api/map/latest.png";
+  if (!res.ok) { data = null; summary.textContent = body.error; draw(); return; }
+  data = body;
+  spots = await (await fetch("/api/spots")).json();
+  const r = data.scene.robot, last = (data.scene.pose_history || []).slice(-1)[0] || {};
+  const deg = Math.atan2(Math.sin(r.theta), Math.cos(r.theta)) * 180 / Math.PI;
+  summary.textContent = `bản đồ ${data.scene.map_id}, ${data.scene.room.width} × ${data.scene.room.length} m, ` +
+    `robot (${r.x.toFixed(2)}, ${r.y.toFixed(2)}) ${deg.toFixed(0)}° - ${last.source || ""}${last.predicted ? " (dự đoán)" : ""}`;
+  draw();
+}
+
+// ---- chat and run: drive_chat.ChatSession / RunManager behind /api/chat and /api/run
+const $ = id => document.getElementById(id);
+
+function addMsg(text, cls) {
+  const box = $("chatlog"), div = document.createElement("div");
+  div.className = "msg " + cls; div.textContent = text;
+  box.appendChild(div); box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+async function post(url, body) {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+                                 body: JSON.stringify(body || {}) });
+  let json = {};
+  try { json = await res.json(); } catch (e) { /* an empty or HTML error page */ }
+  return { ok: res.ok, body: json };
+}
+
+function updateButtons() {
+  $("run").disabled = !chatPlan || running;
+  if (inlineRun) inlineRun.disabled = !chatPlan || running;
+  $("stop").disabled = !running; $("stop").classList.toggle("live", running);
+  $("send").disabled = running;
+}
+
+function showPlan() {
+  const box = $("plansum"), p = chatPlan;
+  if (!p) { box.className = "muted"; box.textContent = NO_PLAN; updateButtons(); return; }
+  const what = p.target ? SAY.to + p.target.name : p.steps.join(", ");
+  box.className = ""; box.title = p.legs.map(l => l.label).join("\n");
+  box.textContent = `${what} · ${p.length_m ? p.length_m.toFixed(2) + " m · " : ""}${p.duration_s.toFixed(0)} s`;
+  updateButtons();
+}
+
+function showReply(body) {   // a chat reply: its bubble (a plan's with its own Run button), the plan box, the map
+  if (inlineRun) { inlineRun.remove(); inlineRun = null; }   // only the plan now pending keeps a button
+  const div = addMsg(body.text, "bot" + (body.type === REPLY.ask ? " ask" : body.type === REPLY.error ? " error" : ""));
+  if (body.type === REPLY.run) { started(body.run); return; }   // "chạy": the server started the plan
+  if (body.type === REPLY.plan) {
+    chatPlan = body.plan;
+    inlineRun = document.createElement("button");
+    inlineRun.className = "go inrun"; inlineRun.type = "button"; inlineRun.textContent = SAY.runButton;
+    inlineRun.onclick = runPlan;
+    div.appendChild(inlineRun); $("chatlog").scrollTop = $("chatlog").scrollHeight;
+  } else if (body.type !== REPLY.busy) chatPlan = null;   // the server dropped it: a new command started
+  showPlan(); draw();
+}
+
+async function ask(url, body, waiting) {   // one chat request, a "waiting" bubble while it goes
+  $("send").disabled = true;
+  const wait = addMsg(waiting, "bot wait");
+  try {
+    const { ok, body: reply } = await post(url, body);
+    wait.remove();
+    if (!ok) { addMsg(reply.error || "lỗi máy chủ", "bot error"); return; }
+    showReply(reply);
+  } catch (e) {
+    wait.remove();
+    addMsg("không gửi được: " + e, "bot error");
+  } finally {
+    updateButtons();
+  }
+}
+
+async function send(text) {
+  text = text.trim();
+  if (!text) return;
+  addMsg(text, "me");
+  await ask("/api/chat", { text, compensate: $("compensate").checked }, SAY.waiting);
+}
+
+function phaseOf(s) {
+  const line = s.line || "";
+  if (s.state === STATE.idle) return "robot đứng yên";
+  if (s.state === STATE.stopping) return "đang dừng robot (S)…";
+  if (s.state === STATE.finished) return RESULT_WORDS[s.result] || `không chạy (demo_drive thoát ${s.exit_code})`;
+  if (!line || line.startsWith(STATUS.waiting)) return s.dry_run ? "đang chuẩn bị…" : "camera + YOLO đang khởi động…";
+  if (line.startsWith(STATUS.leg)) return "đang chạy " + line.split(LEG_WORDS_SEP)[0];
+  if (line.startsWith(STATUS.measuring)) return "đang đo leg bằng camera";
+  if (line.startsWith(STATUS.done)) return `robot xong (${line.slice(STATUS.done.length).trim()}), đang đóng video`;
+  return line;
+}
+
+async function finished(s) {
+  const arrived = s.result === RESULT.complete && !s.go_on;
+  addMsg(s.message || `demo_drive thoát ${s.exit_code}`, "bot " + (arrived ? "ok" : "error"));
+  chatPlan = null; showPlan(); draw();
+  await checkMap();   // the pose the run left, before the rest of the way is planned from it
+  if (s.go_on && s.result !== RESULT.aborted) await ask("/api/chat/go_on", {}, SAY.goOnWaiting);   // Stop: the user's
+}
+
+async function pollRun() {
+  clearTimeout(runTimer);
+  let s;
+  try { s = await (await fetch("/api/run/status")).json(); }
+  catch (e) { runTimer = setTimeout(pollRun, POLL_RUN_MS); return; }
+  $("dryrun").hidden = !s.dry_run;
+  const was = running;
+  running = s.state === STATE.running || s.state === STATE.stopping;
+  $("phase").textContent = phaseOf(s) + (running ? ` · ${s.elapsed_s.toFixed(0)} s` : "");
+  $("phase").className = running ? "" : "muted";
+  $("line").textContent = running ? s.line || "" : "";
+  $("runlog").textContent = s.log || "";
+  if (was && !running) finished(s);
+  updateButtons();
+  if (running) runTimer = setTimeout(pollRun, POLL_RUN_MS);
+}
+
+async function runPlan() {
+  $("run").disabled = true;
+  if (inlineRun) inlineRun.disabled = true;
+  const { ok, body } = await post("/api/run", { compensate: $("compensate").checked });
+  if (!ok) { addMsg(body.error || "không chạy được", "bot error"); updateButtons(); return; }
+  started(body);
+}
+
+function started(run) {   // a run began (Run button, or "chạy" in the chat): say so, follow it
+  addMsg((chatPlan && chatPlan.target ? SAY.goingTo + chatPlan.target.name : SAY.going) +
+         (run.dry_run ? SAY.dry : run.compensate ? SAY.measured : "") + SAY.stopHint, "bot");
+  if (inlineRun) { inlineRun.remove(); inlineRun = null; }
+  running = true; updateButtons(); pollRun();
+}
+
+async function stopRun() {
+  if (!running) return;
+  const { body } = await post("/api/run/stop");
+  if (body.ok) addMsg("Đã gửi lệnh dừng (như Ctrl-C: robot_link huỷ plan, gửi S).", "bot");
+  pollRun();
+}
+
+async function checkMap() {
+  try {
+    const { version } = await (await fetch("/api/map/version")).json();
+    if (version !== mapVersion) { mapVersion = version; await load(); }
+  } catch (e) { /* the server restarting: the next poll retries */ }
+}
+
+$("chatform").onsubmit = e => { e.preventDefault(); const t = $("say").value; $("say").value = ""; send(t); };
+$("say").addEventListener("keydown", e => {   // Enter sends, Shift+Enter a new line
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("chatform").requestSubmit(); }
+});
+$("showspots").onchange = draw;
+$("forget").onclick = async () => {
+  await post("/api/chat/reset"); chatPlan = null; showPlan(); draw(); addMsg("Đã huỷ lệnh.", "bot");
+};
+$("run").onclick = runPlan;
+$("stop").onclick = stopRun;
+document.addEventListener("keydown", e => { if (e.key === "Escape") stopRun(); });
+$("reload").onclick = load;
+addMsg(WELCOME, "bot");
+checkMap();
+pollRun();
+setInterval(checkMap, POLL_MAP_MS);
+</script>
+</body>
+</html>

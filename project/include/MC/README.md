@@ -59,7 +59,7 @@ a_max   = WHEEL_ACCEL_RAD_S2   / peak(d)
   not its magnitude. The result is never faster than `requested`. A direction that moves no wheel
   (below `cfg::MIN_WHEEL_COEFF`) returns all zeros.
 - The whole vector is scaled, never one wheel clipped, so the robot stays on the planned line.
-- Resulting ceilings: about 0.62 m/s forward, 0.54 m/s sideways, 2.57 rad/s spinning.
+- Resulting ceilings: about 0.45 m/s forward, 0.39 m/s sideways, 1.77 rad/s spinning (r 0.040 m, L 0.2217 m).
 
 ### executor.h — `Executor`
 - `load(primitives, count, limits, startTheta)` loads a list. `startTheta` is the heading at the
